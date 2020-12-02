@@ -93,7 +93,7 @@ int main()
             // Set the pen thickness, but read it back to correct going below the minimum.
 
             iPenThickness = cWin.SetPenThickness(iPenThickness + iMouseWheel); 
-            ShowBanner();        // Update the banner to show thew new pen thickness
+            ShowBanner();        // Update the banner to show the new pen thickness
         }
 
         // If the mouse was moved and the mouse button is down, draw a line from the last mouse
