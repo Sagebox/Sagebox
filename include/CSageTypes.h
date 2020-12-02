@@ -19,4 +19,5 @@ using opt = Sage::opt;
 using namespace Sage;
 #endif
 
+
 #endif // _CSageTypes_H_

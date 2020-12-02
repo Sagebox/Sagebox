@@ -1,4 +1,5 @@
 //#pragma once
+//#pragma once
 
 #if !defined(_CDAVINCI_H_)
 #define _CDAVINCI_H_
@@ -17,7 +18,7 @@
 #include "CButton.h"
 #include "CSlider.h"
 #include "CListBox.h"
-
+#include "CComboBox.h"
 #include "CWindow.h"
 #include "CRawBitmap.h"
 #include <string>
@@ -30,6 +31,7 @@ class CWindow;
 class CButton;
 class CEditBox;
 class CDavBitmap;
+class CSageBox;
 
 struct DavBitmap_t;
 
@@ -39,7 +41,7 @@ struct BitmapColor24_t
 	unsigned char ucBlue;
 	unsigned char ucRed;
 };
-
+class CHoverWindow;
 
 // CDavinci Class - Main object for Davinci GUI.  Typically created only once per application. 
 //
@@ -77,8 +79,16 @@ private:
 	void LoadDefaultResources();
 	void RegisterWidgets();
 	void LoadWindowsSlider();
+	void CreateHoverWindow();
+	static bool HoverFunction(void * pDavinci,bool bShow,const char * pHoverData);
 public:
+	void SetSageBox(CSageBox * cSageBox);
+	HWND m_hConsoleWindow = (HWND) nullptr;
+	bool SetHoverFunction(CEControlAction_t * stControl);
+	CHoverWindow * m_cHoverWindow = nullptr;
 	
+	bool ValidateControl(HWND hWnd);
+
 	std::vector<Sage::Deleter_t>	m_vDeleters;
 
 	int FindDeleter(void * pObject,Sage::Deleter_t * stDeleter = nullptr);
@@ -87,7 +97,7 @@ public:
 	void CallDeleters(CWindow * cWin);
 	DialogStruct * GetDefaultDialog();
 	CControlStyles::stControlStyles_t * GetControlStyle(Sage::ControlStyles,char * sName);
-
+	CPasWindow * GetWinCore();
 public:
 	// $$ Legacy functionality.  These are left in Davinci for now, for use with the private window Davinci creates for itself, but is also used
 	//    as a status window.  This will eventually change to a CWindow * m_cStatusWin that can then be used as a DavWindow object.
@@ -105,7 +115,8 @@ public:
 	DWORD GetColor(char * sColor,bool * pColorFound = nullptr);
 	bool GetColor(char * sColor,DWORD & rgbColor);
 	int Rectangle(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);
-	Sage::SageString m_stProgramName;
+	Sage::SageString m_stProgramName = {};
+	CSageBox * m_cSageBox = nullptr;
 public:
 	CDavinci(HWND m_hWnd,HINSTANCE m_hInstance,int ix=0,int iy=0,int iWidth=800,int iHeight=400,const char * sName=nullptr,char * sControl = NULL);
 	~CDavinci();
@@ -133,7 +144,9 @@ public:
 
 	
 	int RegisterWidget(int & iRegistryID);
-
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrPath,bool * bSuccess = nullptr);
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+	HWND GetConsoleWindow() { return m_hConsoleWindow; }
 };
 
 

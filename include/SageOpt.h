@@ -150,7 +150,21 @@ public:
 	optRet Border();
 	optRet ThickBorder();
 	optRet Title(const char * sTitle);
+	optRet cbTitleCell(const char * sTitle);
 	optRet Label(const char * sLabel);
+	optRet LabelX(const char * sLabel,int iPos);
+	optRet LabelTop(const char * sLabel)	;
+	optRet LabelBottom(const char * sLabel)	;
+	optRet LabelLeft(const char * sLabel,int iSpacing)	;
+	optRet LabelRight(const char * sLabel,int iSpacing)	;
+	optRet LabelFont(const char * sFont);
+	optRet LabelColor(const char * sFgColor);
+	optRet LabelColor(DWORD dwFgColor);
+	optRet LabelColor(Sage::RGBColor_t rgbColor);
+	optRet BorderColor(const char * sFgColor);
+	optRet BorderColor(DWORD dwFgColor);
+	optRet BorderColor(Sage::RGBColor_t rgbColor);
+
 	optRet Style(const char * sStyle);
 	optRet Style(const char * & sStyle,const char * & sOptions);
 	optRet Font(const char * sFont);
@@ -172,6 +186,8 @@ public:
 	optRet Plate(const char * sPlate);
 	optRet bgColor(const char * sBgColor);
 	optRet bgColor(DWORD dwBgColor);
+	optRet bgColor2(const char * sBgColor);
+	optRet bgColor2(DWORD dwBgColor);
 	optRet bgHigh(const char * sBgColor);
 	optRet bgHigh(DWORD dwBgColor);
 	optRet bgChecked(const char * sBgColor);
@@ -216,6 +232,10 @@ public:
 	optRet IconNone()		;
 	optRet NoCancel();
 	optRet CancelOk();
+	optRet Modal();
+	optRet NoAutoUpdate();
+	optRet CenterWin();
+	optRet SetTopmost();
 	optRet HideCancel();
 	optRet ProgressBar();
 	optRet Transparent();
@@ -225,10 +245,14 @@ public:
 	optRet CenterX();
 	optRet CenterY();
 	optRet AddBorder();
+	optRet InnerSize();
+	optRet Resizeable();
 	optRet NoBorder();
 	optRet NoScrollbar();
 	optRet PadX(int iPad)		;
 	optRet PadY(int iPad)		;
+	optRet OffsetX(int iOffset)		;
+	optRet OffsetY(int iOffset)		;
 
 
 	optRet TextCenter();
@@ -265,7 +289,7 @@ public:
 	optRet JustBottom();
 
 	optRet CenterXY(int iOffset=0);
-	optRet X(int iPos);
+	optRet XPos(int iPos);
 	optRet TabPos(int iPos);
 	optRet Tab(int iPos);
 	optRet GotoXY(int iX,int iY);
@@ -273,10 +297,10 @@ public:
 	optRet ValidateGroup(ControlGroup & cGroup);
 	optRet Group(ControlGroup & cGroup,int iID = MAXINT);
 
-	cwfOpt & operator + (cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
-	cwfOpt & operator << (cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
+	cwfOpt & operator + (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
-	cwfOpt & operator | (cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
+//	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
+	cwfOpt & operator | (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	const char * operator * () const { return spOpt && *spOpt ? spOpt : (const char *) sOpt; }
 	cwfOpt(const cwfOpt &opt2);
 	inline bool Active() { return iLength > 0 || ipLength > 0; }
@@ -295,6 +319,15 @@ public:
 
 namespace opt
 {
+	// Sets a background gradient for window or control by specifying two colors: the top and bottom color. 
+	// --> note: this is experimental and not supported in all controls or window types
+	//
+	static optRet bgGradient(const char * sColor1,const char * sColor2) { return defOpt.bgColor(sColor1) << defOpt.bgColor2(sColor2); }
+
+	// --> note: this is experimental and not supported in all controls or window types
+	//
+	static optRet bgGradient(Sage::RGBColor_t rgbColor1,RGBColor_t rgbColor2) { return defOpt.bgColor(*rgbColor1) << defOpt.bgColor2(*rgbColor2); }
+
 	//---> Set the background color for this control.  Enter any valid SageWin named color or RGB() value
 	static optRet bgColor(DWORD dwColor) { return defOpt.bgColor(dwColor); }  ;	
 
@@ -518,6 +551,8 @@ namespace opt
 	//
 	static optRet Title(const char * sTitle) { return defOpt.Title(sTitle); }  ;	
 
+	static optRet cbTitleCell(const char * sTitle) { return defOpt.cbTitleCell(sTitle); }  ;	
+
 	// Adds a title to a control, such as a slider, input dialog title bard, and other controls.
 	//
 	// Without a title, many controls/dialog show the ProgramName() in the title bar of the program name is set.
@@ -525,7 +560,21 @@ namespace opt
 	//
 	// Title() and Label() are the same.
 	//
-	static optRet Label(const char * sLabel) { return defOpt.Label(sLabel); }  ;	
+	static optRet Label(const char * sLabel)			{ return defOpt.Label(sLabel);			}  ;	
+	static optRet LabelX(const char * sLabel,int iPos)	{ return defOpt.LabelX(sLabel,iPos);		}  ;	
+	static optRet LabelTop(const char * sLabel)			{ return defOpt.LabelTop(sLabel);		}  ;	
+	static optRet LabelBottom(const char * sLabel)		{ return defOpt.LabelBottom(sLabel);	}  ;	
+	static optRet LabelLeft(const char * sLabel,int iSpacing = 0)		{ return defOpt.LabelLeft(sLabel,iSpacing);		}  ;	
+	static optRet LabelRight(const char * sLabel,int iSpacing =0 )		{ return defOpt.LabelRight(sLabel,iSpacing);		}  ;	
+	static optRet LabelFont(const char * sFont)			{ return defOpt.LabelFont(sFont);			}  ;	
+
+	static optRet LabelColor(const char * sColor) { return defOpt.LabelColor(sColor); }  ;	
+	static optRet LabelColor(DWORD dwColor) { return defOpt.LabelColor(dwColor); }  ;	
+	static optRet LabelColor(Sage::RGBColor_t rgbColor) { return defOpt.LabelColor(*rgbColor); }  ;	
+
+	static optRet BorderColor(const char * sColor) { return defOpt.BorderColor(sColor); }  ;	
+	static optRet BorderColor(DWORD dwColor) { return defOpt.BorderColor(dwColor); }  ;	
+	static optRet BorderColor(Sage::RGBColor_t rgbColor) { return defOpt.BorderColor(*rgbColor); }  ;	
 
 	// Sets a Style of a button, slider, or other control.
 	// Styles can be pre-defined styles or ones created through loading graphics and setting the style with
@@ -626,7 +675,7 @@ namespace opt
 	// Can be used in a console input function (i.e. console.GetInput(), console.getFloat(), etc.) to set the position of the 
 	// input box.  This allows the boxes to be easily lined up with text to the left and aligned boxes to the right.
 	//
-	static optRet XPos(int iPos) { return defOpt.X(iPos); }  ;		
+	static optRet XPos(int iPos) { return defOpt.XPos(iPos); }  ;		
 
 	// Can be used in a console input function (i.e. console.GetInput(), console.getFloat(), etc.) to set the position of the 
 	// input box.  TabPos is sets (aerage character width of font)*size entered in the TabPos.  For example, TabPos(50)
@@ -664,7 +713,7 @@ namespace opt
 	// Use Min() or Max() for ranges on the end, such as GetFloat(Min(0)) to prohibit negative values
 	// while allowing any positive value.
 	//
-	static optRet Range(float fMin,float fMax) { return defOpt.MinMax(fMin,fMax); }  ;		
+	static optRet Range(double fMin,double fMax) { return defOpt.MinMax(fMin,fMax); }  ;		
 
 	// Use the last known options.  This is deprecated.
 	// Instead, set the options in a cwfOpt value, such as:
@@ -686,12 +735,12 @@ namespace opt
 	static optRet IconNone()	{ return defOpt.IconNone();		}		;
 
 
-	// Add X pixels to the control. For example,
+	// Add X pixels to the size of control. For example,
 	// CreateButton(10,50,"OK",PadX(20)) will add 20 pixels to the size of the button to make the button wider with "OK" in the center.
 	//
 	static optRet PadX(int iPad) { return defOpt.PadX(iPad); }  ;		
 
-	// Add Y pixels to the control. For example,
+	// Add Y pixels to the size of control. For example,
 	// CreateButton(10,50,"OK",PadX(20)) will add 20 pixels to the size of the button to make the button wider with "OK" in the center.
 	//
 	// PadY() only works with certain controls.  For example, standard buttons work with PadX() but not PadY(), where
@@ -699,6 +748,18 @@ namespace opt
 	// specifiying an explicit width and height is a better option.
 	//
 	static optRet PadY(int iPad) { return defOpt.PadY(iPad); }  ;		
+
+	// Add X Pixels to the location of the control.  This helps when keeping items off of the edges,giving them some space.
+	// For example, TextWidget(0,0,"This a text widget",opt::JustTopRight,opt::OffsetX(-5)) will move the text widget 5 pixels from 
+	// the edge of the window to give it some space. 
+	//
+	static optRet OffsetX(int iOffset) { return defOpt.OffsetX(iOffset); }  ;		
+
+	// Add Y Pixels to the location of the control.  This helps when keeping items off of the edges,giving them some space.
+	// For example, TextWidget(0,10,"This a text widget",opt::JustBottomCenter,opt::OffsetX(-5)) will move the text widget 5 pixels from 
+	// the bottom of the window, making it look more natural with some space before the bottom edge.
+	//
+	static optRet OffsetY(int iOffset) { return defOpt.OffsetY(iOffset); }  ;		
 
 	// Can be used in dialog boxes such as GetInteger() to elminate the cancel button.
 	// This will force the user to enter a value before continuing with no way to cancel the input dialog.
@@ -709,8 +770,38 @@ namespace opt
 	// This used when creating a PleaseWaitWindow() to allow the user to cancel, which can then be 
 	// detected by polling the please wait window.
 	//
-	static optRet CancelOk() { return defOpt.CancelOk(); }  ;	
+	static optRet CancelOk() { return defOpt.CancelOk(); }  ;
 
+	// Specifies that the new window opened will disabled the parent window until the new window is dismissed
+	// Used for message boxes, document windows, and other windows with any form of input (buttons, sliders, edit boxes, etc.).
+	// For example, opening an InfoWindow with Modal() option will not allow input to any other window 
+	// until the OK button is pressed.
+	//
+	// When Modal() is not specified, other windows may also be used (depending on the function).
+	//
+	static optRet Modal() { return defOpt.Modal(); }  ;	
+
+	// Sets AutoUpdate to False when creating a Window.  When AutoUpdate = False, you must
+	// update the window when appropriate.  
+	//
+	// Default behavior for new windows is AutoUpdate = On, which automatically updates the window
+	// (though one Update() is sometimes required at the end of large outputs to make sure the Window is fully updated)
+	//
+	static optRet NoAutoUpdate() { return defOpt.NoAutoUpdate(); }  ;	
+
+	// When Creating a Dialog (i.e. dialog.Info(), etc.) or Dialog Window, CenterWindow()
+	// causes the newly created window to be centered in the parent window creating it. 
+	//
+	// Otherwise, the window is put somewhere on the screen, or, in the case of dialog windows and
+	// dialog functions, centered on the screen rather than the parent window.
+	//
+	static optRet CenterWin() { return defOpt.CenterWin(); }  ;	
+
+	// Specifies window as "TopMost", keeping the window at the top of all windows.  This prevents other windows from 
+	// overlapping the window.  This is useful for windows that need to be on top at all times so they do not become
+	// obscured by other windows
+	//
+	static optRet SetTopmost() { return defOpt.SetTopmost(); };
 	// Hides the cancel button on dialog.  This is used for the PleaseWaitWindow() to remove the cancel button
 	// after a certain point -- i.e. after a point of no return. 
 	//
@@ -1035,6 +1126,21 @@ namespace opt
 	// Adds a border to the input box, window, or other control that uses borders
 	//
 	static optRet AddBorder() { return defOpt.AddBorder();	}  ;		
+
+	// When creating a new window with a frame or border, InnerSize() creates the window with the
+	// canvas size set to the input width/height.  Otherwise, the Width/Height is the size of the
+	// entire window, including the frame or border
+	//
+	static optRet InnerSize() { return defOpt.InnerSize();	}  ;		
+
+	// Allows the window to be resized by the user by dragging the edge of the window and maximizing the window.
+	// By default, once the window is created, the size cannot be changed by the user. 
+	//
+	// When true, make sure the window has the canvas size to support larger sizes.  The window will not
+	// be allowed to size greater than the original size of greater canvas set set in the program
+	//
+	static optRet Resizeable() { return defOpt.Resizeable(); };
+
 
 	// Tells the Window, Control, input box, or Widget to no use a border even when it is the default
 	//

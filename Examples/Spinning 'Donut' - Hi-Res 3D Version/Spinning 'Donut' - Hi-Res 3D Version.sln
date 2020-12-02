@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spinning Donut (Hi-Res)", "Spinning Donut (Hi-Res)\Spinning Donut (Hi-Res).vcxproj", "{1CB20AAF-19C3-4083-A885-DDAE01F24C23}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug Optimized|x64.Build.0 = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug|x64.ActiveCfg = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug|x64.Build.0 = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Debug|x86.Build.0 = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{1CB20AAF-19C3-4083-A885-DDAE01F24C23}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6FFCACB1-1105-43B7-8FC2-0C82B73EBEF8}
+	EndGlobalSection
+EndGlobal

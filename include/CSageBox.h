@@ -3,9 +3,12 @@
 
 #if !defined (_CSageBox_H_)
 #define _CSageBox_H_
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 
 //#include "SageIncludes.h"
+#include <cstdlib>
+#include <cstdio>
+#include <ctime>
 
 #include "Sage.h"
 #include "SageOpt.h"
@@ -15,7 +18,10 @@
 #include "CMemClass.h"
 #include "CSageMacros.h"
 #include "CDialog.h"
-#include "CJpeg.h"
+#include "CSageTools.h"
+#include "StyleManifest.h"
+#include "CQuickControls.h"
+#include "CComplex.h"
 
 // -------------------
 // Main CSageBox Class
@@ -78,6 +84,14 @@
 namespace Sage
 {
 
+// Empty values useful for returning null objects of various types when errors occur. 
+
+static constexpr RGBColor_t EmptyRGB{};
+static constexpr HSLColor_t EmptyHSL{};
+static constexpr POINT		EmptyPoint{};
+static constexpr SIZE		EmptySize{};
+static constexpr RECT       EmptyRect {};
+static constexpr SizeRect   EmptySizeRect{};
 class CSageBox
 {
 public:
@@ -85,11 +99,19 @@ public:
 
 private:
 	void Postamble(CWindow & cWin);
-	void Preamble(CWindow & cWin);
+	void Preamble(CWindow & cWin,bool bHidden = false);
 	void CreateDefaultWindow();
+    bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     HANDLE m_hWinThread = nullptr;
+    CDevControls * m_cDevControls   = nullptr;          // Not created until first used. 
+    bool m_bConsoleHidden           = true;             // true if the Console Window was hidden
+    HWND m_hConsoleWindow           = (HWND) nullptr;   // HWND of the Console window if we're in console mode. 
+    bool m_bConsoleDontRestore      = false;            // When true and the console is hidden, the console window is not 
+                                                        // restored on program exit.  Otherwise, a hidden console window is restored
+                                                        // When the program ends.
 
 	int m_iConsoleWinNum = 0;		// Used for positioning windows when ConsoleWin() is called
+    CPasWindow * m_cWinCore = nullptr;
 public:
 	// The main SageBox Class
 	//
@@ -144,7 +166,24 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
+
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
     //
@@ -175,7 +214,23 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sWinTitle, const cwfOpt & cwOpt = cwfOpt());
+
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -193,7 +248,23 @@ public:
     //
 	CWindow & NewWindow(const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
-	// Main() -- Creates a new window from a newly created class and runs the windows Main() function.
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(cwfOpt & cwOpt);
+
+    // Main() -- Creates a new window from a newly created class and runs the windows Main() function.
 	//
 	// This is designed to be used with the QuickConsole macro, where the defined classname is used in the Main() function
 	//
@@ -220,7 +291,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -231,7 +302,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -242,7 +313,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -253,7 +324,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -264,7 +335,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -292,6 +363,25 @@ public:
     // only events are returned and it is not caught in a spining loop. 
     //
 	bool EventLoop(Sage::WaitEvent * eStatus = nullptr); 
+    
+    // GetEvent() -- Wait for a user event.  Even though the main SageBox window is not visible, all other controls
+	// run through this EventLoop.
+    //
+    // This is the Main Event Loop for procedurally-driven programs to capture events without using event callbacks.
+    //
+    // EventLoop() returns for relavent events from the user.  It does not return for all Windows events, only those that affect the running of the
+    // program.  All Windows message events can be intercepted by subclassing the window or using SetMessageHandler() to capture all messages.
+    //
+    //
+    // EventLoop() returns if the window is closing with the WaitEvent::WindowClosing status. 
+	// For the main (hidden) SageBox window, this must be exited to close the program since the window
+	// does not display and there is now way to close it by choice.
+    // 
+    // Important Note:  Make sure EventLoop() does not return until it sees events.  With empty windows or corrupted windows, EventLoop()
+    // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
+    // only events are returned and it is not caught in a spining loop. 
+    //
+    bool GetEvent(Sage::WaitEvent * eStatus = nullptr);
 
     // QuickButton() -- Put up a quick button and information line. 
     //
@@ -301,7 +391,7 @@ public:
     // The text can be is changed by setting sText.
     // The ProgramName (if it is set) is set in the title bar, unless sTitleBar is set other text
     //
-    // QuickButton() is similar to dialog.Info(), but uses a smaller font.
+    // QuickInfoButton() is similar to dialog.Info(), but uses a smaller font.
     // 
     // Multiple lines may be entered with '\n', and long lines are automatically broken into multiple lines
     //
@@ -687,7 +777,7 @@ public:
 
     // PleaseWaitCancelled() -- Returns true if the Cancel button was pressed on the Please Wait Window.  False, if not or Please Wait Window is not active.
     //
-	bool PleaseWaitCancelled(Sage::Peek peek = Sage::Peek::No);
+	bool PleaseWaitCancelled(Peek peek = Peek::No);
 
     // PleaseWaitGetOk() -- Changes "Cancel" button to "Ok" button and waits for the button to be pressed.  This is useful when a function has completed and you want to
     //                      make sure the user knows it is finish.
@@ -827,7 +917,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,Sage::ThumbType eType,const char * sTitle = nullptr);
+    bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,Sage::ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -841,7 +931,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-	bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle = nullptr);
+	bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
 
         // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -855,7 +945,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,Sage::ThumbType eType,const char * sTitle = nullptr);
+    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -869,8 +959,11 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-	bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle = nullptr);
+	bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
 
+
+    CSageBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
+    CSageBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -965,6 +1058,225 @@ public:
     //
     CJpeg::Status GetJpegError();
 
+    // DevControls -- passed through to default CDevControls so that adding buttons, sliders, etc. is easy. 
+    // For more controls (i.e. other Dev Control windows, use DevControlsWindow() to create new ones. 
+
+ 	// DevButton() -- Add a button to the Default Dev Control Window.  This accepts all options as normal buttons, but 
+	// the default will add a regular button. 
+	//
+	// The Name used as a title for the button, but is optional. 
+	//
+    CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickCheckbox() -- Add a checkbox to the default Dev Control Window. This accepts all options as normal buttons, but 
+	// the default will add a regular button. 
+	//
+	// The Name used as a title for the button, but is optional. 
+	//
+    CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
+    // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
+	// -->
+	// The title is displayed beneath the slider, as well as the value. 
+	//
+    CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // AddEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
+	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
+	//
+    CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+  
+	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const char * sTitle);
+
+    CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
+
+
+ 	// AddDevSction() -- Adds a text section to the default Dev Controls window, to separate types of controls.
+	// You can use opt::fgColor() to set the text color of the section name.
+	//
+    bool AddDevSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
+    // *** Important note *** -- this will return NULLPTR until a control is created with
+    // QuickButton(), QuickSlider(), etc. The window is not created until a control is created in order
+    // to save memory.
+    //
+    // With the pointer, any CDevContgrols() function can be used, though most are replicated directly
+    // through CSageBox functions for ease of use.
+    //
+    CDevControls * GetDevControlsPtr();
+
+    // DevControlsWindow() -- Create a CDevControls Window, allowing for quick creation and automatic placement of
+    // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
+    // GUI functions with GUI controls. 
+    // 
+    // See documentationn in CQuickControls.h for more information
+    //
+    // ** Important note ** the object pointer returned MUST BE DELETED, as it is not a managed object. 
+    // Example code tends to use Obj<CDevControls> cDevControls = DevControlsWindow() to treat it as a stack object
+    // that is automatically deleted when the current function (or class) goes out of scope.
+    // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
+    //
+    CDevControls * DevControlsWindow(int iX = -1,int iY = -1,const cwfOpt & cwOpt = cwfOpt());
+
+    // DevControlsWindow() -- Create a CDevControls Window, allowing for quick creation and automatic placement of
+    // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
+    // GUI functions with GUI controls. 
+    // 
+    // See documentationn in CQuickControls.h for more information
+    //
+    // ** Important note ** the object pointer returned MUST BE DELETED, as it is not a managed object. 
+    // Example code tends to use Obj<CDevControls> cDevControls = DevControlsWindow() to treat it as a stack object
+    // that is automatically deleted when the current function (or class) goes out of scope.
+    // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
+    //
+    CDevControls * DevControlsWindow(const cwfOpt & cwOpt);
+
+    // DevControlsTopmost() -- Sets the Default Dev controls windows as a 'topmost' window, 
+    // preventing other windows from overlapping and obscuring the Dev Controls Window.
+    // This is the equivalent of GetDevControlsPtr()->SetTopmost(), or using SetTopMost() in a 
+    // user-created window (see DevControlsWindow() to create more Dev Control Windows).
+    // -->
+    // Setting bTopMost = false sets the default Dev Controls Window to normal behavior, allowing
+    // other windows to overlap when they gain focus and are overlapping the default Dev Controls Window
+    //
+    bool DevControlsTopmost(bool bTopmost = true);
+
+    // ExitButton() -- Create a modal button (i.e. a button that needs input before continuing) with a message.  This can be used
+    // prior to exiting a console-mode program so that the windows and controls remain intact until the user pressed
+    // the "OK" button.  This is the same as QuickInfoButton() but uses a default "program ending" message when there is
+    // no text included.
+    // --> sText sets the message to display to the user.  When sText is omitted a message declaring the program has ended
+    //     is displayed as the default message.
+    // 
+    void ExitButton(const char * sText = nullptr); 
+
+   // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
+    // CSageBitmap.
+    //
+    // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
+    // opening the PGR file and searching for the image.
+    //
+    // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
+    // if found.  Otherwise, an empty CSageBitmap is returned.
+    //
+    // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
+    // error occurred loading the image.
+    //
+    // --> Examples:
+    // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
+    // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
+    //
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr);
+
+    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
+    // CSageBitmap.
+    //
+    // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
+    // opening the PGR file and searching for the image.
+    //
+    // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
+    // if found.  Otherwise, an empty CSageBitmap is returned.
+    //
+    // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
+    // error occurred loading the image.
+    //
+    // --> Examples:
+    // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
+    // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
+    //
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+
+    // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
+    // If Height is omitted, a Bitmap structure of height 1 is returned.
+    //
+    // This is returned as an aligned 8-bit-per-channel bitmap.
+    //
+    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
+    // RawBitmap_t::Delete() must be called to delete this memory.
+    //
+    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
+    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //
+    CSageBitmap CreateBitmap(int iWidth,int iHeight = 1);
+
+    // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
+    // If Height is omitted, a Bitmap structure of height 1 is returned.
+    //
+    // This is returned as an aligned 8-bit-per-channel bitmap.
+    //
+    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
+    // RawBitmap_t::Delete() must be called to delete this memory.
+    //
+    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
+    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //
+    CSageBitmap CreateBitmap(SIZE szBitmapSize);
+
+    bool ShowConsole(bool bShow = true);
+    bool HideConsole(bool bPermanent = false);
+    bool ValidateControl(HWND hWnd);
+    bool ValidateWindow(CWindow * cWin);
+
+    // Determine if we're console app or a windows app.  
+    //
+    // This returns true of the app started as a Windows app (i.e. _WINDOWS is defined), even if it has created a console window.
+    // This returns false if both _CONSOLE mode was set and there is no console window.  Therefore, if a console mode program has deleted
+    // its console window, this will return true to indicate to the program that this isn't a console-capable application, since it has no console window
+    //
+    // This is meant to be called at any time, but particularly before or right after SageBox is created so that a prorgram may determine 
+    // a course of action.
+    // 
+    // This is a static function and can be called without SageBox having been created, i.e. CSageBox::isConsoleApp()
+    //
+    static bool isConsoleApp() { 
+            #ifdef _WINDOWS 
+                return true;        // if _WINDOWS is defined, it's a good bet, so we'll trust it, even if it has defined a console app on its own.
+            #else           
+                // When _CONSOLE is defined, lets also make sure we have a console window
+                return GetConsoleWindow() != nullptr;
+            #endif          
+    }
+
+    // Returns true of the main thread is stopped.  
+    // Use StartThread() to resume the main thread. 
+    //
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    bool ThreadStopped();
+    
+    // Returns the status of the thread.  ThreadStatus::Running or ThreadStatus::Suspended (if the thread is stopped).
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    ThreadStatus GetThreadStatus();
+
+    // Stop the main thread.  This is usually used when ending the main thread and transferring to full event-driven control. 
+    //
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    bool StopThread();
+
+    // Restart the main thread if it is suspended.
+    //
+    bool StartThread();
+
+    // End the program when in the main message thread.  This is used when StopThread() has been used to stop the main thread but events are
+    // still being handled through the Main Windows Message Thread.
+    //
+    // EndProgram() sets the window closing status and resumes the main thread.  Typically, the main thread will exit and SageBox will end.
+    // However, StopThread() can be used anywhere and does not need to exit immediately.  It can take care of cleanup, memory deallocations, etc. 
+    //
+    bool EndProgram();
 };
 }; // namespace Sage;
 

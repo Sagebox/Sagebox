@@ -92,6 +92,8 @@ public:
 		Sage::SageString stOptString;
 		Sage::SageString stName;
 		Sage::SageString stText;
+		CPasWindow	* m_cWinCore;
+		int			m_iControl;
 		int			bNoCancel;
 		int			iMinRange;
 		int			iMaxRange;
@@ -131,6 +133,8 @@ public:
 		ButtonType	eButtonType;
 		Sage::SageString stAltText; 
 		CButton * cButton;
+		CPasWindow	* m_cWinCore;
+		int m_iControl;
 		SIZE szButtonSize;
 		POINT pPosition;
 	public:
@@ -246,6 +250,7 @@ public:
 	HDC					  m_hDC			= nullptr;
 	bool				  m_bModal		= false;
 	bool				  m_bClosing	= false;
+	bool				  m_bCenterWindow = false;
 public:
 	void Init();
 	ButtonType GetButtonPress();
@@ -291,24 +296,25 @@ public:
 
 	bool AddItem(DialogItem eItemType,void * vpItem);
 	char * GetText(Button stButton);
-	POINT GetPos(char * sName);
-	DialogStruct::EditBox * GetEditBox(char * sName);
+	POINT GetPos(const char * sName);
+	DialogStruct::EditBox * GetEditBox(const char * sName);
 	HFONT SetFont(Label & stLabel);
 	Sage::RGBColor_t SetTextColor(Label & stLabel);
-	bool AddButton(ButtonType eButtonType, char * sAltText = nullptr);
-	bool AddEditBox(EditBoxType eEditBoxType, char * sName,char * sDefaultText = nullptr,char * sOptString = nullptr);
+	bool AddButton(ButtonType eButtonType, const char * sAltText = nullptr);
+	bool AddEditBox(EditBoxType eEditBoxType, const char * sName,const char * sDefaultText = nullptr,const char * sOptString = nullptr);
 	bool ValidateEditBox(EditBox & stEditBox);
-	bool AddLabel(DialogItem eItemType,char * sLabel,DialogJustify eJustify);
-	bool AddVerticalSpace(int iPixels,char * sName = nullptr);
-	bool AddTitleIcon(TitleIconType eType,char * sUserName = nullptr);
-	bool AddTitle(char * sTitle);
+	bool AddLabel(DialogItem eItemType,const char * sLabel,DialogJustify eJustify);
+	bool AddVerticalSpace(int iPixels,const char * sName = nullptr);
+	bool AddTitleIcon(TitleIconType eType,const char * sUserName = nullptr);
+	bool AddTitle(const char * sTitle);
 
-	char * GetText(char * sName);
+	char * GetText(const char * sName);
 	POINT GetPointX(HDC hdc,Label & stLabel,RECT & rRect,int iDialogY);
 	bool CalcWindow();
 	bool CalcButtons();
 	bool DrawWindow(CPasWindow * cWinCore,bool bShow = true);
 	bool Closing() { return m_bClosing; }
+	void SetCenterWindow(bool bCenterWindow) { m_bCenterWindow = bCenterWindow; }
 };
 
 }; // namespae Sage

@@ -52,11 +52,13 @@ namespace Sage
     class CDavinci;
     class CEditBox;
     class CListBox;
+    class CComboBox;
     class CTextWidget;
     class CDialog;
     class COutDC;
     class CSageBox;
     class CMenu;
+    class CDevControls;
     struct CEWindow_t;
     typedef int ConsoleOp_t;        // Experimental
 
@@ -109,7 +111,6 @@ public:
     };
 
    // This private section should disappear altogether in an upcoming update
-
 private:
 
     friend CMenu;
@@ -124,6 +125,15 @@ private:
     int FindDeleter(void * pObject,Deleter_t * stDeleter = nullptr);        // Find any attached objects that want to be deleted when the window is deleted.
     void SetBaseWindow(bool bisBaseWindow = true);                          // Set as a Base Window, a hidden control-Parent Window 
     bool isBaseWindow();                                                    // true = hidden base window, causing differences in Window ownership, child windows, etc.
+    bool m_bNextOpenisSave          = false;
+    bool m_bPaintDisabled           = false;
+    bool m_bFirstEvent              = false;                                // Allows passthrough on GetEvent() on first event call -- this is already deprecated and will be removed.
+    CSageBitmap  m_cClsBitmap;                                              // Bitmap used to repaint in window when cls() is issued (i.e. when a user has specified Transparent()
+                                                                            // on a Child Window or called SetClsBitmap() to set the bitmap for Cls() repaint.
+
+    bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
+    bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
+    CDevControls * m_cDevControls = nullptr;    // Not created until first used. 
 
 
     // Bitmap Message Handle for BitmapWindow() returned windows
@@ -170,6 +180,14 @@ private:
         }
     };
 
+    // $$ Under Development $$ -- These are placeholders and to be removed (deprecated).
+    // They are here to keep them out of the public declarations
+
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const wchar_t * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const wchar_t * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const char * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+   
 
 // kAdvPublic:
 // This is defalted to private to disallow CWindow class/object copying and deleting.
@@ -319,22 +337,15 @@ private:
                                             // For more efficient use, using the object value is much faster, but requires an active/managed object (i.e. the caller
                                             // needs to know the object is valid.
 
-    int                       m_bPaintDisabled;    // TBD -- in an update, for more specific Windows uses, enabling/disabling painting is useful
     DialogStruct            * m_stPleaseWait        = nullptr;
     CButton                 * m_cPleaseWaitButton   = nullptr;      // These are deprecated
     CWindow                 * m_cPleaseWaitProgress = nullptr;      // These are deprecated
     int                       m_iProgressBarWidth;
     int                       m_iWindowLock = 0;
 
-    static CWindow            m_cEmptyWindow;           // Returned when control not found for any function that returns a conrol reference.
-    static CButton            m_cEmptyButton;           // Returned when control not found for any function that returns a conrol reference.
-    static CEditBox           m_cEmptyEditBox;          // Returned when control not found for any function that returns a conrol reference.
-    static CSlider            m_cEmptySlider;           // Returned when control not found for any function that returns a conrol reference.
-    static CListBox           m_cEmptyListBox;          // Returned when control not found for any function that returns a conrol reference.
-    static CDialog            m_cEmptyDialog;           // Returned when control not found for any function that returns a conrol reference.
 
     bool TranslateOptColor(char * sColor,DWORD & dwColor);
-    void InitWin(int iControl,CPasWindow * cWinCore,CDavinci * cDavinciMain);
+    void InitWin(int iControl,CPasWindow * cWinCore,CSageBox * cSageBox,CDavinci * cDavinciMain);
     CButton & NewButton(CButton * cUserButton,ButtonType eButtonType,int ix,int iy,int iWidth,int iHeight,const char * sText,const cwfOpt & cwfOpt = cwfOpt());
     CButton & NewButton(CButton * cUserButton,ButtonType eButtonType,int ix,int iy,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwfOpt = cwfOpt());
     int GetOptInt(const char * sFind,bool & bSet);
@@ -350,10 +361,13 @@ private:
     const char * GetInput(const char * sControls = nullptr,const char * sDefaultText = nullptr); 
     bool TranslateButtonStyle(SageString200 & stStyle,char * sStyle,char * sDefaultStyle,CStyleDefaults::ControlType eControlStyle,bool bStrict = false);
     bool AutoUpdate(Sage::UpdateDirty upDateDirty);
+    SIZE CreateGenericButtonGroup(bool bRadioButton,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+
 protected:
     friend DialogStruct;
     CUserWindow         * m_cUserWin        = nullptr;  // Main engine Window Interface
-    CDavinci            * m_cDavinciMain    = nullptr;  // Interface to CSageBox global functions
+    CDavinci            * m_cDavinciMain    = nullptr;  // Interface to CSageBox global functions (Deprecated)
+    CSageBox            * m_cSageBox        = nullptr;  // Main SageBox core
     CPasWindow          * m_cWinCore        = nullptr;  // Main core engine interface (CUserWindow's parent)
     CWindow             * m_cParent         = nullptr;  // Our Parent Window, if any
 
@@ -363,6 +377,15 @@ protected:
     // -----------------------------------------------------------------------------------------
 
 public:
+    // Empty controls used for various routine to return the empty controls rather than nullptrs, for fallthrough errors
+
+    static CWindow            m_cEmptyWindow;           // Returned when control not found for any function that returns a conrol reference.
+    static CButton            m_cEmptyButton;          
+    static CEditBox           m_cEmptyEditBox;         
+    static CSlider            m_cEmptySlider;          
+    static CListBox           m_cEmptyListBox;         
+    static CComboBox          m_cEmptyComboBox;        
+    static CDialog            m_cEmptyDialog;          
 
     // --------------------------------------------------------------------------------------------------------------
     // opt -- allows easy option-finding for writing Widgets and other functions that use options embedded in strings
@@ -445,6 +468,11 @@ public:
         void                SetOptLine(const char * sOptions);
     };
     WinOpt opt;
+
+    // Returns true if an event has occurred.  This can be used when GetEvent() isn't appropriate (such as in a loop that takes a lot of time)
+    // When GetEvent() is called, the Event Pending Status is cleared back to false
+    //
+    __forceinline bool EventReady() { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(); }
 
     // SetMessageHandler() -- Set the message handler for the window.  This overrides the default message handler.
     // This allows events such as OnMouseMove(), OnButton() press, as well as all other Windows Messages to be 
@@ -617,7 +645,10 @@ public:
     // allow such drawing and output in place of creating a child window to perform the same task.
     // Use  ResetClipWindow() or ClipWindow() (with no paramaters) to remove the clipping region
     //
-    bool ClipWindow(int iX,int iY,int iWidth,int iHeight);
+    // bAllowScroll allows the clip region to scroll based on writing text to the screen with '\n' newlines.
+    // Default is to not allow the clipping region to scroll.
+    //
+    bool ClipWindow(int iX,int iY,int iWidth,int iHeight,bool bAllowScroll = false);
 
     // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
     // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -625,7 +656,10 @@ public:
     // allow such drawing and output in place of creating a child window to perform the same task.
     // Use  ResetClipWindow() or ClipWindow() (with no paramaters) to remove the clipping region
     //
-    bool ClipWindow(POINT pPoint,SIZE szSize);
+    // bAllowScroll allows the clip region to scroll based on writing text to the screen with '\n' newlines.
+    // Default is to not allow the clipping region to scroll.
+    //
+    bool ClipWindow(POINT pPoint,SIZE szSize,bool bAllowsScroll = false);
 
     // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
     // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -951,21 +985,22 @@ public:
     //
     // This sets the Canvas size of the window (i.e. the drawable space), which can exceed the size of the window.
     //
-    bool SetCanvasSize(SIZE szSize);
+    bool SetCanvasSize(SIZE szMaxSize,bool bAllowResizing = true);
+    bool SetCanvasSize(SIZE szMinSize,SIZE szSize,bool bAllowResizing = true);
  
     // Set CanvasSize() -- Set the Canvas size of the window
     // This value must be greater than the displayed window canvas or it is ignored.
     //
     // This sets the Canvas size of the window (i.e. the drawable space), which can exceed the size of the window.
     //
-    bool SetCanvasSize(int iWidth,int iHeight);
-
-    // GetCanvasSize() -- Get the current canvas size (i.e. writeable/drawable part of the window)
+    bool SetCanvasSize(int iWidth,int iHeight,bool bAllowResizing = true);
+    bool AllowResizing(bool bAllowResizing = true);
+    // GetClientSize() -- Get the current client area size (i.e. writeable/drawable part of the window)
     // This value may be larger than the visible window.
     //
     // GetWindowSize(), for example, returns the visible canvas area.
     //
-    bool GetCanvasSize(SIZE & Size);
+    bool GetClientSize(SIZE & Size);
 
     // UpdateRegion() - Update a region of the window
     //
@@ -1015,7 +1050,15 @@ public:
     // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
     // will center the text in the X plane.
     //
-    bool GetTextSize(wchar_t * sText,SIZE & Size);
+    SIZE GetTextSize(const wchar_t * sText);
+  
+    // GetTextSize() -- Get the text size of the text using the current font.
+    //
+    // This returns the size the text will use in the window.  This can help with the placement of the text or controls around the text.
+    // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
+    // will center the text in the X plane.
+    //
+    SIZE GetTextSize(HFONT hFont,const wchar_t * sText);
 
     // GetTextSize() -- Get the text size of the text using the current font.
     //
@@ -1032,6 +1075,8 @@ public:
     // will center the text in the X plane.
     //
     SIZE GetTextSize(const char * sText);
+    SIZE GetTextSize(HFONT hFont,const char * sText);
+    bool GetTextSize(HFONT hFont,const char * sText,SIZE & Size);
 
     // AddWindowShadow() -- Adds a shadow to the window.  This can be useful for popup-windows or
     // child windows embedded in the current window.
@@ -1060,6 +1105,10 @@ public:
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
     bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        
+
+    bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
+    bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
+    bool DrawGradient(RECT rGradientRect,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
 
     // Recangle() -- Put out a filled or outlined rectangle to the window.
     //
@@ -1138,47 +1187,42 @@ public:
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
     bool DrawLine(int ix1,int iy1,int ix2,int iy2,int iColor);
+    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,int iColor);
     
     // SetPenThickness -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
     //
     // This value defaults to 1, but can be set prior to drawing any control that uses an outline or draws a line.
-    // SetPenThickness() must be used again to revert back to the original thickness. 
+    // SetPenThickness() must be used again to revert back to the original thickness.  
+    // 
+    // SetPenThickness() returns the new thickness of the pen -- this useful to ensure the value does not 
+    // go below the minimum of 1.
     //
-    bool SetPenThickness(int iThickness);
+    int SetPenThickness(int iThickness);
+    int GetPenThickness();
 
-    // SetPixel() draw a piel on the screen. 
+    // DrawPixel() draw a piel on the screen. 
     //
     // This sets a pixel on the screen and can be useful in prototyping and general drawing.
-    // However, note that SetPixel() used when drawing an entire array (i.e. a bitmap or an image)
+    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
     // is very slow! 
     //
     // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
     // and then call DrawBitmap() to display multiple pixels at a time.
     //
-    bool SetPixel(int iX,int iY,DWORD dwColor);
+    bool DrawPixel(int iX,int iY,DWORD dwColor);
  
-    // SetPixel() draw a piel on the screen. 
+    // DrawPixel() draw a piel on the screen. 
     //
     // This sets a pixel on the screen and can be useful in prototyping and general drawing.
-    // However, note that SetPixel() used when drawing an entire array (i.e. a bitmap or an image)
+    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
     // is very slow! 
     //
     // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
     // and then call DrawBitmap() to display multiple pixels at a time.
     //
-    bool SetPixel(int iX,int iY,RGBColor_t rgbColor);               // $$ Form outdated -- rgbColor converts automatically to DWORD
-    // SetPixel() draw a piel on the screen. 
-    //
-    // This sets a pixel on the screen and can be useful in prototyping and general drawing.
-    // However, note that SetPixel() used when drawing an entire array (i.e. a bitmap or an image)
-    // is very slow! 
-    //
-    // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
-    // and then call DrawBitmap() to display multiple pixels at a time.
-    //
-    bool SetPixel(int iX,int iY,RGBColor24 rgbColor);            // $$ Form outdated -- RGBColor24 should convert automatically to DWORD
-
-
+    bool DrawPixel(int iX,int iY,RGBColor_t rgbColor);               // $$ Form outdated -- rgbColor converts automatically to DWORD
+ 
+                                                                     // DrawPixel() draw a piel on the screen. 
     // Show() -- Show the window (i.e. make it visible)
     //
     // If the window is not showing on the screen, Show() will make it visible.
@@ -1415,7 +1459,8 @@ public:
         CPasWindow * m_cWinCore            ;
         void InitDialog(DialogStruct & stDialog,const char * sTitle,const char * sOptions,DialogStruct::TitleIconType eDefault);
         bool    m_bYesNoCancel;            // For YesNoCancel to call YesNo() and get cancel status
-
+        bool  * m_bPleaseWaitSignal = nullptr; 
+        CButtonHandler * m_cPleaseWaitButtonHandler = nullptr;
     public:
         // QuickButton() -- Put up a quick button and information line. 
         //
@@ -1454,6 +1499,8 @@ public:
         DialogResult YesNoCancel(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
         bool OkCancel(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
+        bool SetPleaseWaitSignal(bool * bSignal); 
+        void RemovePleaseWaitSignal();
         // PleaseWaitWindow() - Open Please Wait Window
         //
         // Input String:
@@ -1654,7 +1701,7 @@ public:
         // When bPeek is false, this is a one-time only call, returning of a button in the group was pressed.
         // A subsequent call will return false until another button is pressed.
         //
-        bool isPressed(const char * sGroup,bool bPeek = false,int * iPressedID = nullptr);
+        bool isPressed(const char * sGroup,Peek peek = Peek::No,int * iPressedID = nullptr);
 
         // group.isPressed() -- Returns whether or not a button in the group specified was pressed.
         // This has many variations to look at a Group ID number or string, as well as provisions to
@@ -1663,7 +1710,7 @@ public:
         // When bPeek is false, this is a one-time only call, returning of a button in the group was pressed.
         // A subsequent call will return false until another button is pressed.
         //
-        bool isPressed(int iGroup,bool bPeek = false,int * iPressedID = nullptr);
+        bool isPressed(int iGroup,Peek peek = Peek::No,int * iPressedID = nullptr);
 
         // group.isPressed() -- Returns whether or not a button in the group specified was pressed.
         // This has many variations to look at a Group ID number or string, as well as provisions to
@@ -1683,6 +1730,8 @@ public:
         //
         bool isPressed(int iRadioGroup,int & iPressedID);
 
+#if 0
+        // GetPressed() has been deprecated
 
         // Group::GetPressed()
         //
@@ -1717,6 +1766,16 @@ public:
         // a button has been pressed.  Note that this only works once (unless bPeek is set) so that you do not need to reset the button status.
         //
         int GetPressed(int iRadioGroup,bool bRemove = false);
+#endif
+        // GetChecked() -- returns the button ID of a checked Radio Button
+        // This only works for RadioButtons.
+        //
+        // In a RadioButton group, one button is always checked (as opposed to Checkboxes where any checkbox may
+        // be checked or unchecked). 
+        //
+        // GetChecked() returns the ID if the radio button checked in the group specified.
+        //
+        int GetChecked(const char * sGroupID);
 
         // GetChecked() -- returns the button ID of a checked Radio Button
         // This only works for RadioButtons.
@@ -1726,17 +1785,11 @@ public:
         //
         // GetChecked() returns the ID if the radio button checked in the group specified.
         //
-        int GetChecked(const char * sRadioGroup);
+        int GetChecked(int iGroupID);
 
-        // GetChecked() -- returns the button ID of a checked Radio Button
-        // This only works for RadioButtons.
-        //
-        // In a RadioButton group, one button is always checked (as opposed to Checkboxes where any checkbox may
-        // be checked or unchecked). 
-        //
-        // GetChecked() returns the ID if the radio button checked in the group specified.
-        //
-        int GetChecked(int iRadioGroup);
+        bool SetCheck(int iGroupID,int iControlID); 
+        bool SetCheck(const char * sGroupID,int iControlID); 
+
 
         // GetGroupID() -- Returns the group ID of a group specified with a string.
         //
@@ -1760,6 +1813,21 @@ public:
         // the first usage of a Group ID or Name creates the group when it is first seen.
         //
         int CreateGroup(const char * sGroupName,GroupType eGroupType = GroupType::Undefined); 
+       SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+       SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+       CButton * GetButton(int iGroupID, int iPosition);
+       bool Enable(int iGroupID,bool bEnable);
+       bool Disable(int iGroupID,bool bDisable);
+
+        bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const wchar_t * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+        bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const wchar_t * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+        bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const char * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+        bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+
+
+
+       bool SetHoverMsg(int iGroupID,int iPosition,const char * sMessage); 
+
     };
 
     // Location for group functions that can help using buttons, edit boxes, and other controls by grouping them together
@@ -1870,7 +1938,7 @@ public:
     // event functions
     // -------------------------
     //
-    // This is where all event function calls are collected.  In most cases, these can be called withou the 'event.' identifier, as they are
+    // This is where all event function calls are collected.  In most cases, these can be called without the 'event.' identifier, as they are
     // replicated in the CWindow class.
     //
     // However, using "event." will cause the list of options to appear so that all event possibilities can be seen easily.
@@ -1895,7 +1963,7 @@ public:
         //
         // Use GetMouseClickPos() to retrieve the last mouse-click coordinates.
         //
-        bool MouseClicked(bool bPeek = false);
+        bool MouseClicked(Peek peek = Peek::No);
 
         // LButtonPressed() -- returns true if the Left Mouse Button was clicked (same as MouseClicked())
         //
@@ -1909,7 +1977,7 @@ public:
         //
         // Use GetMouseClickPos() to retrieve the last mouse-click coordinates.
         //
-        bool LButtonPressed(bool bPeek = false);
+        bool LButtonPressed(Peek peek = Peek::No);
 
         // RButtonPressed() -- returns true if the Right Mouse Button was clicked
         //
@@ -1923,7 +1991,7 @@ public:
         //
         // Use GetMouseClickPos() to retrieve the last mouse-click coordinates.
         //
-        bool RButtonPressed(bool bPeek = false);
+        bool RButtonPressed(Peek peek = Peek::No);
  
         // LButtonUnpressed() -- returns true when the left button is unclicked.
         //
@@ -1935,7 +2003,7 @@ public:
         // must be read once without bPeek == true in order for the flag to be reset for the next 
         // event.
         //
-        bool LButtonUnpressed(bool bPeek = false);
+        bool LButtonUnpressed(Peek peek = Peek::No);
 
         // RButtonUnpressed() -- returns true when the right button is unclicked.
         //
@@ -1947,7 +2015,7 @@ public:
         // must be read once without bPeek == true in order for the flag to be reset for the next 
         // event.
         //
-        bool RButtonUnpressed(bool bPeek = false);
+        bool RButtonUnpressed(Peek peek = Peek::No);
 
         // Returns true if the mouse was moved
         // This is an event and is a one-time only read so that the status is reset 
@@ -1961,7 +2029,7 @@ public:
         // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
         // You can also use GetMousePos() to retrieve the current mouse cooordinates.
         //
-        bool MouseMoved(bool bPeek = false);
+        bool MouseMoved(Peek peek = Peek::No);
 
         // Returns true if the mouse was moved
         // This is an event and is a one-time only read so that the status is reset 
@@ -1988,7 +2056,7 @@ public:
         // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
         // which case it is untouched.
         //
-        int       ButtonPressed(bool bPeek = false)                         ;
+        int       ButtonPressed(Peek peek = Peek::No)                         ;
 
         // ButtonPressed() -- returns the ID of a button that has an active "press" status.
         // When a button is pressed, the individual Button.Pressed() function can be called to determine the press event.
@@ -2001,21 +2069,21 @@ public:
         // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
         // which case it is untouched.
         //
-        bool      ButtonPressed(int & iButtonID,bool bPeek = false)         ;
+        bool      ButtonPressed(int & iButtonID,Peek peek = Peek::No)         ;
 
         // MenuItemSelected() -- This works as an event, and will fill the menu item if it is selected.
         // As an event, subsquent calls will return false and not fill the menu item until another menu item is selected.
         //
         // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
         //
-        bool      MenuItemSelected(int & iMenuItem,bool bPeek = false)      ;
+        bool      MenuItemSelected(int & iMenuItem,Peek peek = Peek::No)      ;
 
         // MenuItemSelected() -- This works as an event, and will fill the menu item if it is selected.
         // As an event, subsquent calls will return false and not fill the menu item until another menu item is selected.
         //
         // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
         //
-        bool      MenuItemSelected(bool bPeek = false)                      ;
+        bool      MenuItemSelected(Peek peek = Peek::No)                      ;
 
         // Retrieves the last menu item selected.
         // 
@@ -2034,20 +2102,22 @@ public:
         // This is not a mouse event and returns the real-time status of the mouse.
         //
         bool MouseRButtonDown();
+        bool MouseRButtonClicked(POINT & pPoint,Peek peek = Peek::No);
+        bool MouseRButtonClicked(Peek peek);
 
         // Returns true of the middle mouse button mouse was double clicked.
         // *** This function is still in development and may not work.
         // This is tied to the status of the window an whether or not it will accept double-clicks.
         //
-        bool      MouseDoubleClicked();     
+        bool MouseDoubleClicked();     
 
         // GetMousePos() -- Returns the current mouse coordinates relative to the window
         //
-        bool      GetMousePos(int & iMouseX,int & iMouseY);
+        bool GetMousePos(int & iMouseX,int & iMouseY);
 
         // GetMousePos() -- Returns the current mouse coordinates relative to the window
         //
-        POINT     GetMousePos();     
+        POINT GetMousePos();     
 
         // GetMouseClickPos() -- Returns the last mouse click coordinates.
         //
@@ -2110,23 +2180,44 @@ public:
         // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
         // only events are returned and it is not caught in a spining loop. 
         //
-        bool      EventLoop(WaitEvent * eStatus = nullptr);
+        bool EventLoop(WaitEvent * eStatus = nullptr);
+        
+        // EventLoop() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
+        //
+        // This is the Main Event Loop for procedurally-driven programs to capture events without using event callbacks.
+        //
+        // EventLoop() returns for relavent events from the user.  It does not return for all Windows events, only those that affect the running of the
+        // program.  All Windows message events can be intercepted by subclassing the window or using SetMessageHandler() to capture all messages.
+        //
+        //
+        // EventLoop() returns if the window is closing with the WaitEvent::WindowClosing status. 
+        // 
+        // Important Note:  Make sure EventLoop() does not return until it sees events.  With empty windows or corrupted windows, EventLoop()
+        // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
+        // only events are returned and it is not caught in a spining loop. 
+        //
+        bool GetEvent(WaitEvent * eStatus = nullptr);
 
         // WaitforCLose() -- Wait for the window to close.  
         // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
         // This can be a quick method to stop program execution and prevent exiting the program until the window is closed.
         //
-        void      WaitforClose();     
+        void WaitforClose();     
 
+        // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
+        // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
+        //
+        bool ExitButton(const char * sText = nullptr);
+ 
         // Returns true if the 'X' button was pressed in the window or the window is closing for some other reason.
         // 
-        // By default in Sagelight, main windows do not close when the 'X' button is pressed.  Instead, the WindowClosing() flag
+        // By default in Sagebox, main windows do not close when the 'X' button is pressed.  Instead, the WindowClosing() flag
         // is set so that it can be handled by the user's code. 
         //
         // When the Window is closed, it is up to the code to determine whether or not to close the window.  In some cases, a dialog can be used to determine
         // whether or not the user wants to close the window, to save unsaved items, etc.
         //
-        // Important Note:  Many blocking Sagelight functions (such as dialogs and other functions that wait for button presses) will exit or fallthrough when 
+        // Important Note:  Many blocking Sagebox functions (such as dialogs and other functions that wait for button presses) will exit or fallthrough when 
         // the Window close button has been pressed.
         //
         // See CLoseButtonPressed() to determine if the Window is closing because of a 'X' button press or some other reason.
@@ -2141,8 +2232,35 @@ public:
         // This can be used when a user has pressed the close button and CloseButtonPessed() returns true.
         // To cancel the user-based close, call ResetWindowClosing()
         //
-        bool      ResetWindowClosing();     
+        bool ResetWindowClosing();    
 
+        // Set the Window status as closing.  This causes WindowClosing() to return true. 
+        // if bPressCloseButton is TRUE, then this also presses the close button and also sends any signals attached to it. 
+        //
+        // Pressing the close button through the bPressCloseButtonFlag allows functions to check the one-time press event and react to it
+        // one time, rather than WindowClosing() that always remains true unless reset. 
+        //
+        bool SetWindowClosing(bool bPressCloseButton = false);     
+
+        bool MouseWheelMoved(Peek peek = Peek::No);
+        bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No);
+        int GetMouseWheelMove(bool bResetEvent = false); 
+
+        bool WindowResized(Peek peek = Peek::No);
+        bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No);
+
+        // Returns TRUE when the mouse capture has been release.  This only returns true when
+        // the mouse capture previously engaged for the window has been released.
+        //
+        // This returns an event status.  Therefore, the event is reset after the call and will return false 
+        // afterward until a subsequent release -- unless peek is set to Peek::No, in which case the status is not reset
+        //
+        bool CaptureReleased(Peek peek = Peek::No);
+
+        // Returns true if an event has occurred.  This can be used when GetEvent() isn't appropriate (such as in a loop that takes a lot of time)
+        // When GetEvent() is called, the Event Pending Status is cleared back to false
+        //
+        __forceinline bool EventReady() { return !m_cWin ? false : m_cWin->EventReady(); };
     };
 
     WinEvent event;
@@ -2189,8 +2307,10 @@ public:
     private:
         CWindow * m_cWin                ;
     public:
-        [[nodiscard]] RawBitmap_t CreateBitmap(int iWidth,int iHeight);
+        [[nodiscard]] RawBitmap_t CreateBitmap(int iWidth,int iHeight = 1);
         [[nodiscard]] RawBitmap_t ReadBitmap(const char * sPath,bool * bSucceeded = nullptr);
+        bool SendtoClipboard(RawBitmap_t & stBitmap); 
+
     };
 
     WinBitmap bitmap;
@@ -3227,7 +3347,7 @@ public:
         // allow such drawing and output in place of creating a child window to perform the same task.
         // Use  ResetClipWindow() or ClipWindow() (with no paramaters) to remove the clipping region
         //
-        bool ClipWindow(int iX,int iY,int iWidth,int iHeight);
+        bool ClipWindow(int iX,int iY,int iWidth,int iHeight,bool bAllowScroll = false);
 
         // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
         // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -3235,7 +3355,7 @@ public:
         // allow such drawing and output in place of creating a child window to perform the same task.
         // Use  ResetClipWindow() or ClipWindow() (with no paramaters) to remove the clipping region
         //
-        bool ClipWindow(POINT pPoint,SIZE szSize);
+        bool ClipWindow(POINT pPoint,SIZE szSize,bool bAllowScroll = false);
 
         // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
         // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -3423,7 +3543,7 @@ public:
         // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
         // will center the text in the X plane.
         //
-        bool GetTextSize(wchar_t * sText,SIZE & Size);
+    //    bool GetTextSize(wchar_t * sText,SIZE & szSize); -- deprecated
 
         // GetTextSize() -- Get the text size of the text using the current font.
         //
@@ -3431,7 +3551,7 @@ public:
         // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
         // will center the text in the X plane.
         //
-        bool GetTextSize(const char * sText,SIZE & Size);
+        bool GetTextSize(const char * sText,SIZE & szSize);
 
         // GetTextSize() -- Get the text size of the text using the current font.
         //
@@ -3584,7 +3704,9 @@ public:
     //
     CListBox & listbox(int iListBoxID);
 
-    // Return a CWindow & for a Window with a Name or an ID. 
+    CComboBox & combobox(int iComboBoxID);
+    CComboBox & combobox(const char * sComboBoxName);
+  // Return a CWindow & for a Window with a Name or an ID. 
     //
     // For example, for this Window: NewWindow(10,20,800,600,"MyWindow,ID(1))
     // auto& MyWindow = window(1) will retrieve the Window.
@@ -3650,6 +3772,23 @@ public:
     // a false return. 
     //
     bool DisplayBitmap(int iX,int iY,RawBitmap32_t & stBitmap);    
+ 
+    // Display a Bitmap on the window.
+    // 
+    // ** Note: ** -- this displayed aligned bitmaps, where each row must be divisible by 4, in which 
+    // case some rows must be padded. 
+    //
+    // DisplayBitmap() shows a bitmap on the window at the specified (iX,iY) coordinates on the screen.
+    // Raw data can be used, in which case the width, height, and memory pointer must also be supplied.
+    // RawBitmap_t and CSageBitmap can also be used, in which case only the iX, and iY parameters are necessary.
+    //
+    // Note: Negate the height to display the bitmap upside-down.  In the case of RawBitmap_t or CSageBitmap, put
+    // a '-' sign in front of the bitmap structure.  DisplayBitmapR() can also be used.
+    //
+    // In the case of RawBitmap_t and CSageBitmap, bad or corrupted bitmaps are not displayed and passed through with 
+    // a false return. 
+    //
+    bool DisplayBitmap(RawBitmap32_t & stBitmap);    
 
     // Display a Bitmap on the window.
     // 
@@ -3684,6 +3823,23 @@ public:
     // a false return. 
     //
     bool DisplayBitmap(int iX,int iY,RawBitmap_t & stBitmap);    
+ 
+    // Display a Bitmap on the window.
+    // 
+    // ** Note: ** -- this displayed aligned bitmaps, where each row must be divisible by 4, in which 
+    // case some rows must be padded. 
+    //
+    // DisplayBitmap() shows a bitmap on the window at the specified (iX,iY) coordinates on the screen.
+    // Raw data can be used, in which case the width, height, and memory pointer must also be supplied.
+    // RawBitmap_t and CSageBitmap can also be used, in which case only the iX, and iY parameters are necessary.
+    //
+    // Note: Negate the height to display the bitmap upside-down.  In the case of RawBitmap_t or CSageBitmap, put
+    // a '-' sign in front of the bitmap structure.  DisplayBitmapR() can also be used.
+    //
+    // In the case of RawBitmap_t and CSageBitmap, bad or corrupted bitmaps are not displayed and passed through with 
+    // a false return. 
+    //
+    bool DisplayBitmap(RawBitmap_t & stBitmap);    
 
     // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
     // Windows behavior is to correct this.
@@ -3729,19 +3885,24 @@ public:
     //
     bool DisplayBitmap32(int iX,int iY,RawBitmap32_t & stBitmap);    
  
+    //Display a 32-bit bitmap. 
+    //
+    // This function is the same as DisplayBitmap(), except that it displays a 32-bit bitmap. 
+    //
+    // iX,iY must be specified for the location of the displayed bitmap.
+    // For raw data, Width,Height, and memory pointer must also be displayed.
+    //
+    // See DisplayBitmap() for more information
+    //
+    bool DisplayBitmap32(RawBitmap32_t & stBitmap);    
+ 
     // Blend a bitmap with a pre-defined mask
     //
-    // This function is deprecated and will be replaced soon
-    // to use a bitmap and a mask together
-    //
-    bool BlendBitmap(int iX,int iY,CSageBitmap & cBitmap);    
+    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap);
 
     // Blend a bitmap with a pre-defined mask
     //
-    // This function is deprecated and will be replaced soon
-    // to use a bitmap and a mask together
-    //
-    bool BlendBitmap(int iX,int iY, RawBitmap32_t & stSource);
+    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap,RawBitmap_t & stMask);
 
     // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
     //
@@ -3755,7 +3916,7 @@ public:
     //
     // PushFont can be used for up to 32 Fonts on the stack at a time
     //
-    HFONT PushFont(char * sFont);
+    HFONT PushFont(const char * sFont);
 
     // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
     //
@@ -3790,7 +3951,7 @@ public:
     //
     // PushColor can be used for up to 32 colors on the stack at a time
     //
-    bool PushColor(DWORD dwFgColor = -1,DWORD dwBgColor = -1);
+    bool PushColor(DWORD dwFgColor,DWORD dwBgColor = -1);
 
     // PushColor() -- Push the current Background and Foreground colors for later retrieval.
     // This can also be used to simultaneously set colors.
@@ -3925,6 +4086,8 @@ public:
     // This is not a mouse event and returns the real-time status of the mouse.
     //
     bool MouseRButtonDown();
+    bool MouseRButtonClicked(POINT & pPoint,Peek peek = Peek::No);
+    bool MouseRButtonClicked(Peek peek = Peek::No);
 
     // Returns true if the mouse was moved
     // This is an event and is a one-time only read so that the status is reset 
@@ -3938,7 +4101,7 @@ public:
     // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
     // You can also use GetMousePos() to retrieve the current mouse cooordinates.
     //
-    bool MouseMoved(bool bPeek = false);
+    bool MouseMoved(Peek peek = Peek::No);
 
     // Returns true if the mouse was moved
     // This is an event and is a one-time only read so that the status is reset 
@@ -3966,7 +4129,7 @@ public:
     // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
     // which case it is untouched.
     //
-    int ButtonPressed(bool bPeek = false);
+    int ButtonPressed(Peek peek = Peek::No);
 
     // ButtonPressed() -- returns the ID of a button that has an active "press" status.
     // When a button is pressed, the individual Button.Pressed() function can be called to determine the press event.
@@ -3979,7 +4142,7 @@ public:
     // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
     // which case it is untouched.
     //
-    bool ButtonPressed(int & iButtonID,bool bPeek = false);
+    bool ButtonPressed(int & iButtonID,Peek peek = Peek::No);
 
     // MouseClicked() -- returns true if the Left Mouse Button was clicked.
     //
@@ -3994,7 +4157,7 @@ public:
     // Include a POINT (i.e. MouseClicked(MyPoint)) to get the mouse-click coodrinates.
     // You can also use GetMouseClickPos() to retrieve the last mouse-click coordinates.
     //
-    bool MouseClicked(bool bPeek = false);
+    bool MouseClicked(Peek peek = Peek::No);
 
     // MouseClicked() -- returns true if the Left Mouse Button was clicked.
     //
@@ -4036,6 +4199,12 @@ public:
     // This works for both left button and right button clicks.
     //
     POINT GetMouseClickPos();
+
+    bool MouseWheelMoved(Peek peek = Peek::No);
+    bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No);
+    int GetMouseWheelMove(bool bResetEvent = true);
+    bool WindowResized(Peek peek = Peek::No);
+    bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No);
 
     // SetWritePos() -- Set the output position in the Window for writing text. 
     // 
@@ -4099,13 +4268,13 @@ public:
 
     // Returns true if the 'X' button was pressed in the window or the window is closing for some other reason.
     // 
-    // By default in Sagelight, main windows do not close when the 'X' button is pressed.  Instead, the WindowClosing() flag
+    // By default in Sagebox, main windows do not close when the 'X' button is pressed.  Instead, the WindowClosing() flag
     // is set so that it can be handled by the user's code. 
     //
     // When the Window is closed, it is up to the code to determine whether or not to close the window.  In some cases, a dialog can be used to determine
     // whether or not the user wants to close the window, to save unsaved items, etc.
     //
-    // Important Note:  Many blocking Sagelight functions (such as dialogs and other functions that wait for button presses) will exit or fallthrough when 
+    // Important Note:  Many blocking Sagebox functions (such as dialogs and other functions that wait for button presses) will exit or fallthrough when 
     // the Window close button has been pressed.
     //
     // See CLoseButtonPressed() to determine if the Window is closing because of a 'X' button press or some other reason.
@@ -4121,6 +4290,8 @@ public:
     // To cancel the user-based close, call ResetWindowClosing()
     //
     bool ResetWindowClosing();
+    bool SetWindowClosing(bool bPressCloseButton = false);
+    bool PressCloseButton(); 
 
     // CloseButtonPressed() -- Returns true of the close buttton was pressed.
     //
@@ -4284,6 +4455,7 @@ public:
     // SetMessageHandler() may also be used.
     //
     CWindow & ChildWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & ChildWindow(POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());
 
     // Create a new Child Window within the parent window. 
     // This created an embedded window that is the same as other windows (and, in fact, return CWindow)
@@ -4303,6 +4475,7 @@ public:
     // SetMessageHandler() may also be used.
     //
     CWindow & ChildWindow(CWindow * cWindow,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & ChildWindow(CWindow * cWindow,POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -4436,7 +4609,7 @@ public:
 
     // MakeColor() -- Make a named system color useable throughout SageBox functions.
     //
-    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagelight
+    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagebox
     // functions.
     //
     // Example:
@@ -4452,7 +4625,7 @@ public:
 
     // MakeColor() -- Make a named system color useable throughout SageBox functions.
     //
-    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagelight
+    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagebox
     // functions.
     //
     // Example:
@@ -4528,6 +4701,7 @@ public:
     // Update prior to executing to ensure the screen is up-to-date.
     //
     void SetAutoUpdate(bool bAuto = true);
+    void SetAutoUpdate(AutoUpdateType update);
  
     // Create a new button on the window. 
     //
@@ -5139,7 +5313,18 @@ public:
     // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
     // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    [[nodiscard]] RawBitmap_t GetWindowBitmap(POINT pLoc,SIZE szSize);
+    CSageBitmap GetWindowBitmap(POINT pLoc,SIZE szSize);
+    
+    // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
+    // and other functions.
+    //
+    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
+    // RawBitmap_t::Delete() must be called to delete this memory.
+    //
+    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
+    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //
+    CSageBitmap GetWindowBitmap();
 
     // SendWidgetMessage()
     // 
@@ -5209,12 +5394,35 @@ public:
     // only events are returned and it is not caught in a spining loop. 
     //
     bool EventLoop(WaitEvent * eStatus = nullptr); 
+ 
+    // GetEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
+    //
+    // This is the Main Event Loop for procedurally-driven programs to capture events without using event callbacks.
+    //
+    // EventLoop() returns for relavent events from the user.  It does not return for all Windows events, only those that affect the running of the
+    // program.  All Windows message events can be intercepted by subclassing the window or using SetMessageHandler() to capture all messages.
+    //
+    //
+    // EventLoop() returns if the window is closing with the WaitEvent::WindowClosing status. 
+    // 
+    // Important Note:  Make sure EventLoop() does not return until it sees events.  With empty windows or corrupted windows, EventLoop()
+    // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
+    // only events are returned and it is not caught in a spining loop. 
+    //
+    bool GetEvent(WaitEvent * eStatus = nullptr);
 
     // WaitforCLose() -- Wait for the window to close.  
     // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
     // This can be a quick method to stop program execution and prevent exiting the program until the window is closed.
     //
     void WaitforClose();
+    bool WaitforMouseClick();    // false return means window is closing down
+
+    // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
+    // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
+    //
+    bool ExitButton(const char * sText = nullptr);
+ 
 
     // EnableWindow() -- Enables or Disables the Window and all controls within the window
     //
@@ -5247,7 +5455,20 @@ public:
     // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
     // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    [[nodiscard]] RawBitmap_t GetBitmapStruct(int iWidth,int iHeight = 1);
+    CSageBitmap CreateBitmap(int iWidth,int iHeight = 1);
+
+    // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
+    // If Height is omitted, a Bitmap structure of height 1 is returned.
+    //
+    // This is returned as an aligned 8-bit-per-channel bitmap.
+    //
+    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
+    // RawBitmap_t::Delete() must be called to delete this memory.
+    //
+    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
+    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //
+    CSageBitmap CreateBitmap(SIZE szBitmapSize);
  
     // GetBitmapStruct32() -- Returns a 32-bit RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -5363,11 +5584,18 @@ public:
     // With drawing and other routines, sometimes keeping the mouse input even ouside the window is important.
     // CaptureMouse() does this.
     //
+    // The parameter, "bReleaseOnMouseUp" tells SageBox to release the capture when the user lifts the mouse button up
+    // (this is assuming the capture was started because the mouse button is down).  In most cases, the capture is only
+    // needed while the mouse button is down, and this provides the convenience of removing it afterwrd.
+    // Default for bReleaseOnMouseUp is FALSE
+    //
+    // *** Otherwise, without "bReleaseOnMouseUp" TRUE, you must release the capture with MouseCapture() ***
+    //
     // Note: The mouse capture can be released independently of ReleaseCapture() is MouseCaptured() or
     // catch the OnCaptureChange() Message (which is only called when the capture is released) to 
     // monitor the capture status
     //
-    bool CaptureMouse(); 
+    bool CaptureMouse(bool bReleaseOnMouseUp = false); 
 
     // ReleaseCapture() -- this releases a mouse capture in the current window or control
     // This can be used to release the capture, such as when the mouse button is released. 
@@ -5387,6 +5615,14 @@ public:
     // put isMouseCaptured() to monitor the status (unless using OnCaptureChanged())
     //
     bool isMouseCaptured();
+
+    // Returns TRUE when the mouse capture has been release.  This only returns true when
+    // the mouse capture previously engaged for the window has been released.
+    //
+    // This returns an event status.  Therefore, the event is reset after the call and will return false 
+    // afterward until a subsequent release -- unless peek is set to Peek::No, in which case the status is not reset
+    //
+    bool CaptureReleased(Peek peek = Peek::No);
 
     // Delete the window.  This closes the window permanently.  All data associated with the window
     // is closed when the parent window is deleted. 
@@ -5615,7 +5851,7 @@ public:
     // 
     // When Sagebox calls the Widget::Register() function, the widget calls this function,
     // which fille the provided RegistryID with an ID for the widget that it can use to work with dialog boxes
-    // created by Sagelight.
+    // created by Sagebox.
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
@@ -5634,7 +5870,8 @@ public:
     //
     // CWidget -- the widget can send in its cWidget when a Snap action needs to change the color of the window (otherwise nothing is done)
     //
-    bool SnaptoWin(CWindow * cWin,int iPadX,int iPadY,Snap eAction = Snap::NoAction,CWidget * cWidget = nullptr);
+    bool SnaptoWin(CWindow * cWin,int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);
+    bool SnaptoDesktop(int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);
 
     // NewDialog() -- Create a new dialog window. 
     // This returns with a CDialog class that allows you to build a dialog window.
@@ -5781,6 +6018,78 @@ public:
     //
     bool GetOpenFile(CString & csFilename);
 
+
+    CString GetSaveFile(stOpenFileStruct & stFile);
+ 
+    // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
+    // 
+    // CString comes back empty if no file is chosen.
+    // If CString is specified in the function, a bool is returned: TRUE if there is a filename,
+    // FALSE if aborted by the user.
+    // 
+    // Use GetOpenFleStruct() or declare stOpenFileStruct to fill the structure.
+    //
+    // See notes on stOpenFilestruct to fill the requirements properly.
+    //
+    // This blocks program execution until the user selects a file or cancels.
+    //
+    // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
+    // Note: Use ';' to separate types.
+    //
+    CString GetSaveFile(const char * sTypes = nullptr);
+    
+    // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
+    // 
+    // CString comes back empty if no file is chosen.
+    // If CString is specified in the function, a bool is returned: TRUE if there is a filename,
+    // FALSE if aborted by the user.
+    // 
+    // Use GetOpenFleStruct() or declare stOpenFileStruct to fill the structure.
+    //
+    // See notes on stOpenFilestruct to fill the requirements properly.
+    //
+    // This blocks program execution until the user selects a file or cancels.
+    //
+    // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
+    // Note: Use ';' to separate types.
+    //
+    bool GetSaveFile(stOpenFileStruct & stFile,CString & csFilename);
+
+    // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
+    // 
+    // CString comes back empty if no file is chosen.
+    // If CString is specified in the function, a bool is returned: TRUE if there is a filename,
+    // FALSE if aborted by the user.
+    // 
+    // Use GetOpenFleStruct() or declare stOpenFileStruct to fill the structure.
+    //
+    // See notes on stOpenFilestruct to fill the requirements properly.
+    //
+    // This blocks program execution until the user selects a file or cancels.
+    //
+    // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
+    // Note: Use ';' to separate types.
+    //
+    bool GetSaveFile(const char * sTypes,CString & csFilename);
+
+    // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
+    // 
+    // CString comes back empty if no file is chosen.
+    // If CString is specified in the function, a bool is returned: TRUE if there is a filename,
+    // FALSE if aborted by the user.
+    // 
+    // Use GetOpenFleStruct() or declare stOpenFileStruct to fill the structure.
+    //
+    // See notes on stOpenFilestruct to fill the requirements properly.
+    //
+    // This blocks program execution until the user selects a file or cancels.
+    //
+    // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
+    // Note: Use ';' to separate types.
+    //
+    bool GetSaveFile(CString & csFilename);
+
+
     // GetOpenFileStruct() -- Return an stOpenFileStruct to set for using an GetOpenFile() or GetSaveFile() dialog.
     //
     // This is a shortcut for declaring a structure directly, so that auto& stStruct = GetOpenFileStruct() can be used
@@ -5801,7 +6110,7 @@ public:
     //
     // See CMenu documentation for more information.
     //
-    CMenu CreateMenu(void);
+    [[nodiscard]] CMenu CreateMenu(int iBaseMenuValue = 0);
 
     // Find a Windows menu.  If the HMENU (Windows Menu) value is a valid windows menu, a CMenu object is returned for this menu.
     //
@@ -5816,14 +6125,14 @@ public:
     //
     // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
     //
-    bool MenuItemSelected(int & iMenuItem,bool bPeek = false);
+    bool MenuItemSelected(int & iMenuItem,Peek peek = Peek::No);
 
     // MenuItemSelected() -- This works as an event, and will fill the menu item if it is selected.
     // As an event, subsquent calls will return false and not fill the menu item until another menu item is selected.
     //
     // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
     //
-    bool MenuItemSelected(bool bPeek = false);
+    bool MenuItemSelected(Peek peek = Peek::No);
 
     // Retrieves the last menu item selected.
     // 
@@ -5832,6 +6141,9 @@ public:
     // This will continue to return the same menu item until a new menu item is selected.
     //
     int GetMenuItem();
+
+    bool SetCloseButtonMenu(int iMenuItem = 0);
+
 
     // ReadJpegFile -- Read a jpeg file and store it into a CSageBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
@@ -5872,7 +6184,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,ThumbType eType,const char * sTitle = nullptr);
+    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
  
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -5886,7 +6198,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle = nullptr);
+    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
 
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -5900,7 +6212,7 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType,const char * sTitle = nullptr);
+    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -5914,7 +6226,11 @@ public:
     // A RawBitmap_t or CSageBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle = nullptr);
+    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
+
+    CSageBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
+    CSageBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
+
 
     // Duplication of C++ console-mode getline()
     //
@@ -5943,10 +6259,221 @@ public:
     CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
     CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
 
+
+    CComboBox &  NewComboBox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); 
+    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); 
+
+    bool SetEventWindow(CWindow * cWin = nullptr);
+    bool SetEventWindow(CWindow & cWin);
+    bool AddControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bUpdate,const cwfOpt & cwOpt = cwfOpt());
+   
+    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate = true,BorderType eBorderType = BorderType::Depressed, LabelJust eLabelType = LabelJust::None,const cwfOpt & cwOpt = cwfOpt());
+    bool DrawLabelBox(POINT pLocation,SIZE szSize, const char * sTitle,const cwfOpt & cwOpt);
+    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate,const cwfOpt & cwOpt);
+    bool HideMenu();
+    bool ShowMenu(CMenu & cMenu);
+
+    LONG SetFullScreen(bool bFullscreen = true,LONG dwPrevStyle = 0,bool bForceShow = false);
+
+    CDavinci * GetDavinciMain();
+
+    SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+    SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+
+	bool EnablePainting();
+	bool DisablePainting();
+	bool DisablePaintingSafe();
+	bool DontUpdate(bool bDontUpdate = true);
+    bool SetasTopWindow();
+    bool SetasTopmostWindow();
+    bool DrawSimpleDoc(const unsigned char * sPgrData,const cwfOpt & cwOpt = cwfOpt()); 
+    bool DrawSimpleDoc(const char * sPgrPath, const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
+    // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
+    // GUI functions with GUI controls. 
+    // 
+    // See documentationn in CQuickControls.h for more information
+    //
+    // ** Important note ** the object pointer returned MUST BE DELETED, as it is not a managed object. 
+    // Example code tends to use Obj<CQuickControls> cQuickControl = QuickControlWindow() to treat it as a stack object
+    // that is automatically deleted when the current function (or class) goes out of scope.
+    // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
+    //
+    CDevControls * DevControlsWindow(int iX = -1, int iY = -1, const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
+    // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
+    // GUI functions with GUI controls. 
+    // 
+    // See documentationn in CQuickControls.h for more information
+    //
+    // ** Important note ** the object pointer returned MUST BE DELETED, as it is not a managed object. 
+    // Example code tends to use Obj<CQuickControls> cQuickControl = QuickControlWindow() to treat it as a stack object
+    // that is automatically deleted when the current function (or class) goes out of scope.
+    // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
+    //
+    CDevControls * DevControlsWindow(const cwfOpt & cwOpt);
+
+	// DevButton() -- Add a button to the Default Dev Control Window.  This accepts all options as normal buttons, but 
+	// the default will add a regular button. 
+	//
+	// The Name used as a title for the button, but is optional. 
+	//
+    CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickCheckbox() -- Add a checkbox to the default Dev Control Window. This accepts all options as normal buttons, but 
+	// the default will add a regular button. 
+	//
+	// The Name used as a title for the button, but is optional. 
+	//
+    CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
+    // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
+	// -->
+	// The title is displayed beneath the slider, as well as the value. 
+	//
+    CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // AddEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
+	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
+	//
+    CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+  	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt());
+	CWindow & DevWindow(const char * sTitle);
+
+    CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
+
+
+ 	// AddDevSction() -- Adds a text section to the default Dev Controls window, to separate types of controls.
+	// You can use opt::fgColor() to set the text color of the section name.
+	//
+    bool AddDevSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
+    // *** Important note *** -- this will return NULLPTR until a control is created with
+    // QuickButton(), QuickSlider(), etc. The window is not created until a control is created in order
+    // to save memory.
+    //
+    // With the pointer, any CDevContgrols() function can be used, though most are replicated directly
+    // through CSageBox functions for ease of use.
+    //
+    CDevControls * GetDevControlsPtr();
+ 
+    bool DevControlsTopmost(bool bTopmost = true);
+
+    bool DisableClose(bool bDisable = true);
+    bool CloseWindow();
+
+    bool SetClsBitmap(RawBitmap_t & stBitmap,bool bClsNow = true);
+    bool SetClsBitmap(CSageBitmap & cBitmap,bool bClsNow = true);
+    bool ClearClsBitmap();
+    CSageBitmap & GetClsBitmap();
+    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
+    // CSageBitmap.
+    //
+    // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
+    // opening the PGR file and searching for the image.
+    //
+    // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
+    // if found.  Otherwise, an empty CSageBitmap is returned.
+    //
+    // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
+    // error occurred loading the image.
+    //
+    // --> Examples:
+    // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
+    // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
+    //
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr);
+
+    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
+    // CSageBitmap.
+    //
+    // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
+    // opening the PGR file and searching for the image.
+    //
+    // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
+    // if found.  Otherwise, an empty CSageBitmap is returned.
+    //
+    // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
+    // error occurred loading the image.
+    //
+    // --> Examples:
+    // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
+    // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
+    //
+	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+    
+
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt())
+    {
+        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,szSize.cx,szSize.cy,sButtonNames,iColumns,szSpacing,cwOpt);
+    }
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt())
+    {
+        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,sButtonNames,iColumns,cwOpt);
+    }
+
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt())
+    {
+        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,szSize.cx,szSize.cy,sButtonNames,iColumns,szSpacing,cwOpt);
+    }
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt())
+    {
+        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,sButtonNames,iColumns,cwOpt);
+    }
+
+    
+    bool SetSignal(SignalEvents event,bool & bSignal);
+    bool SetSignal(SignalEvents event,Signal & stSignal);
+    bool CancelSignal(SignalEvents event);
+    bool UpdateBg(bool bUpdateNow = false);
+
+    // Returns true of the main thread is stopped.  
+    // Use StartThread() to resume the main thread. 
+    //
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    bool ThreadStopped();
+    
+    // Returns the status of the thread.  ThreadStatus::Running or ThreadStatus::Suspended (if the thread is stopped).
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    ThreadStatus GetThreadStatus();
+
+    // Stop the main thread.  This is usually used when ending the main thread and transferring to full event-driven control. 
+    //
+    // This only applies to the original program thread and will not work for other threads created after
+    // the program started.
+    //
+    bool StopThread();
+
+    // Restart the main thread if it is suspended.
+    //
+    bool StartThread();
+
+    // End the program when in the main message thread.  This is used when StopThread() has been used to stop the main thread but events are
+    // still being handled through the Main Windows Message Thread.
+    //
+    // EndProgram() sets the window closing status and resumes the main thread.  Typically, the main thread will exit and SageBox will end.
+    // However, StopThread() can be used anywhere and does not need to exit immediately.  It can take care of cleanup, memory deallocations, etc. 
+    //
+    bool EndProgram();
+
+    CSageBox * GetSageBox();
+
 };
-
-
 }; // namespae Sage
 
 #endif // _CDavWindow_H_
 
+ 

@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simple Mouse Drawing Example", "Simple Mouse Drawing Example\Simple Mouse Drawing Example.vcxproj", "{CEE53B0A-E7C0-4B85-A713-626472D57A61}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug Optimized|x64.ActiveCfg = Windows Debug|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug Optimized|x64.Build.0 = Windows Debug|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug|x64.ActiveCfg = Debug|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug|x64.Build.0 = Debug|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Debug|x86.Build.0 = Windows Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{CEE53B0A-E7C0-4B85-A713-626472D57A61}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8819678C-DB07-4C3B-86DA-67AB991DD5B2}
+	EndGlobalSection
+EndGlobal

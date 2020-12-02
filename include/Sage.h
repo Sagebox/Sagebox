@@ -3,6 +3,7 @@
 #define __CSage_H__
 
 
+#include "CMemClass.h"
 // SageBox defines for .DLL output. 
 // This is currently in-process. 
 
@@ -38,15 +39,17 @@ static constexpr int defColor = -1;
 #define kStdPassThrough nullptr			// i.e. "@", or some other token to refer to passing the last error 
 #define stdNoMsg		nullptr
 
+
 #ifdef _WIN64
-#define stdInt __int64
+#define stdInt	//__int64
 #else
-#define stdInt int
+#define stdInt //__int64
 #endif
 
 #define stdTry		bool bError = false; char *___sErrMsg = nullptr; try{
-#define stdAssert(_x,_msg) {  if (!((stdInt) (_x))) {/*  Sage::StopHere();*/ throw((char *) _msg); } }
-#define stdCatch }catch(char * __y) {__y; bError = true; }
+#define stdAssert(_x,_msg) {  if (!(stdInt (_x))) {/*  Sage::StopHere();*/ throw((char *) _msg); } }
+#define stdCatch }catch(const char * sErrMsg) {sErrMsg; bError = true; }
+#define stdCatcher }catch(const char * sErrMsg) 
 #define stdCatchSage }catch(char * __y) {__y; bError = true; Sage::sLastError = __y; }
 #define stdAssertL stdAssert
 
@@ -59,7 +62,7 @@ static constexpr int defColor = -1;
 #define stdAssertL(_x,_msg) _x		// versions for stdAssert embedded in Lambdas
 #define stdCatchSage } __Err:  
 #endif
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 
  #define SageControlDelete public: void operator delete(void * ptr ) { ::operator delete(ptr); }
  #define SageControlDeletePrivate private: void operator delete(void * ptr ) { ::operator delete(ptr); }
@@ -94,10 +97,131 @@ static constexpr int defColor = -1;
 class CSageBitmap; 
 namespace Sage
 {
+	constexpr const char * BoolString(bool bValue) { return bValue ? "true" : "false"; };
+	constexpr const char * BoolStringU(bool bValue) { return bValue ? "True" : "False"; };
+	constexpr const char * BoolStringUU(bool bValue) { return bValue ? "TRUE" : "FALSE"; };
+
+	enum class ThreadStatus
+    {
+        Running, 
+        Suspended,
+		Unknown,
+    };
+
+	// Window Event Signals that can be processed.
+	//
+	// $$ Right now, ONLY WindowClose is supported. 
+	//
+
+	enum class SignalEvents
+	{
+		// Set Signal to true if WindowClose Button pressed or Window Close status is true
+		//
+		WindowClose,
+
+		// Expected to be supported
+//		MouseWheel,		
+//		MouseClick,
+//		MouseRClick,
+//		MouseMove,
+//		others TBD
+		NoEvent,	
+	};
+
+
+
+	// An Signal Event structure.
+	//
+	// This is still being developed and may change.
+	// stEventSignal has some routines and some data it can also set for more advanced events.
+	// For instance, MouseWheel() will set the iData value for the MouseWheel value. 
+	//
+	// pPtr is still TBD and may be removed if there is no useful purpose for it.  For now, its a placeholder.
+	//
+	// All Event signals can also be given a simple bool and an altdata pointer to fill these value rather than the 
+	// Event Signal.  For example, a Windows Close event signal can just fill a simple bWindowsClosed or bAbort signal used by
+	// multiple signals.  
+	// 
+	// stEventSignal is used for clean code and self-documenting code, but is not required to use signals.
+	//
+	// Signals are still under development.
+	//
+	struct Signal
+	{
+		bool bSignal;		// Set true when the event occurs 
+		int iData;			// any additional data set by the event
+		void * pPtr;		// any addition Pointer set by the event
+		__forceinline bool GetSignal()	{ bool bReturn = bSignal; bSignal = false; return bReturn; };
+		__forceinline int GetData()		{ return iData; };
+		__forceinline void * GetPtr()	{ return pPtr; };
+	};
+	struct SliderSignal
+	{
+		bool bMoved;
+		int iPosition;
+		constexpr bool GetSignal() { bool bReturn = bMoved; bMoved = false; return bReturn; };
+		constexpr int GetPos() { return iPosition; };
+	};
+	struct EditBoxSignal
+	{
+		bool bCRPressed; 
+		char sText[40];
+		constexpr bool GetSignal() { bool bReturn = bCRPressed; bCRPressed = false; return bReturn; };
+		constexpr const char * GetText() { return (const char *) sText; }
+	};
+
+struct ButtonSignal
+{
+	// bPressed -- true when the button is pressed, until reset.  See GetSignal()
+	//
+	bool bPressed;
 	
+	// bChecked -- true of checkbox or radiobutton is chcked or active (i.e. radio button set)
+	// --> important note -- This vsalue is only filled (and valid) when the checkbox or radiobutton is pressed.
+	// Initial settings or changes outside of the actual press with the Signal active are not registered.
+	//
+	bool bChecked; 
+
+	// Returns true if Button was pressed, returning false for subsequent calls until the button is pressed again.
+	// This is the equivalent of checking bPressed and then setting it to false directly afterwards, ensuring only
+	// one TRUE reurn per-button press.
+	// 
+	// --> GetSignal(MyButtonSignal.bPressed) can be used instead of the member function.
+	// 
+	constexpr bool GetSignal() { bool bReturn = bPressed; bPressed = false; return bReturn; };
+
+};
+constexpr bool GetSignal(SliderSignal stSignal) { bool bReturn = stSignal.bMoved; stSignal.bMoved = false; return bReturn; };
+constexpr bool GetSignal(ButtonSignal stSignal) { bool bReturn = stSignal.bPressed; stSignal.bPressed = false; return bReturn; };
+constexpr bool GetSignal(EditBoxSignal stSignal) { bool bReturn = stSignal.bCRPressed; stSignal.bCRPressed = false; return bReturn; };
+constexpr bool GetSignal(bool & bSignal) { bool bReturn = bSignal; bSignal = false; return bReturn; };
+enum class BorderType
+{
+	Line,
+	Depressed,
+}; 
+enum class LabelJust
+{
+	None,
+	Top,
+	Bottom,
+	Left,
+	Right,
+	SetXPos,
+};	
 
 class CWindow;
 enum class ThumbType
+	{
+		BestFit		   ,
+		BestExactFit   ,
+		ExactWidth	   ,
+		ExactHeight	   ,
+		Percentage	   ,
+		MaxWidth	   ,
+		MaxHeight	   ,
+	};	
+enum class ResizeType
 	{
 		BestFit		   ,
 		BestExactFit   ,
@@ -116,6 +240,7 @@ struct Deleter_t
 
 class CWidget
 {
+	bool bTransparent = false;					// True if the widget is currently set as Transparent
 public:
 	virtual CWindow * GetWindow()				{ return nullptr;		}
 	virtual bool SetLocation(int iX,int iY)		{ return false;			}	// This needs to return true if processed
@@ -125,6 +250,8 @@ public:
 	virtual int GetID()							{ return -1;			}
 	virtual const char * GetName()				{ return nullptr;		}
 	virtual bool RecalcWindow()					{ return false;			}	// This needs to return true if processed
+	virtual bool UpdateBg(bool bUpdate = true)  { return false;			}	// Update background if transparent 
+	virtual bool isTransparent()				{ return false;			}	// Widget returns true if it is transparent (not if it supports it)
 };
 
 	struct fPoint_t
@@ -182,6 +309,14 @@ public:
 
 	struct RGBColor24
 	{
+	__forceinline RGBColor24 & operator *= (const RGBColor24 & r2) {	Red		= (unsigned char) ((int) Red*(int) r2.Red/255);
+																		Green	= (unsigned char) ((int) Green*(int) r2.Green/255); 
+																		Blue	= (unsigned char) ((int) Blue*(int) r2.Blue/255); 
+																		return *this; }
+	__forceinline RGBColor24 operator * (const RGBColor24 & r2) { return {	(unsigned char) ((int) Red*(int) r2.Red/255), 
+																			(unsigned char) ((int) Green*(int) r2.Green/255), 
+																			(unsigned char) ((int) Blue*(int) r2.Blue/255) }; }
+
 		unsigned char Blue;
 		unsigned char Green;
 		unsigned char Red;
@@ -231,7 +366,35 @@ typedef RGBColor32* pRGB32;
 		Yes = true,
 	};
 
-	enum class AutoUpdate
+	// Auto Update Type:
+	//
+	// On: Updates 10-20 millisconds.  Use an extra Update() at the end of all routines to make sure it is updated.
+	// Off:  Update() must be used to update the window.
+	// Immediate:  Updates after any action that outputs to the screen, no matter how small. 
+	//             *** Warning: Immediate can slow down your program.  Use for diagnostics, status windows or other places where you don't want to do an Update(), but 
+	//             *** also don't care about it performing an Update() at every step
+	enum class AutoUpdateType
+	{
+		//  Update() must be used to update the window.
+		//
+		Off,
+
+		// Updates 10-20 millisconds.  Use an extra Update() at the end of all routines to make sure it is updated.
+		//
+		On,
+		// Updates after any action that outputs to the screen, no matter how small. 
+		// *** Warning: Immediate can slow down your program.  Use for diagnostics, status windows or other places where you don't want to do an Update(), but 
+		// *** also don't care about it performing an Update() at every step
+		//
+		Immediate, 
+
+
+
+	};
+
+	// This is deprecated
+
+	enum class AutoUpdateOld
 	{
 		Disabled,
 		Always,
@@ -288,16 +451,35 @@ public:
 	int iGreen;
 	int iBlue;
 public:
-	DWORD toRGB();
-	RGBColor_t & fromRGB(DWORD dwColor);
-	DWORD operator * ();
-	RGBColor_t & operator = (DWORD dwColor);
-	operator int () { return (int) RGB(iRed,iGreen,iBlue); }
-	operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
+	__forceinline RGBColor_t operator * (const RGBColor_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
+	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+
+	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
+	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
+	__forceinline RGBColor_t & fromRGB(DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
+	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
+	__forceinline RGBColor_t & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
+	
 	RGBColor_t & Init();
 	bool Undefined();
-};
+	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
+	__forceinline double Gray() { return (double) (iRed+iGreen+iBlue)/3.0; }
+	double LabGray();
 
+
+	__forceinline void Clip() { iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
+};
+	// Gradient -- used two store two colors to form a gradient
+	//
+	struct Gradient
+	{
+		RGBColor_t rgbColor1;		// Top or Left Color
+		RGBColor_t rgbColor2;		// Bottom or Right Color
+		bool bMono;					// When true, only the top color is used (i.e. it's just storage for the top color)
+		bool bHorizontal;
+	};
 	struct FloatBitmap_t
 	{
 		float * fRed;
@@ -307,14 +489,41 @@ public:
 		int iWidth;
 		int iHeight;
 		int iTotalSize;
+		bool bAlignedMem;	// True of memory aligned
+							// $$ This is temporary until all legacy functions
+							// are verified to use aligned memory
 
 		void Delete();
 		void Init();
 		bool isValid();
 
+		FloatBitmap_t & operator = (SIZE szSize);
+
 		[[nodiscard]] RawBitmap_t ConverttoBitmap();
 		[[nodiscard]] RawBitmap_t ConverttoBitmap(RawBitmap_t & stSource);
 		float **  operator * ();
+
+	};
+	[[nodiscard]] FloatBitmap_t CreateFloatBitmap(int iWidth,int iHeight,bool * bError = nullptr);
+	[[nodiscard]] FloatBitmap_t CreateFloatBitmap(const SIZE szSize,bool * bError = nullptr);
+	[[nodiscard]] FloatBitmap_t CreateFloatBitmap(float * fpMem,int iWidth,int iHeight,bool * bError = nullptr);
+
+	struct FloatBitmapM_t
+	{
+		float * fPixels;
+		int iWidth;
+		int iHeight;
+		int iTotalSize;
+
+		void Delete();
+		void Init();
+		bool isValid();
+		bool Invert();
+		bool Multiply(FloatBitmapM_t & stSource,POINT pDestStart = { 0,0 }, POINT pSourceStart = { 0,0 }, SIZE szSize = { 0,0 });
+
+		[[nodiscard]] RawBitmap_t ConverttoBitmap();
+		[[nodiscard]] RawBitmap_t ConverttoBitmap(RawBitmap_t & stSource);
+		float *  operator * ();
 
 	};
 
@@ -323,6 +532,7 @@ public:
 		int iWidth;
 		int iHeight;
 		int iWidthBytes;
+		int iOverHang;
 		int iTotalSize;
 		unsigned char * sMask;
 		unsigned char * stMem;
@@ -335,7 +545,6 @@ public:
 		RawBitmap_t operator - ();
 
 		// Check if empty -- it's only empty if everything is 0. Otherwise, it might be used as a bitmap or simply uninitialized
-
 		bool isEmpty();
 		bool ApplyMaskColor(RawBitmap_t & stDest,DWORD dwColor);
 		bool ApplyMaskGraphic(Sage::RawBitmap_t & stBackground,Sage::RawBitmap_t & stDest);
@@ -360,10 +569,20 @@ public:
 		void DeleteMask();
 		void UpdateMaskMem();
 		bool MasktoBmp(RawBitmap_t & stDest);
+
+		// Returns true of the bitmap data is invalid (i.e. corrupted), but does not determine if there is an active bitmap.
+		// Use isEmpty() to determine of a bitmap is empty, or use isValid() to combine isInvalid() + isEmpty()
+		//
 		bool isInvalid();
+		
+		// Returns true of there is a valid bitmap contained in the structure. 
+		// Returns true if the bitmap is empty (i.e. v.s. isInvalid() which only returns true of the data is corrupted).
+		//
+		bool isValid();
 		SIZE GetSize();
 		FloatBitmap_t ConverttoFloat();
 		FloatBitmap_t ConverttoFloat(FloatBitmap_t & fBitmap);
+
 	};
 
 	struct GraphicButtonStyle
@@ -434,6 +653,7 @@ public:
 
 	char * operator * ();
 	SageString200 & operator = (char * sString);
+	SageString200 & operator = (const char * sString);
 	SageString200 & operator += (char * sString);
 	SageString200 & operator += (SageString200 & stString);
 	SageString200 & operator <<  (char * sString);
@@ -686,13 +906,21 @@ enum class ControlSubStyles
 	RGB32Bitmap,
 };
 
-	[[nodiscard]] RawBitmap_t ReadBitmap(char * sFile, bool * bSucceeded = nullptr);
+	[[nodiscard]] RawBitmap_t ReadBitmap(const char * sFile, bool * bSucceeded = nullptr);
 
-	[[nodiscard]] RawBitmap32_t BMPtoBitmap32(unsigned char * sBMP);
-	[[nodiscard]] RawBitmap_t BMPtoBitmap(unsigned char * sBMP);
-	bool BMPtoBitmap(unsigned char * sBMP,RawBitmap_t & stBitmap);
+	bool SaveBitmap(const char * sFile,RawBitmap_t & stBitmap); 
+
+	[[nodiscard]] RawBitmap32_t BMPtoBitmap32(const unsigned char * sBMP);
+	[[nodiscard]] RawBitmap_t BMPtoBitmap(const unsigned char * sBMP);
+	bool BMPtoBitmap(const unsigned char * sBMP,RawBitmap_t & stBitmap);
 	void DeleteBitmap(Sage::RawBitmap_t & stBitmap);
 	void DeleteBitmap(Sage::RawBitmap32_t & stBitmap);
+
+	[[nodiscard]] FloatBitmapM_t CreateFloatMBitmap(int iWidth,int iHeight,bool * bError = nullptr);
+	[[nodiscard]] FloatBitmapM_t CreateFloatMBitmap(const SIZE szSize,bool * bError = nullptr);
+	[[nodiscard]] FloatBitmapM_t CreateBitmap(float * fpMem,int iWidth,int iHeight);
+
+
 	[[nodiscard]] RawBitmap_t CreateBitmap(unsigned char * sBitmapMem,int iWidth,int iHeight);
 	[[nodiscard]] RawBitmap_t CreateBitmap(int iWidth,int iHeight,bool * bError = nullptr);
 	[[nodiscard]] RawBitmap_t CreateBitmap(SIZE szSize,bool * bError = nullptr);
@@ -727,6 +955,8 @@ enum class ControlSubStyles
 
 	bool ApplyMaskGraphic(RawBitmap_t & stSource,POINT pSourceStart, RawBitmap_t & stDest, POINT pDestStart, const SIZE & szSize); 
 	bool ApplyMaskGraphicR(RawBitmap_t & stSource,POINT pSourceStart, RawBitmap_t & stDest, POINT pDestStart, const SIZE & szSize); 
+	bool Multiply(Sage::FloatBitmapM_t & stDest, Sage::FloatBitmapM_t & stSource,POINT pDestStart = { 0,0 }, POINT pSourceStart = { 0,0 }, SIZE szSize = { 0,0 });
+
 	int CopyStringMax(const char * sSource,char * sDest,int iMaxLen);
 	void StopHere();
 	bool toHex(char * sText,DWORD & dwValue);
@@ -745,6 +975,11 @@ enum class ControlSubStyles
 	BITMAPINFO CreateBitmapInfo32(int iWidth,int iHeight);
 	int FindIntValues(char * sString,long * iValues,int iMaxValues);
 	int FindIntValues(char * sString,int * iValues,int iMaxValues);
+	[[nodiscard]] Mem<char> ReadTextFile(const char * sFile,bool bNullTerminate = false,bool * bSuccess = nullptr);
+	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,bool * bSuccess = nullptr);
+	CSageBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
+	CSageBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
+
 	namespace Win
 	{
 		void ScreentoClient(HWND hWndParent,RECT & rRect);

@@ -6,6 +6,7 @@
 #define _CDavEditBox_H_
 #include "CDavinci.h"
 #include "CEditBoxHandler.h"
+#include "CPoint.h"
 
 // -----------------
 // CEditBox Class
@@ -42,6 +43,7 @@
 
 namespace Sage
 {
+class CArrowBox;
 
 class CEditBox : public CEditBoxHandler
 {
@@ -60,6 +62,17 @@ public:
 
 private:
 	void EnableInvalidate(bool bEnable,bool bRefresh = false);		// Enable/Disable widow redraws.  Used internally.
+	bool			m_bArrowBox		= false;
+	bool			m_bLabelPending = false;
+	CString			m_csLabelFont;
+	CString			m_csLabel;
+	RGBColor_t		m_rgbLabelColor;
+	int				m_iLabelX = 0;
+	LabelJust		m_eLabelJustType = LabelJust::None;
+
+	CArrowBox	* m_cArrowBox	= nullptr;
+
+	bool SetLabelPending(LabelJust eLabelJust,int iX,const char * sLabel,const char * sFont,RGBColor_t rgbColor); 
 
 public:
 	friend CWindow;
@@ -97,15 +110,21 @@ public:
 
 	// Get the length of the text string in the Edit Box text areas
 	//
-	int		GetTextLength()			;
+	int	GetTextLength()			;
 
 	// Set the text in the edit box
 	//
-	int		SetText(const char * sText)	;
+	bool	SetText(const char * sText)	;
+	bool SetText(int iValue);
+	bool SetText(double fValue);
+	double GetFloat(bool * bOk = nullptr);
+	bool GetFloat(double & fValue,double fSetValue = DBL_MIN);
+	int GetInteger(bool * bOk = nullptr);
+	bool GetInteger(int & iValue,int iSetValue = INT_MIN);
 
 	// Clear the text in the Edit Box
 	//
-	int		ClearText()				;
+	bool ClearText()				;
 
 	// Show the Edit Box Window (i.e. make it visible)
 	//
@@ -114,6 +133,8 @@ public:
 	// Hide the Edit Box Window
 	//
 	bool Hide(bool bHide = true);
+	bool Enable(bool bEnable = true);
+	bool Disable(bool bDisable = true);
 
 	// Was a return Pressed?  True if so, false it not.
 	// With Peek = Sage::Peek::No  (default), the "return pressed" flag is reset. This will cause subsequent values to return false
@@ -121,7 +142,12 @@ public:
 	// 
 	// Use ReturnPressed(Sage::Peek::Yes) to keep from resetting the flag
 	//
-	bool ReturnPressed(Sage::Peek peek = Sage::Peek::No);
+	bool ReturnPressed(bool bPeek = false);
+	bool ReturnPressed(double & fValue,bool bPeek = false);
+	bool ReturnPressed(int & fValue,bool bPeek = false);
+	bool MouseWheelMoved(bool bPeek = false);
+	bool MouseWheelMoved(int & iMouseWheelValue,bool bPeek = false);
+	int GetMouseWheelValue();
 
 	// $$ TBD
 	//
@@ -132,12 +158,22 @@ public:
     int SetValidateCallback(int (*MyFunc)(CEditBox *,WPARAM & ,void*),void * vpCallbackData = NULL);
 
 
+	bool SetMouseWheel(double fAdd,double fSub,double fMin = 0,double fMax = 0);
+	bool SetMouseWheel(int iAdd,int iSub,int iMin = 0,int iMax = 0);
+
+
+
 	// Set the Font in the Edit Box Window.  This may change the size of the Edit Box. 
 	// This is usually used just after creating the Edit Box in a hidden state.  You can also use
 	// "Setfont=<fontname or type>" or opt::SetFont(<fontname or type>) to set it in the initial call.
 	// --> Example: SetFont("Arial,12"), or SetFont("RobsPrivateFont"), or SetFont(hMyFont) (where HFONT MyFont = <Windows Font>
 	//
 	bool SetFont(char * sFont);
+
+	// Sets the keyboard focus to the Edit Box -- this places the input caret in the editbox so the user does 
+	// not have to click on it to start editing.
+	//
+	bool SetFocus();
 
 	// Set the Font in the Edit Box Window.  This may change the size of the Edit Box. 
 	// This is usually used just after creating the Edit Box in a hidden state.  You can also use
@@ -257,6 +293,9 @@ public:
 	int GetID();
 	const char * GetName();
 
+	SizeRect GetBoxSizeRect();
+	SizeRect GetArrowBoxSizeRect();
+	HWND GetWindowHandle();
 	bool SetHoverMsg(const char * sHoverMessage);
 	int	StartX();
 	int	StartY();
@@ -264,9 +303,15 @@ public:
 	int	EndY();
 	int getWidth();
 	int getHeight();
+	SIZE getSize();
 	bool isVisible();
 	bool isValid();
-	
+	bool AttachArrowBox(CWindow * cParent);
+	bool SetSignal(bool * pSignal,char * pTextSignal = nullptr,int iTextLength = 0);
+	bool Redraw();
+	bool SetSignal(EditBoxSignal & stSignal);
+	bool ResetSignal();
+	bool UpdateBg(bool bUpdateNow = true);
 	// virtual destructor -- allows overloaded objects cast as CEditBox to delete properly.
 	//
 	virtual ~CEditBox();

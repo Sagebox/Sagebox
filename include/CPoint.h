@@ -7,6 +7,18 @@
 
 namespace Sage
 {
+
+struct SizeRect
+{
+public:
+	POINT loc;
+	SIZE size;
+	bool Empty() { return !loc.x && !loc.y && !size.cx && !size.cy; };
+	bool EmptySize() {return !size.cx && !size.cy; };
+	bool EmptyPoint() {return !loc.x && !loc.y; };
+	bool EmptyAny() { return (!size.cx && !size.cy) || ( !loc.x && !loc.y); };
+};
+
 struct CPoint
 {
 	int x;
@@ -33,40 +45,64 @@ struct CPoint
 
 		return { *this };
 	}
-	CPoint operator * (SIZE & p2)
+	CPoint operator * (const SIZE & p2)
 	{
 
 		return { x * p2.cx,y*p2.cy };
 	}
-	
-	CPoint operator * (CPoint & p2)
+	CPoint operator * (int iValue) { return { x * iValue,y * iValue }; }
+	CPoint operator / (int iValue) { return { x / iValue,y / iValue }; }
+	CPoint operator + (int iValue) { return { x + iValue,y + iValue }; }
+	CPoint operator - (int iValue) { return { x - iValue,y - iValue }; }
+
+	CPoint & operator *= (int iValue) { x *= iValue; y *= iValue; return *this; }
+	CPoint & operator /= (int iValue) { x /= iValue; y /= iValue; return *this; }
+	CPoint & operator += (int iValue) { x += iValue; y += iValue; return *this; }
+	CPoint & operator -= (int iValue) { x -= iValue; y -= iValue; return *this; }
+
+	CPoint operator * (const POINT & p2)
 	{
 
 		return { x * p2.x,y*p2.y };
 	}
-	CPoint operator + (CPoint & p2)
+	
+	CPoint operator * (const CPoint & p2)
+	{
+
+		return { x * p2.x,y*p2.y };
+	}
+	CPoint operator + (const CPoint & p2)
 	{
 		return { x + p2.x, y+p2.y };
 	}
-	CPoint operator + (POINT & p2)
+	CPoint operator + (const POINT & p2)
 	{
 		return { x + p2.x, y+p2.y };
 	}
-	CPoint operator / (int p)
-	{
-		return { x / p, y/p};
-	}
-	CPoint & operator += (CPoint & p2)
+
+	CPoint & operator += (const CPoint & p2)
 	{
 		x += p2.x;
 		y += p2.y;
 		return *this;
 	}
-	CPoint operator - (CPoint & p2)
+	CPoint & operator += (const POINT & p2)
+	{
+		x += p2.x;
+		y += p2.y;
+		return *this;
+	}
+	CPoint & operator += (const SIZE & p2)
+	{
+		x += p2.cx;
+		y += p2.cy;
+		return *this;
+	}
+	CPoint operator - (const CPoint & p2)
 	{
 		return { x - p2.x, y-p2.y };
 	}
-	CPoint & operator -= (CPoint & p2)
+	CPoint & operator -= (const CPoint & p2)
 	{
 		x -= p2.x;
 		y -= p2.y;
@@ -79,12 +115,12 @@ struct CPoint
 		x = iX;
 		y = iY;
 	}
-	CPoint(POINT p)
+	CPoint(const POINT p)
 	{
 		x = p.x;
 		y = p.y;
 	}
-	CPoint(SIZE sz)
+	CPoint(const SIZE sz)
 	{
 		x = sz.cx;
 		y = sz.cy;
@@ -94,79 +130,95 @@ struct CPoint
 	CPoint() { }
 };
 
-struct CSagefPoint
+struct CfPoint
 {
 	double x;
 	double y;
 
-	CSagefPoint & operator = (CPoint & p)
+	CfPoint & operator = (const CPoint & p)
 	{
 		x = (double) p.x;
 		y = (double) p.y;
 		return (*this);
 	}
-	CSagefPoint operator + (CSagefPoint & p2)
+	CfPoint operator + (const CfPoint & p2)
 	{
 		return { x + p2.x, y+p2.y };
 	}
-	CSagefPoint operator / (CSagefPoint & p2)
+	CfPoint operator / (const CfPoint & p2)
 	{
 		return { x / p2.x, y/p2.y };
 	}
-	CSagefPoint & operator /= (CSagefPoint & p2)
+	CfPoint & operator /= (const CfPoint & p2)
 	{
 		x /= p2.x;
 		y /= p2.y;
 		return *this;
 	}
-	CSagefPoint operator / (double fDiv)
+	CfPoint operator / (double fDiv)
 	{
 		return { x /fDiv, y/fDiv };
 	}
-	CSagefPoint & operator /= (double fDiv)
+	CfPoint & operator /= (double fDiv)
 	{
 		x /= fDiv;
 		y /= fDiv;
 		return *this;
 	}
-	CSagefPoint operator * (double fMul)
+	CfPoint & operator *= (double fMul)
+	{
+		x *= fMul;
+		y *= fMul;
+		return *this;
+	}
+	CfPoint operator * (double fMul)
 	{
 		return { x * fMul, y*fMul };
 	}
-	CSagefPoint operator - (CSagefPoint & p2)
+	CfPoint operator - (const CfPoint & p2)
 	{
 		return { x - p2.x, y-p2.y };
 	}
-	CSagefPoint operator - (CPoint & p2)
+	CfPoint operator - (const CPoint & p2)
 	{
 		return { x - (double) p2.x, y- (double) p2.y };
 	}
-	CSagefPoint & operator += (CSagefPoint & p2)
+	CfPoint & operator += (const CfPoint & p2)
 	{
 		x += p2.x;
 		y += p2.y;
 		return *this;
 	}
-CSagefPoint & operator -= (CSagefPoint & p2)
+	CfPoint & operator *= (const CfPoint & p2)
+	{
+		x *= p2.x;
+		y *= p2.y;
+		return *this;
+	}
+	CfPoint operator * (const CfPoint & p2)
+	{
+		return { x * p2.x, y * p2.y };
+	}
+CfPoint & operator -= (const CfPoint & p2)
 	{
 		x -= p2.x;
 		y -= p2.y;
 		return *this;
 	}
 
-	CSagefPoint() { };
-	CSagefPoint(double fx,double fy) { x = fx; y = fy; };
-	CSagefPoint(CPoint & p)
+	CfPoint() { };
+	CfPoint(double fx,double fy) { x = fx; y = fy; };
+	CfPoint(CPoint & p)
 	{
 		x = (double) p.x;
 		y = (double) p.y;
 	}
-	CSagefPoint(POINT & p)
+	CfPoint(const POINT & p)
 	{
 		x = (double) p.x;
 		y = (double) p.y;
 	}
-	CSagefPoint(SIZE & szSize)
+	CfPoint(const SIZE & szSize)
 	{
 		x = (double) szSize.cx;
 		y = (double) szSize.cy;

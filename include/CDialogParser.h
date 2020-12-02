@@ -5,10 +5,12 @@
 #include "Parser/CCompiler.h"
 #include "Parser/Parser1.h"
 #include "Parser/CCompLink.h"
-#include "CSageBox.h"
+#include "CString.h"
+
 namespace Sage
 {
 
+class CWidget;
 class CDialogParser
 {
 public:

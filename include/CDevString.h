@@ -1,7 +1,7 @@
 //#pragma once
 #if !defined(_CDevString_H_)
 #define _CDevString_H_
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 #include <Windows.h>
 class CDevString
 {
@@ -30,6 +30,7 @@ public:
 	operator char * () { return (char *) s; }
 	CDevString() { iPlace = 0; s[0] = 0; s[1200] = 0; }
 	CDevString(char * sString) { iPlace = 0; s[0] = 0; s[1200] = 0; AddString(sString);  }
+	CDevString(const char * sString) { iPlace = 0; s[0] = 0; s[1200] = 0; AddString(sString);  }
 
 	void StartString(const char * sString); 
 	void StartString(const wchar_t * sString); 

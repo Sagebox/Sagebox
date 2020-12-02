@@ -13,6 +13,7 @@ class CTextWidget : CWindow
 
 	class CWidget : public Sage::CWidget
 	{
+		bool bTransparent = false;
 	public:
 		CTextWidget * m_cText;
 
@@ -26,6 +27,7 @@ class CTextWidget : CWindow
 		int GetID()								override;
 		const char * GetName()					override;
 		bool RecalcWindow()						override;
+		bool UpdateBg(bool bUpdate = true)		override;
 	};
 friend CWindow;
 friend CWidget;
@@ -83,6 +85,7 @@ private:
 	int				  m_iOffsetY		= 0;
 	CWindow			* m_cParent			= nullptr;
 	CWindow			* m_cWin			= nullptr;
+	CDavinci		* m_cDavinciMain	= nullptr;
 	bool			  m_bValid			= false;
 					  
 	int					m_iWinOffsetY		= 0;
@@ -123,12 +126,16 @@ public:
 	void Write(const char * sText,cwfOpt & cwOpt);
 	void Write(const char * sText);
 	void Write(CString & cString);
+	__inline void Write(int iValue) { Write(CString() << iValue); }
+	__inline void Write(double fValue) { Write(CString() << fValue); }
+
 	void WriteShadow(const char * sText,cwfOpt & cwOpt);
 	void WriteShadow(const char * sText);
 	void WriteShadow(CString & cString);
 	void Show(bool bShow = true);
 	void Hide(bool bHide = true);
 	void SetLocation(int iX,int iY);
+	bool UpdateBg(bool bUpdate = true);
 	void SetFont(char * sFont);
 	void SetFont(HFONT hFont);
 	void SetBgColor(Sage::RGBColor_t rgbColor);
@@ -139,6 +146,7 @@ public:
 	void EnableUpdate(bool bEnable);
 	void DisableUpdate();
 	void Update();
+	void Delete();
 	int EndY();
 	int EndX();
 	int Width();

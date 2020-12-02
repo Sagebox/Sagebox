@@ -61,6 +61,7 @@ private:
 public:
 	virtual void Init(void * pClassInfo)					{ } // Set info to your class type, i.e. MyClassPtr = (MyClass *) pClassInfo, or MyClassRef = & (MyCLass *) pClassInfo
 	virtual MsgStatus OnChar(char cChar)					{ return MsgStatus::Ok;	}
+	virtual MsgStatus OnMouseWheel(int iDelta)				{ return MsgStatus::Ok;	}
 	virtual ValidateStatus Validate(const char * sText)		{ return ValidateStatus::NotChecked; }
 
 	WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }

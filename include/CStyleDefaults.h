@@ -3,7 +3,7 @@
 #define _CSyleDefaults_h_
 #include <Windows.h>
 #include "Sage.h"
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 
 namespace Sage
 {
@@ -46,7 +46,7 @@ private:
 		stControl_t stControls[10];		// Up to 10 different control types, 50 chars max. 
 	};
 
-	stDefaults_t	* m_stDefaultClasses; 
+	stDefaults_t	* m_stDefaultClasses = nullptr; 
 
 public:
 	bool AddDefaultClass(char * sDefaultClassName,bool AutoDefault = false);

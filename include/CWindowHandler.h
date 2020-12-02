@@ -35,11 +35,11 @@ public:
 						// m_bPostProcess = TRUE for the top-level call and FALSE for the bottom level call (which only occurs when CallAgain is returned on the first call)
 						// If CallAgain is returned on the second, post-process call, it is seen as "Ok"
 	};
-private:
+protected:
 	friend CEControlAction_t;		// Allow direct access for faster processing
 	CPasWindow		* m_cWinCore = nullptr;
 	int				  m_iControlID;
-	void			* m_pClassInfo = nullptr;
+	void			* m_pClassInfo = nullptr;		// Use for storing private data (such as an object pointer) for call passthrough
 	const char		* m_sControlName;
 	bool			  m_bPostProcess;		// Initially FALSE.  When CallAgain is returned, this will add a second call at the bottom of the processing 
 								// When it will be set to true.
@@ -69,7 +69,7 @@ public:
 	virtual MsgStatus OnMove(int iX,int iY)								{ return MsgStatus::Ok; }	// Continue as normal
 	virtual MsgStatus OnMenu(int iMenuID)								{ return MsgStatus::Ok; }	// Continue as normal
 
-	virtual bool LockProcessBusy()										{	// This is used for developmen to trap when the process is locked, for timing, debugging, etc.
+	virtual bool LockProcessBusy()										{	// This is used for development to trap when the process is locked, for timing, debugging, etc.
 																			// You can trap it here or override it.
 
 																			return true;	// Just a compileable line of code to make setting a breakpoint easier.

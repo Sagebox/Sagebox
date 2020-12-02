@@ -61,6 +61,20 @@ private:
 
 	void * stPrivStruct = nullptr;
 public:
+	struct WinEvent
+	{
+		friend CSlider;
+	private:
+		CSlider * m_cSlider;
+	public:
+		bool Moved(bool bPeek = false);
+		bool Moved(int & iPosition,bool bPeek = false);
+		bool EndScroll(bool bPeek = false);
+		int GetPos(void);
+		
+	};
+
+	WinEvent event;
     CSlider();
 	virtual ~CSlider();
 	bool Delete();
@@ -69,9 +83,12 @@ public:
 //	void SetControlID(int iControl);
     //void Close(void) { gcPasWindow->Slider_Close(m_iControl); }
     int GetPos(void);
+	bool SetPos(int iPos);
+
     bool SetRange(int iMin,int iMax);
-	bool Moved(Sage::Peek peek = Sage::Peek::No);
-	bool EndScroll(Sage::Peek peek = Sage::Peek::No);
+	bool Moved(bool bPeek = false);
+	bool Moved(int & iPosition,bool bPeek = false);
+	bool EndScroll(bool bPeek = false);
 
    // void SetPos(int iPos) { gcPasWindow->Slider_SetPos(m_iControl,iPos); }
 	//int SetLocation(int iX,int iY) { return gcPasWindow->Slider_SetLocation(m_iControl,iX,iY); }
@@ -92,13 +109,31 @@ public:
 	bool SetBgColor(DWORD dwColor);
 	bool EnableFocusBox(bool bEnable = true);
 
+	// SetFineControl() -- When TRUE, the Mouse Wheels will increment the slider value by 1 or -1, allowing finer control
+	// When FALSE (default setting), the Mouse Wheel increments the slider by a larger value so that the
+	// entire length of the slider and be traversed fairly quickly.
+	//
+	// --> iIncrement sets the increment for each Mouse Wheel (i.e. SetFineControl(5) will move the slider value or or down by 5.
+	// --> The default is one (i.e. SetFineControl() is the same as SetFineControl(true,1) or SetFineControl(1);
+	//
+	bool SetFineControl(bool bFineControl = true,int iIncrement = 1);
+
+	// SetFineControl() -- When TRUE, the Mouse Wheels will increment the slider value by 1 or -1, allowing finer control
+	// When FALSE (default setting), the Mouse Wheel increments the slider by a larger value so that the
+	// entire length of the slider and be traversed fairly quickly.
+	//
+	// --> iIncrement sets the increment for each Mouse Wheel (i.e. SetFineControl(5) will move the slider value or or down by 5.
+	// --> The default is one (i.e. SetFineControl() is the same as SetFineControl(true,1) or SetFineControl(1);
+	//
+	bool SetFineControl(int iIncrement = 1);
+
 	HWND	GetWindowHandle();
 	bool	RecalculateWindow();
+	bool	Redraw();
 	bool	ClearFlags();
 	bool	SetLocation(int iX,int iY);
 	POINT	GetLocation();
 	SIZE	GetWindowSize();
-	bool	SetHoverMsg(const char * sHoverMessage);
 	int		StartX();
 	int		StartY();
 	int		EndX();
@@ -107,7 +142,7 @@ public:
 	int		getHeight();
 	bool	isVisible();
 	bool	isValid();
-
+	bool	SetHoverMsg(const char * sMessage);
 	int GetID();
 	const char * GetName();
 	Sage::CWidget * GetWidgetObj();
@@ -117,6 +152,9 @@ public:
 
 	bool SetMessageHandler(CSliderHandler * cHandler,void * pClassInfo = nullptr);
 	bool SetMessageHandler(CSliderHandler & cHandler,void * pClassInfo = nullptr);
+
+	bool SetSignal(bool * bSignal,int * iSignalPos);
+	bool SetSignal(SliderSignal & stSignal);
 
 };
 }; // namespace Sage

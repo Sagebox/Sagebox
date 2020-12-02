@@ -3,7 +3,7 @@
 #define _ControlGroup_H_
 
 #include "SageOpt.h"
-
+#include "Sage.h"
 namespace Sage
 {
 
@@ -26,9 +26,9 @@ protected:
 public:
 	~ControlGroup() { FreeOptString(); }
 	ControlGroup() { m_iControlGroup = 0; };
-	int GetPressed(bool bRemove = false);
-	bool isPressed(bool bPeek = false,int * iPressedID = nullptr);
-	bool isPressed(int & iPressedID);
+//	int GetPressed(bool bRemove = false);	-- deprecated
+	bool isPressed(Peek peek = Peek::No);
+	bool isPressed(int & iPressedID,Peek peek = Peek::No);
 	bool Valid() { return m_iControlGroup != 0; }
 	inline int getGroupID() { return m_iControlGroup; }
 	char * getGroupName(); 

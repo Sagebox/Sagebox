@@ -1,0 +1,15 @@
+Since they are useful tools, the Color Wheel Widget and ColorSelector Widgets are contained natively in the SageBox library. 
+
+You can just include 'CColorWheelWidget', or 'CColorSelector',  which will use the one in the main include.  If you include "Widgets\include\CColorWheelWidget.h", or
+"Widgets\include\CColorSelector.h" then you  must also add ColorWheelWidget.lib and CColorSelector.lib, respectively, to your linker input (use all configurations setting).
+
+CColorWheelWidget and CColorSelector are  inside of SageBox is in the Sage:: namespace, and the ones in the Widget directory are in no namepace.  
+Therefore, they will not collide with the classes of the same name inside of the Sage namespace.
+
+These are included here for reference, and the source code for CColorSelector, CColorWheelWidget, CDial, cLed, and others will be released as more is release with the
+initial version of SageBox.
+
+It is recommended to use the versions of CColorSelector and CColorWheelWidget already in the SageBox library (i.e. these are here just for reference).
+
+
+

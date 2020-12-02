@@ -4,7 +4,7 @@
 #define _CControlsStyles_h_
 #include "windows.h"
 #include "Sage.h"
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 
 
 class CControlStyles

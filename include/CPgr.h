@@ -121,6 +121,14 @@ typedef enum
 } ePGR_t;
 class CReadPGR
 {
+   // Version 2 header, containing memory length and Checksum
+   struct stPGR2Header
+    {
+        char   sHeader[4];      // PGRX
+        DWORD  dwVersion;
+        int    iSize;
+        int    iCheckSum; 
+    };
 public:
     int                       m_iLastJPEGWidth		;
     int                       m_iLastJPEGHeight		;
@@ -132,7 +140,7 @@ public:
     FILE                    * m_fFile;
     char                    * m_sFile;
     int                       m_iLastKeyUsed;
-    char                    * FindKey(char * sKey,char * sSubKey = NULL);
+    char                    * FindKey(const char * sKey,const char * sSubKey = NULL);
     char                    * FindKeyCont(char * sKey,char * sSubKey = NULL);
     int                       FindPartialKey(char * sKey);
     int                       GetFileLocation(char * sFile,int * iFileSize = NULL);
@@ -141,7 +149,7 @@ public:
     int                       GetJpegInfo(int iFileLocation,int & iWidth,int & iHeight);
     int                       GetFileSizeByLocation(int iFileLocation);
     int                       m_bFileOpen;
- 
+    int                       m_iFileStart = 0;
 
      // Storage used for outside processes, but not strictly part of a PGR, when it is expanded into other areas.
 
@@ -192,37 +200,58 @@ public:
 class CSagePGR
 {
 private:
+
+    // Version 2 header, containing memory length and Checksum
+   struct stPGR2Header
+    {
+        char   sHeader[4];      // PGRX
+        DWORD  dwVersion;
+        int    iSize;
+        int    iCheckSum; 
+    };
+
+   bool m_bVersion2 = false;        // Uses new header when true, which must be handled as the memory address is wrong due to 
+                                    // adjustment in code
+
 	CReadPGR	* m_cPGR = nullptr;
 
 	void DeletePGR();
+    bool m_bInvalid = true;
 public:
-	CSagePGR() {};
-	ePGR_t ReadPGR(char * sFile);
-	ePGR_t ReadMemPGR(unsigned char * sLocation,int iLength);
-	char * FindKey(char * sKey,char * sSubKey = nullptr);
-	char * ReadText(char * sKey,char * sSubKey = nullptr);
-	bool ReadText(CString & cString,char * sKey,char * sSubKey = nullptr);
-	ePGR_t ReadSize(SIZE & szSize,char * sKey,char * sSubKey = nullptr);
-	SIZE ReadSize(char * sKey,bool * bSuccess = nullptr);
-	ePGR_t ReadPoint(POINT & szPoint,char * sKey,char * sSubKey = nullptr);
-	POINT ReadPoint(char * sKey,bool * bSuccess = nullptr);
-	Sage::RGBColor_t ReadRGB(char * sKey,bool * bSuccess = nullptr);
-	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,char * sKey,char * sSubKey = nullptr);
-	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,Sage::RGBColor_t  rgbDefault,char * sKey,char * sSubKey = nullptr);
-	unsigned char * ReadFile(char * sFile,int & iFilesize);
-	unsigned char * ReadFile(char * sTopKey,char * sFile,int & iFilesize);
-	[[nodiscard]] Sage::RawBitmap_t ReadBitmap(char * sFile);
-	[[nodiscard]] Sage::RawBitmap_t ReadBitmap(char * sTopKey,char * sFile);
-	bool FileExists(char * sTopKey,char * sFile);
-	bool FileExists(char * sFile);
-	ePGR_t ReadInt(int * iValue,char * sKey,char * sSubKey = nullptr); 
+	CSagePGR() { m_bInvalid = false;};
+    CSagePGR(const char * sPath);
+    CSagePGR(const unsigned char * sPgrData);
+
+    bool isValid() { return !m_bInvalid; };
+	ePGR_t ReadPGR(const char * sFile);
+	ePGR_t ReadMemPGR(const unsigned char * sLocation,int iLength = 0);
+	const char * FindKey(const char * sKey,const char * sSubKey = nullptr);
+	const char * ReadText(const char * sKey,const char * sSubKey = nullptr);
+	bool ReadText(CString & cString,const char * sKey,const char * sSubKey = nullptr);
+	ePGR_t ReadSize(SIZE & szSize,const char * sKey,const char * sSubKey = nullptr);
+	SIZE ReadSize(const char * sKey,bool * bSuccess = nullptr);
+	ePGR_t ReadPoint(POINT & szPoint,const char * sKey,const char * sSubKey = nullptr);
+	POINT ReadPoint(const char * sKey,bool * bSuccess = nullptr);
+	Sage::RGBColor_t ReadRGB(const char * sKey,bool * bSuccess = nullptr);
+	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,const char * sKey,const char * sSubKey = nullptr);
+	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,Sage::RGBColor_t  rgbDefault,const char * sKey,const char * sSubKey = nullptr);
+	unsigned char * ReadRawFile(const char * sFile,int & iFilesize);
+	unsigned char * ReadFile(const char * sFile,int & iFilesize);
+	unsigned char * ReadFile(const char * sTopKey,const char * sFile,int & iFilesize,bool bRawFile = false);
+	[[nodiscard]] Sage::RawBitmap_t ReadRawBitmap(const char * sFile);
+	[[nodiscard]] Sage::RawBitmap_t ReadRawBitmap(const char * sTopKey,const char * sFile);
+	CSageBitmap ReadBitmap(const char * sFile);
+	CSageBitmap ReadBitmap(const char * sTopKey,const char * sFile);
+	bool FileExists(const char * sTopKey,const char * sFile);
+	bool FileExists(const char * sFile);
+	ePGR_t ReadInt(int * iValue,const char * sKey,const char * sSubKey = nullptr); 
 //	ePGR_t ReadInt(int & iValue,int iDefault,char * sKey,char * sSubKey = nullptr); 
-	int ReadInt(int iDefault,char * sKey,char * sSubKey = nullptr); 
-	int ReadInt(char * sKey,char * sSubKey = nullptr); 
-	ePGR_t ReadBool(bool * bValue,char * sKey,char * sSubKey = nullptr); 
-	bool ReadBool(bool bDefault,char * sKey,char * sSubKey = nullptr);
-	ePGR_t ReadFloat(double * fValue,char * sKey,char * sSubKey = nullptr); 
-	double ReadFloat(double fDefault,char * sKey,char * sSubKey = nullptr);
+	int ReadInt(int iDefault,const char * sKey,const char * sSubKey = nullptr); 
+	int ReadInt(const char * sKey,const char * sSubKey = nullptr); 
+	ePGR_t ReadBool(bool * bValue,const char * sKey,const char * sSubKey = nullptr); 
+	bool ReadBool(bool bDefault,const char * sKey,const char * sSubKey = nullptr);
+	ePGR_t ReadFloat(double * fValue,const char * sKey,const char * sSubKey = nullptr); 
+	double ReadFloat(double fDefault,const char * sKey,const char * sSubKey = nullptr);
 	static void FreeFileMem(unsigned char * & sFile);
 	~CSagePGR();
 };

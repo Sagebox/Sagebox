@@ -71,7 +71,7 @@ kAdvPublic:		// Public or --Adanced define
 	{ 
 		::operator delete(ptr); 
 	};
-		CButton(const CButton &p);						// Copy constructor to force error on copy (since its a managed object)
+	CButton(const CButton &p);						// Copy constructor to force error on copy (since its a managed object)
 
 public:
 	static void deleteObj(CButton * p) 
@@ -106,6 +106,40 @@ private:
 	int m_iWinControl	;	// Internal Conrol ID for parent window
 public:
 
+	struct WinEvent
+	{
+		friend CButton;
+	private:
+		CButton * m_cButton;
+	public:
+		bool Pressed(Peek peek = Peek::No);
+		bool Pressed(bool & bChecked,Peek peek = Peek::No);
+
+		// Checked() -- For checkboxes, this returns TRUE if the checkbox is checked, FALSE if it is unchecked.
+		// To determine WHEN the checkbox is checked, this is equivalent to a "press" (and "unpress") action -- use Pressed() to determine when the
+		// checkbox is pressed ans UnPressed() to determine when the mouse button is unpressed.
+		// -->
+		//  ** Important note ** 
+		// This is not an event and will always return the status (it doesn't get reset on the call).  It is provided here for clarity. 
+		// MyButton.Checked() can also be used to get the 'checked' status
+		//
+		bool Checked();
+		bool PeekPress();
+		bool DoubleClicked(Peek peek = Peek::No);
+		bool Unpressed(Peek peek = Peek::No);
+		bool RadioGroupPressed(Peek peek = Peek::No);
+		bool RadioGroupPressed(int & iButton,Peek peek = Peek::No);
+
+		// RadioGroupChecked() - Returns the currently selected RadioButton that is selected in the radio button group (since one must always be selected)
+		// -->
+		//  ** Important note ** 
+		// This is not an event and will always return the status (it doesn't get reset on the call).  It is provided here for clarity. 
+		// MyButton.RadioGroupChecked() can also be used to get the 'checked' box for the radio button group
+		//
+		int RadioGroupChecked();
+	};
+
+	WinEvent event;
 	// Window Rect of Button Window
 	//
 	RECT WindowRect();
@@ -116,7 +150,8 @@ public:
 	//
 	// Specify Sage::Peek:Yes to "peek" at the value.  This will no reset the value, allowing the call to be made again for the same press.
 	//
-	bool Pressed(Sage::Peek peek = Sage::Peek::No);
+	bool Pressed(Peek peek = Peek::No);
+	bool Pressed(bool & bChecked,Peek peek = Peek::No);
 
 	// PeekPress() -- Returns TRUE of the button was pressed, false if it has not been pressed. This will not reset the flag and will always return TRUE until the flag is reset.
 	// This function is a shortcut for Pressed(Sage::Peek:Yes).
@@ -128,8 +163,12 @@ public:
 	// This function is a one--time-per press, resetting the "pressed" flag after being called. This means subsequent calls to Presed() will return false until the
 	// button is pressed again.
 	//
-	int DoubleClicked(Sage::Peek peek = Sage::Peek::No);
+	int DoubleClicked(Peek peek = Peek::No);
+
+	bool SetHoldPress(int iRepeatMS = 0,int iHoverMS = 0); 
+	bool ReleaseHoldPress(); 
 	
+
 
 	// TBD
 	//
@@ -149,7 +188,7 @@ public:
 	// UnPressed() -- When the button is pressed, a "pressed" flag is set.  When the mouse is released, an "UnPressed" flag is set. This functio will return true
 	// when the button is "unpressed".
 	//
-	bool Unpressed(Sage::Peek peek = Sage::Peek::No);
+	bool Unpressed(Peek peek = Peek::No);
 	
 	// ComboBoxPressed() -- This is TBD, as the ComboBoxes are scheduled for the next release.
 	//
@@ -196,11 +235,11 @@ public:
 	// Disable() -- Disable the button.  This will cause the button (or checkbox) to become disabled, accepting no input.  In most cases, this will also gray-out the button to 
 	// give a disabled appearance
 	//
-	bool Disable();
+	bool Disable(bool bDisable = true);
 	
 	// Enable() -- Enable a button or checkbox that has been disabled.
 	//
-	bool Enable();
+	bool Enable(bool bEnable = true);
 
 	// RadioGroupPressed() - Acts just like button.Press(), but returns the button press status of any button in a named group.  This allows addressing multiple Radio buttons with one call.
 	// RadioGroupPressed() returns with false if no button is pressed. Like Press(), this is a one-time function and will clear the flag, resulting in a FALSE return on subsequent calls until another button
@@ -213,7 +252,7 @@ public:
 	// iButton  -- When specified, fills pButtonID with the ControlID (set with ID() option) for the button pressed.  This allows a quick if (RadioGroupPressed(iButton)) { ... iValue = button ID } 
 	//               to determine the status and value in one statement, where a GroupPressed() and then checking all button values would otherwise be necessary.
 	//
-	bool RadioGroupPressed(Sage::Peek peek = Sage::Peek::No);
+	bool RadioGroupPressed(Peek peek = Peek::No);
 
 	// RadioGroupPressed() - Acts just like button.Press(), but returns the button press status of any button in a named group.  This allows addressing multiple Radio buttons with one call.
 	// RadioGroupPressed() returns with false if no button is pressed. Like Press(), this is a one-time function and will clear the flag, resulting in a FALSE return on subsequent calls until another button
@@ -226,20 +265,8 @@ public:
 	// iButton  -- When specified, fills pButtonID with the ControlID (set with ID() option) for the button pressed.  This allows a quick if (RadioGroupPressed(iButton)) { ... iValue = button ID } 
 	//               to determine the status and value in one statement, where otherwise a GroupPressed() and then calling iButton = RadioGroupChecked() would be required.
 	//
-	bool RadioGroupPressed(Sage::Peek peek,int & iButton);
+	bool RadioGroupPressed(int & iButto,Peek peek = Peek::No);
 
-	// RadioGroupPressed() - Acts just like button.Press(), but returns the button press status of any button in a named group.  This allows addressing multiple Radio buttons with one call.
-	// RadioGroupPressed() returns with false if no button is pressed. Like Press(), this is a one-time function and will clear the flag, resulting in a FALSE return on subsequent calls until another button
-	// in the group is pressed.  Use RadioGroupPressed(Sage::Peek::Yes) to "peek" at the value, which will no reset the flag.
-	//
-	// Parameters:
-	//
-	//
-	// peek     -- Default is false (i.e. Sage::Peek:No), which resets the flag.  Specifying Sage::Peek::Yes will "peek" at the value and return its status without setting it to false afterwards.
-	// iButton  -- When specified, fills pButtonID with the ControlID (set with ID() option) for the button pressed.  This allows a quick if (RadioGroupPressed(iButton)) { ... iValue = button ID } 
-	//               to determine the status and value in one statement, where a GroupPressed() and then checking all button values would otherwise be necessary.
-	//
-	bool RadioGroupPressed(int & iButton);
 
 	// RadioGroupChecked() - Returns the currently selected RadioButton that is selected in the radio button group (since one must always be selected)
 	//
@@ -291,7 +318,7 @@ public:
 	//
 	// You can also specify a specific width that fits all planned text, which will disallow the button from changing size. 
 	//
-	bool SetText(char * sText);
+	bool SetText(const char * sText);
 	bool SetText(const wchar_t * sText);
 
 
@@ -305,8 +332,6 @@ public:
 	// GetText() -- Get the text on the button.   This will return the text showing on the button.  In the case of a graphic button with no text, either nullptr or "" is returned.
 	//
 	const char * GetText();
-
-	bool SetHoverFunction(void (*fHoverFunction)(int,void *),int iHoverTime,void * pHoverData);
 
 	// Delete() -- Delete the button. 
 	//
@@ -340,7 +365,7 @@ public:
 	//
 	bool SetBgColor(int iColor);
 
-	bool SetStyle(char * sStyle);
+	bool SetStyle(const char * sStyle);
 	bool SetDefaultStyle();
 	bool SetMessageHandler(CButtonHandler * cHandler,void * pClassInfo = nullptr);
 	bool SetMessageHandler(CButtonHandler & cHandler,void * pClassInfo = nullptr);
@@ -361,7 +386,6 @@ public:
 	bool SetLocation(int iX,int iY);
 	POINT GetLocation();
 	SIZE GetWindowSize();
-	bool SetHoverMsg(const char * sHoverMessage);
 	int	StartX();
 	int	StartY();
 	int	EndX();
@@ -372,12 +396,16 @@ public:
 	bool isValid();
 	void SetDebugID(int iDebugID);
 	int GetDebugID();
-	void UpdateBg();
+	void UpdateBg(bool bUpdateNow = true);
 	int GetID();
 	const char * GetName();
 	Sage::CWidget * GetWidgetObj();
 
-	
+	int GetControlID();
+	bool SetHoverMsg(const char * sMessage);
+	bool SetSignal(ButtonSignal & stSignal);
+	bool SetSignal(bool * bSignal,bool * bSignalData = nullptr);
+
 
 };
 }; // namespace Sage

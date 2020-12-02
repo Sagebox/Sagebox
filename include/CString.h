@@ -1,7 +1,7 @@
 //#pragma once
 #if !defined(_CSageString_H_)
 #define _CSageString_H_
-#pragma warning( disable : 4996) 
+//#pragma warning( disable : 4996) 
 #include <Windows.h>
 #include <string>
 
@@ -24,11 +24,12 @@ public:
 
 
 	CString & operator << (std::string & x)		{ AddString((char *) x.c_str()); return((CString &) *this); }
-	CString & operator << (char * x)			{ AddString(x); return((CString &) *this); }
+//	CString & operator << (char * x)			{ AddString(x); return((CString &) *this); }
 	CString & operator << (const char * x)		{ AddString((char *) x); return((CString &) *this); }
 	CString & operator << (wchar_t * x)			{ AddString(x); return((CString &) *this); }
 	CString & operator << (const wchar_t * x)	{ AddString((wchar_t *) x); return((CString &) *this); }
 	CString & operator << (int x)				{ AddNumber(x); return((CString &) *this); }
+	CString & operator << (long x)				{ AddNumber((int) x); return((CString &) *this); }
 	CString & operator << (unsigned int x)		{ AddNumber((int) x); return((CString &) *this); }
 	CString & operator << (DWORD x)				{ AddNumber((unsigned int) x); return((CString &) *this); }
 	CString & operator << (double x2)			{ AddDouble(x2); return((CString &) *this); }
@@ -39,20 +40,24 @@ public:
 	CString & operator >> (wchar_t * x)			{ StartString(x); return((CString &) *this); }
 	CString & operator >> (const wchar_t * x)	{ StartString((wchar_t *) x); return((CString &) *this); }
 	CString & operator >> (int x)				{ StartString(x); return((CString &) *this); }
+	CString & operator >> (long x)				{ StartString((int) x); return((CString &) *this); }
 	CString & operator >> (unsigned int x)		{ StartString((int) x); return((CString &) *this); }
 	CString & operator >> (DWORD x)				{ StartString((unsigned int) x); return((CString &) *this); }
 	CString & operator >> (double x2)			{ iPlace = 0; AddDouble(x2); return((CString &) *this); }
 
 	char * operator * () { return (char *) s; };
 	const char * str() { return s; };
-	const char * c_str() { return s; };
-
+	char * c_str() { return s; };
+	const char * cc_str() { return (const char *)  s; };
+	char * GetBuffer() { return s; };
+	bool isEmpty(){ return  s && *s ? false : true; };
 
 	char * operator * (int x) { return(Return(x)); }
 //	char * operator * (float x) { return(Return((int) x)); }
-	CString & operator = (char * x)			{ if (x == s) return *this; ClearString(); return *this << x; }
-	CString & operator = (const char * x)	{ if (x == s) return *this; ClearString(); return *this << (char *) x; }
+//	CString & operator = (char * x)			{ if (x == s) return *this; ClearString(); return *this << x; }
+	CString & operator = (const char * x)	{ if (x == s) return *this; ClearString(); return *this << x; }
 	CString & operator = (std::string & x)	{	ClearString(); return *this << x; }
+	CString & operator = (const CString & x)		{	ClearString(); return *this << x; }
 	CString & operator = (int x)			{	ClearString(); return *this << x; }
 	CString & operator = (unsigned int x)	{	ClearString(); return *this << x; }
 	CString & operator = (DWORD x)			{	ClearString(); return *this << x; }
@@ -77,6 +82,11 @@ public:
 	{ 
 		Init();
 	}
+	CString(int iMem)
+	{
+		AllocateMem(iMem);
+	}
+
 	CString(const char * sString) 
 	{
 		Init();
@@ -102,6 +112,7 @@ public:
 	}
   
 	char * UnEmptyStr()  { return (*s) ? s : nullptr; }
+	char * PureStr()  { return (*s) ? s : nullptr; }
 
 	void StartString(char * sString); 
 	void StartString(wchar_t * sString); 
@@ -211,6 +222,7 @@ public:
 	}
   
 	wchar_t * UnEmptyStr()  { return (*s) ? s : nullptr; }
+	bool isEmpty(){ return  s && *s ? false : true; };
 
 	void StartString(wchar_t * sString); 
 	void StartString(char * sString); 

@@ -2,9 +2,9 @@
 
 #if !defined(_CDialog_H_)
 #define _CDialog_H_
-#include "CDialogParser.h"
 #include "CSageBox.h"
 #include "CBitmapWidget.h"
+#include "CDialogParser.h"
 
 #include <vector>
 
@@ -232,8 +232,8 @@ public:
 
 	bool isButtonPressed(int iGroup,int & iButton);
 	bool isButtonPressed(const char * sGroup,int & iButton);
-	int isButtonPressed(int iGroup);
-	int isButtonPressed(const char * sGroup); 
+//	int isButtonPressed(int iGroup);		-- These two are deprecated
+//	int isButtonPressed(const char * sGroup); 
 
 	// Get the currently selected radio button in a group of radio buttons.
 	// This returns the ID if the button set with ID() or the 1-based ID set
