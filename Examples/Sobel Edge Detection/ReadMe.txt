@@ -1,11 +1,11 @@
 ************************************
-SageBox Sobel Edge Detection Example
+Sagebox Sobel Edge Detection Example
 ************************************
 
  This program shows a quick example of  loading an image with the GetFile functionality of SageBox, then 
  converting it to a bitmap. 
  
- After conversion, a sobel convolution is then applied to get the edges. 
+ After conversion, a sobel convolution is then applied to calculate the edges. 
  
  This program shows how easy it is to get a file and to perform image-processing a calculations on an image.
  
@@ -16,7 +16,7 @@ SageBox Sobel Edge Detection Example
 This is a Console Mode Program
 ------------------------------
 
- This is a great exampe of a console mode program using SageBox to give it graphic components.
+ This is a great example of a console mode program using SageBox to give it graphic components.
  Note the "conAssert" macro and ErrorExit() function below -- these are console-mode functions to 
  exit the program with a message.  These are printed to std::printf.  As a console-mode program,
  there is no implementation for passing errors to another window.

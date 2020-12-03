@@ -10,7 +10,7 @@
 //  This program is an example that shows a very simple top-level emulation of an LCD dipslay module. 
 //  The program itself is very short, showing how to use SageBox Widgets. 
 //  
-//  The code for the widget itsel will be relased at a later date.
+//  The code for the widget itself will be released at a later date.
 //  
 //  Widgets are easy to write, and can be used by any SageBox application.
 //  In this case, the .H file is included for the widget, and the widget is put into the window
@@ -28,18 +28,18 @@
 // Using the Program - Fast Mode vs. default Mode
 // ----------------------------------------------
 //
-//  There are two buttons in this program, and both to the same thing: counter from 0 - 1000000. 
+//  There are two buttons in this program, and both to the same thing: count from 0 - 1000000. 
 //
 //  However, they do this in two ways, showing how SageBox can be used generally, but also for much more efficient programs.
 //
 //  Default Mode Button
 //
 //    This button simply counts to 1,000,000, updating the LCD at each count.  Being slower than the fast mode button, it also shows how to change
-//    the button title and use signals to get input rather than looking at the button through SageBox calls.
+//    the button title and use signals to get input rather than looking at the button through Sagebox calls.
 //
 // Fast Mode Button
 //
-//    In many places in SageBox, it is suggested that -- when auto updates are turned off -- the Update be given as Update(10) or SoftUpdate(), which will
+//    In many places in SageBox, it is suggested that -- when auto updates are turned off -- the Update be given as Update(10), which will
 //    cause the SageBox to only update the window every 10-20 ms (or whatever number you give it). This allows the system to only update when it is 
 //    time to update -- rather than updating thousands of times a second, it moves to 50-100 frames per-second.
 //
@@ -48,7 +48,7 @@
 //    Add to that the function UpdateReady(), which tells you if it is time to do an update, a function can skip building the update altogether
 //    until it matters.
 //
-//    With the LCD function, setting it to FastMode() does exactly that -- the funcitons are identical in that they call the LCD update for each iteration from 0-1,000,000
+//    With the LCD function, setting it to FastMode() does exactly that -- the functions are identical in that they call the LCD update for each iteration from 0-1,000,000
 //    In fast mode, however, the LCD function only builds and updates the display every 10-20ms, allowing the loop to run thousands of times faster since it doesn't have to 
 //    update every time.
 //
@@ -78,13 +78,13 @@
 //
 // 3. Button Signals and Button ClearEvents()
 //
-//      Button Signals (and Signal, in general) are really nothing but a boolean set when a button is pressed or a control is used.  
+//      Button Signals (and Signals, in general) are really nothing but a boolean set when a button is pressed or a control is used.  
 //      In some cases (such as a Checkbox, or Edit Box), a Signal can 
 //      also fill another pointer with information about the control (i.e. whether checked or not, or the text in an edit box).
 //
 //      Signals allow for two things:
 //
-//        1. Abstraction -- control of processes without the process itself knowing are caring if a GUI is present.  Since a boolean is filled in the button press,
+//        1. Abstraction -- control of processes without the process itself knowing or caring if a GUI is present.  Since a boolean is filled in the button press,
 //           a process can just look at the boolean, which can be passed in by whoever calls it. 
 //
 //           This allows fast prototyping and development, without the need to either insert GUI elements into a lower-level process, or to 
@@ -119,27 +119,27 @@ int main()
 
     auto& cWin = cSageBox.NewWindow(100,100,320,320,InnerSize());
     cWin.Cls("SkyBlue","SkyBlueDark");                                      // Clear screen with a gradient of two stock colors
-    CPoint pLedLoc = { 10,10 };                                             // Get Start X,Y of Led Widget
-    CLcdDisplayWidget clcd(&cWin,pLedLoc.x,pLedLoc.y,0,Transparent());      // Create the LED Widget
+    CPoint pLcdLoc = { 10,10 };                                             // Get Start X,Y of Lcd Widget
+    CLcdDisplayWidget clcd(&cWin,pLcdLoc.x,pLcdLoc.y,0,Transparent());      // Create the LCD Widget
 
-    CPoint szSize = clcd.GetWindowSize();                                   // Get Size of LED Windows
+    CPoint szSize = clcd.GetWindowSize();                                   // Get Size of LCD Windows
 
-    // Use some CPoint arithmetic to place a Text Widget (label) centered under the LED Widget
+    // Use some CPoint arithmetic to place a Text Widget (label) centered under the LCD Widget
     //
-    //        We want to put a label, but we don't know how long the text is going to be, so we use 200 pixels know it won't
-    //        be any longer than that. 
-    //
-    //        In the X direction, we center the 200-pixel-width text widget X with the calculation X = (szSize.x + 200)/2.  To make it 
-    //        easy to get the Y position, the calculation szSize.x - (szSize.x+200)/2 is used, which is the same value.
-    //        
-    //        In the Y direction, since we're putting the text widget just underneath the LED widget, we get the bottom value
-    //        (i.e. pLedLoc.y + szSize.y, but we do the entire CPoint);
+    //  We want to put a label, but we don't know how long the text is going to be, so we use 200 pixels know it won't
+    //  be any longer than that. 
+    //  
+    //  In the X direction, we center the 200-pixel-width text widget X with the calculation X = (szSize.x + 200)/2.  To make it 
+    //  easy to get the Y position, the calculation szSize.x - (szSize.x+200)/2 is used, which is the same value.
+    //  
+    //  In the Y direction, since we're putting the text widget just underneath the LCD widget, we get the bottom value
+    //  (i.e. pLcdLoc.y + szSize.y, but we do the entire CPoint);
 
-    pLedLoc += szSize - CPoint((szSize.x + 200)/2, 0);        
+    pLcdLoc += szSize - CPoint((szSize.x + 200)/2, 0);        
 
     // Create the text widget -- we just harcode 200 since it's more than we'll ever need. 
 
-    cWin.TextWidget(pLedLoc.x,pLedLoc.y,200,0,"LED Emulation Widget",TextCenter() | Transparent());
+    cWin.TextWidget(pLcdLoc.x,pLcdLoc.y,200,0,"LCD Emulation Widget",TextCenter() | Transparent());
 
     // Create two buttons -- one for a slow count and one for a fast count. 
     // with cButtonCount, since it will be slow, we also change the color and label when we run the count
@@ -150,7 +150,7 @@ int main()
 
     constexpr const char * sButtonCountTitle = "Count to 1,000,000";        // This is set as a value because we use it more than once (see the event loop)
 
-    auto& cButtonCount = cWin.NewButton(20,200,250,sButtonCountTitle,CenterX() | Transparent());
+    auto& cButtonCount = cWin.NewButton(20,200,250,sButtonCountTitle,CenterX() | Transparent()); 
     auto& cButtonFast  = cWin.NewButton(20,240,250,"Count to 1,000,000 (Fast Mode)",CenterX() | Transparent());
 
     // Create a checkbox so we can switch styles, from regular LCD to blue LED
@@ -163,30 +163,30 @@ int main()
     //
     // See notes placed before the Signal is used, as well as the following three notes:
     //
-    //        1. Speed.  The only reason we use the Signal here is for speed.  We want the "cButtonFast" routine to be as fast as possible, since 
-    //              the point of it is that we can call the LED without a real penalty, as it will only update when necessary (every 50-100 ms or so).
-    //              We can use cButtonFast->Pressed() to check for the press, which will gives us the same value.  However, this means we have to make 
-    //              a call into the system that is 1+ levels deep, just to get a boolean.  Since we want speed here, we can just check a boolean 
-    //              (i.e. GetSignal) and move on. 
+    //  1. Speed.  The only reason we use the Signal here is for speed.  We want the "cButtonFast" routine to be as fast as possible, since 
+    //      the point of it is that we can call the LCD without a real penalty, as it will only update when necessary (every 50-100 ms or so).
+    //      We can use cButtonFast->Pressed() to check for the press, which will gives us the same value.  However, this means we have to make 
+    //      a call into the system that is 1+ levels deep, just to get a boolean.  Since we want speed here, we can just check a boolean 
+    //      (i.e. GetSignal) and move on. 
     //
-    //              If we really wanted speed, we would just check bStop.bPressed and reset the boolean later.  But, we don't need that sort of speed here, just
-    //              enough to avoid some calls on every iteration of our counter.
+    //      If we really wanted speed, we would just check bStop.bPressed and reset the boolean later.  But, we don't need that sort of speed here, just
+    //      enough to avoid some calls on every iteration of our counter.
     //    
-    //        2. This can just be "bool bStop".  If you look at the ButtonSignal interface, it is just a boolean and a bChecked (for checkboxes),
-    //              with some inline functions to get the flag and reset it.  It is used here instead of a plain "bool bStop" so we can use bStop.GetSignal()
-    //              which returns the boolean value (i.e. if the button was pressed). It also resets the value so we can use it for the next press, but 
-    //              we don't need it here becasue we reset it before every loop with a call to SetSignal() -- it's in the code this way for clarity.
+    //  2. This can just be "bool bStop".  If you look at the ButtonSignal interface, it is just a boolean and a bChecked (for checkboxes),
+    //      with some inline functions to get the flag and reset it.  It is used here instead of a plain "bool bStop" so we can use bStop.GetSignal()
+    //      which returns the boolean value (i.e. if the button was pressed). It also resets the value so we can use it for the next press, but 
+    //      we don't need it here becasue we reset it before every loop with a call to SetSignal() -- it's in the code this way for clarity.
     //
-    //              It also serves as more self-documenting code.   
+    //      It also serves as more self-documenting code.   
     //
-    //      3. Signals can be used effectively in routines that do not want to care or know about the interface -- they just want to check 
-    //              a status -- in this case, the pointer to "bPressed" bool can be sent in as a parameter, or a boolean can be used instead of the Button Signal.
+    //  3. Signals can be used effectively in routines that do not want to care or know about the interface -- they just want to check 
+    //      a status -- in this case, the pointer to "bPressed" bool can be sent in as a parameter, or a boolean can be used instead of the Button Signal.
     
     ButtonSignal bStop;            // This gets initialized when we setup the signal with SetSignal()
 
     // The Main Event Loop -- Get events until the window is closed. 
     // 
-    // This function is formant until an event is received, such as a mouse movement, mouse press, button press, etc. 
+    // This function is dormant until an event is received, such as a mouse movement, mouse press, button press, etc. 
     //
     // In this case, we're looking for any two of the buttons or the checkbox presses, and nothing else. 
     // Since this routine is small -- and typical of in-process development -- the routines are run within the loop (this is also
@@ -197,7 +197,7 @@ int main()
     {
         bool bBlueChecked; 
         if (cCheckboxBlue.Pressed(bBlueChecked)) clcd.SetMode(bBlueChecked ? CLcdDisplayWidget::Mode::BlueLed
-                                                                            : CLcdDisplayWidget::Mode::PlainLed); 
+                                                                           : CLcdDisplayWidget::Mode::PlainLed); 
 
         if (cButtonCount.Pressed())
         {
@@ -241,20 +241,19 @@ int main()
                                                                 // to when the button was used for a different purpose.
             cButtonCount.SetStyle("default");                   // Get back to our original color
             cButtonCount.SetText(sButtonCountTitle);            // get back to our original button text
-
         }
 
         if (cButtonFast.Pressed())
         {
             // Set the fast mode, which only updates every 10-20ms -- still 50-100 frames per-second, and this
-            // allows the function to count and set the LED value on every iteration without the LED updating every single 
+            // allows the function to count and set the LCD value on every iteration without the LCD updating every single 
             // call.
 
             clcd.SetFastMode(true);            // Set the fast mode
             for (int i=0;i<1000000;i++) clcd.SetValue(i);
             clcd.SetFastMode(false);        // Reset the fast mode so we don't have to worry about setting it for the other mode.
 
-            clcd.UpdateLast();              // Update one more time to make sure we got the last count on the led window.
+            clcd.UpdateLast();              // Update one more time to make sure we got the last count on the lcd window.
                                             // This is because we don't know the last time it updated due to the fast mode, so 
                                             // We have to update it one last time to know we have the current value.
         }

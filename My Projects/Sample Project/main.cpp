@@ -1,8 +1,13 @@
 
 // This is a sample project for the "My Projects" directory.
+//
+// This program draws a square red square with a white outline on the screen, moving the rectangle 
+// to the mouse coordinates when the mouse is moved and the mouse button is pressed.
+//
 // This was created with the "Console Mode and Windows Only" template. 
 //
-// All provided project templates will work for this structure, where:
+// The project SageBox templates will work for this structure, where:
+// You can copy this directory structure (and remove this sample project directory) to have a clean Sagebox project structure.
 //
 //  The top-level project or solution directory (i.e. "Sample Project") is in the same directory as
 //
@@ -23,15 +28,16 @@
 //
 int main()
 {
-    CSageBox cSageBox("My Program");                // Open SageBox, titling program cSageBox() may also be used for no title 
+    CSageBox cSageBox("Sagebox - Square Program");  // Open SageBox, titling program cSageBox() may also be used for no title 
     auto &cWin = cSageBox.NewWindow(NoClose());     // Open a sample Window
                                                     // NoClose() -- disallows window closing if the user presses the "X"/Windows close
                                                     // button in the upper-right.  This allows us to put the Exit Button out (otherwise it would fall
                                                     // through).  If we didn't do this we could also call cWin.ResetWindowClosing()
-    
+
     cWin.Cls("SkyBlueDark","SkyBlueLight");         // We can also do Cls({100,200,100}) (or similar) for RGB values rather than stock colors
 
-    SIZE szWinSize = cWin.GetWindowSize();
+    CPoint szWinSize = cWin.GetWindowSize();        // Get in a CPoint (GetWindowSize() returns a SIZE) so we can use it later when we call DrawRect()
+                                                    // We could just use this inline below, I left it here for clarity of code.
 
     // Draw a red rectangle (with white border) on the screen
     // It's a lambda so we can use it twice without having to move it out to an external function
@@ -49,10 +55,10 @@ int main()
     auto DrawRect = [&](POINT pLoc)
     {
         cWin.Cls();     // Not the most efficient compared to a region, but good enough
-        cWin.DrawRectangle(pLoc.x,pLoc.y,200,200,cWin.GetColor("Red"),cWin.GetColor("White")); 
+        cWin.DrawRectangle(pLoc.x-100,pLoc.y-100,200,200,cWin.GetColor("Red"),cWin.GetColor("White")); 
     };
 
-    DrawRect({szWinSize.cx/2-100,szWinSize.cy/2-100});      // Draw initial rectangle in the center
+    DrawRect(szWinSize/2);      // Draw initial rectangle in the center (CPoint will divide 'x and 'y' element by 2 here)
 
     // Event Loop -- Wait for a mouse movement with the mouse button down, then draw a rectangle
     // wherever the mouse is. 
@@ -64,9 +70,9 @@ int main()
     while(cWin.GetEvent() && !cWin.CloseButtonPressed())
     {
         POINT pMouse;
-        if (cWin.MouseMoved(pMouse) && cWin.MouseButtonDown()) DrawRect(CPoint(-150,-150) + pMouse);
+        if (cWin.MouseMoved(pMouse) && cWin.MouseButtonDown()) DrawRect(pMouse);
     }
 
     cWin.ExitButton();      // Put a button at the bottom of the screen to inform the user we're done.
-                            // We could just exit, but its nice to know the program got our message
+                            // We could just exit, but its nice to know the program got our close-button click.
 }

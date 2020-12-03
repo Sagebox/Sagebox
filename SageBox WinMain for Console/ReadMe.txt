@@ -1,5 +1,5 @@
 **************************************************************************************************
-WinMain.Cpp -- WinMain Entry point for console-mode SageBox programs using Windows project Setting
+WinMain.Cpp -- WinMain Entry point for console-mode Sagebox programs using Windows project Setting
 **************************************************************************************************
 
 This file provides an automatic WinMain() that will call the main() in the console-mode-based program.
@@ -11,11 +11,11 @@ be declared as "int main()"
 The Windows project setting for a project that started as a Console Mode program converts the program into
 a valid Windows program, removing the console window. 
 
-As for other values, i.e. instance, nCmdShow, etc.  These can either be obtained easily (such as GetInstance() in Windows), or
+As for other values, i.e. Instance, nCmdShow, etc.  These can either be obtained easily (such as GetInstance() in Windows), or
 this file can be alterted to store the information somewhere accessible.
 
 To supply your own WinMain(), remove the WinMain.obj reference in the LINKER settings in the project. 
-SageBox also has a Windows set of projects where the program can started in windows and then convert back to 
+Sagebox also has a Windows set of projects where the program can started in windows and then convert back to 
 a console mode program (i.e. the reverse of this).
 
 

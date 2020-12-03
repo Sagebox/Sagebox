@@ -3,7 +3,7 @@
 // Please modify, copy, do whatever you want for personal uses.  For professional uses, contact the e-mail address above
 
 // **************************************************************************************************
-// WinMain.Cpp -- WinMain Entry point for console-mode SageBox programs using Windows project Setting
+// WinMain.Cpp -- WinMain Entry point for console-mode Sagebox programs using Windows project Setting
 // **************************************************************************************************
 //
 // This file provides an automatic WinMain() that will call the main() in the console-mode-based program.
@@ -15,11 +15,11 @@
 // The Windows project setting for a project that started as a Console Mode program converts the program into
 // a valid Windows program, removing the console window. 
 //
-// As for other values, i.e. instance, nCmdShow, etc.  These can either be obtained easily (such as GetInstance() in Windows), or
+// As for other values, i.e. Instance, nCmdShow, etc.  These can either be obtained easily (such as GetInstance() in Windows), or
 // this file can be alterted to store the information somewhere accessible.
 //
 // To supply your own WinMain(), remove the WinMain.obj reference in the LINKER settings in the project. 
-// SageBox also has a Windows set of projects where the program can started in windows and then convert back to 
+// Sagebox also has a Windows set of projects where the program can started in windows and then convert back to 
 // a console mode program (i.e. the reverse of this).
 //
 
@@ -37,9 +37,8 @@ extern int main(int argc, char * argv[]);      // external main reference()
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,_In_ LPSTR lpCmdLineA,_In_ int nCmdShow)
 {
-
     // Fixup from previously using wWinMain() -- convert command line into a wide string. 
-    // This is used because (afik) CommandLineToArgvA() does not exist in the MSVC library, and it 
+    // This is used because (afaik) CommandLineToArgvA() does not exist in the MSVC library, and it 
     // is too useful to ignore.
 
     CStringW wCmdLine   = lpCmdLineA;       // Convert to wchar_t as if we use wWinMain as intended
@@ -47,13 +46,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     
     std::vector<CString> vArgs;
 
-    // --> Continue on as it was originall writtem (i.e. for wWinMain)
+    // --> Continue on as it was originally written (i.e. for wWinMain)
     //     This also allows the conversion later to wWinMain by just removing the above.
 
-    char * sAltArgs[1];       // Set a version we know will work (i.e. the command line only) in case of any errors in the process
-                              // -- which never happens, but we do it anyway
+    char * sAltArgs[1];     // Set a version we know will work (i.e. the command line only) in case of any errors in the process
+                            // -- which never happens, but we do it anyway
 
-    int iArgC       = 1;        // Initially one argument for the command line we know we have
+    int iArgC       = 1;    // Initially one argument for the command line we know we have
     int iNumArgs    = 0;
 
     char sModulePath[MAX_PATH+1024];
@@ -144,7 +143,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // Call the C/C++ main function()
     //
     // note: the main() being called is assumed to now be more than a console mode program with some form of input
-    // and output in a GUI (SageBox or anything that gets out of the console mode, if only Windows MessageBox(), for example),
+    // and output in a GUI (Sagebox or anything that gets out of the console mode, if only Windows MessageBox(), for example),
     // as the console mode window does not exist in this implementation. 
     //
     // Or, if it was a console mode program that just provided a service and no I/O, this is a good way to 
@@ -167,7 +166,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         sOutArgs = sAltArgs;
     }
     
-    return main(iArgC,sOutArgs);
+    return main(iArgC,sOutArgs);    // Finally, call the C/C++ normative main() function
 
     // sArgs & vArgs get deleted here automatically
 

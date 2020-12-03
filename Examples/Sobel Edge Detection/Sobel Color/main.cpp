@@ -4,13 +4,13 @@
 // contact the e-mail address above
 
 // ************************************
-// SageBox Sobel Edge Detection Example
+// Sagebox Sobel Edge Detection Example
 // ************************************
 // 
 //  This program shows a quick example of  loading an image with the GetFile functionality of SageBox, then 
 //  converting it to a bitmap. 
 //  
-//  After conversion, a sobel convolution is then applied to get the edges. 
+//  After conversion, a sobel convolution is then applied to calculate the edges. 
 //  
 //  This program shows how easy it is to get a file and to perform image-processing a calculations on an image.
 //  
@@ -21,7 +21,7 @@
 // This is a Console Mode Program
 // ------------------------------
 //
-//  This is a great exampe of a console mode program using SageBox to give it graphic components.
+//  This is a great example of a console mode program using SageBox to give it graphic components.
 //  Note the "conAssert" macro and ErrorExit() function below -- these are console-mode functions to 
 //  exit the program with a message.  These are printed to std::printf.  As a console-mode program,
 //  there is no implementation for passing errors to another window.
@@ -33,9 +33,9 @@
 // SageBox Features Shown in this Program
 // --------------------------------------
 //
-//  This program is very short, so just look around and see what SageBox functions are used.  They are usually
-//  self-explanatory and self-documenting.  In most cases, you can hold the mouse over the function and the 
-//  documentation for that function will appear on the screen.
+// This program is very short, so just look around and see what SageBox functions are used.  They are usually
+// self-explanatory and self-documenting.  In most cases, you can hold the mouse over the function and the 
+// documentation for that function will appear on the screen.
 //
 
 #include "CSageBox.h"
@@ -55,7 +55,7 @@ void ErrorExit(const char * sMsg)
 
 int Sobel()
 {
-    CSageBox cSageBox("SageBox Sobel Color Example");        // Initial Sagebox with a window title
+    CSageBox cSageBox("Sagebox Sobel Color Example");        // Initial Sagebox with a window title
 
     // Get a file from the user. If the file comes back blank, it was aborted.
     // an stFileOpenStruct_t can be used for more control, such as labels.
@@ -75,7 +75,7 @@ int Sobel()
 
     printf("FileName: %s\nOriginal Size = %dx%d\nResizing...",*csFile,cBitmap.GetWidth(),cBitmap.GetHeight());
 
-    // Use two thumbnail/resize tools. The defsault for borth are "BestFit" (it is shown in the QuickThumbnail call for reference, but not required),
+    // Use two thumbnail/resize tools. The default for both are "BestFit" (it is shown in the QuickThumbnail call for reference, but not required),
     // Which will size the image to the smallest dimension in the Width/Height given while keeping the proportions of the image. 
     // If the image is smaller than this, then it will return the image without resizing it. 
     // "ExactBestFit" will resize the image to the lowest Width/Height value (keeping the image the same proportion), even of the image is smaller.
@@ -86,7 +86,7 @@ int Sobel()
 
     printf("\nDone Resizing.\n");
 
-    int iWidth = cNewBitmap.GetWidth();
+    int iWidth  = cNewBitmap.GetWidth();
     int iHeight = cNewBitmap.GetHeight();
      
     auto cBitmapOut = cSageBox.CreateBitmap(cNewBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
@@ -161,7 +161,6 @@ int Sobel()
     cSageBox.ExitButton("Sobel Color Edge Detection Completed");        // Tell the user we've completed the sobel process. 
                                                                         // The menu was added first so it just didn't "pop up" after the user clicked the 
                                                                         // OK button in the info dialog.
-
     return 0; 
 }
 

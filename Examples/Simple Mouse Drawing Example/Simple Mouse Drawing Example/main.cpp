@@ -7,13 +7,13 @@
 // SageBox Mouse Drawing Example
 // *****************************
 //
-//    This program is a very short program to show how powerful SageBox can be with just a few general SageBox functions, such as
+//    This program is a very short program to show how powerful Sagebox can be with just a few general Sagebox functions, such as
 //    looking for the mouse click, mouse movement, and drawing lines. 
 //
-//    The program itself is about 25 lines, and uses common SageBox functions.  That is, its not esoteric and is a good way to
-//    learn how SageBox works.
+//    The program itself is about 25 lines, and uses common Sagebox functions.  That is, its not esoteric and is a good way to
+//    learn how Sagebox works.
 //
-//    Colors used in the program are text-based, i.e. "White","Red","LightYellow", etc.  These are stock colors in SageBox.  
+//    Colors used in the program are text-based, i.e. "White","Red","LightYellow", etc.  These are stock colors in Sagebox.  
 //    Regular RGB values or variable can also be used, such as {0,0,255}, for blue, for example.     In this program, since its
 //    a small demo, stock colors were used for ease-of-use and show how they can be used rather than specific RGB values.
 //
@@ -30,8 +30,6 @@ int main()
 {
     CSageBox cSageBox; 
     auto& cWin = cSageBox.NewWindow();
-
-    POINT pLastMouse;
 
     // Cycle through colors for each time the mouse is lifted and then pressed again.
 
@@ -50,10 +48,8 @@ int main()
     //
     // The options do the following:
     //
-    //        CenterX()     -- Centers the Text Widget (of 700 width) in the current window (of about 1200 width)
-    //        TextCenterX() -- Centers the text within the widget itself -- these two together center the text. 
-    //                         Another option is to use TextCenterX() only and make the widget as large as the window
-    //                         The defualt setting is to justify the text to the left part of the widget.
+    //        TextCenterX() -- Centers the text within the widget. The widget is the width of the screen, so we don't worry about 
+    //                         centering the widget itself.
     //        Font          -- Set a larger font -- the defualt is around Arial, 13
     //        TextColor()   -- Set the Text Color to a Cyan -- RGB values can be used to.  "Cyan" is one of a number of stock colors
     //        Transparent() -- Copy the Window background for the TextWidget background so the text blends in, even though it is a 
@@ -74,7 +70,7 @@ int main()
 
     while(cWin.GetEvent())
     {
-        POINT pMouse;  
+        POINT pMouse,pLastMouse;  
 
         // If the mouse is clicked, consider this the starting point for the mouse, since it was previously not pressed.
 
