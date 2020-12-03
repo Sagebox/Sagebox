@@ -1,7 +1,7 @@
 
 // This is a sample project for the "My Projects" directory.
 //
-// This program draws a square red square with a white outline on the screen, moving the rectangle 
+// This program draws a red square with a white outline on the screen, moving the rectangle 
 // to the mouse coordinates when the mouse is moved and the mouse button is pressed.
 //
 // This was created with the "Console Mode and Windows Only" template. 
