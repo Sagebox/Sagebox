@@ -4,13 +4,13 @@
 // contact the e-mail address above
 
 // ************************************
-// SageBox Sobel Edge Detection Example
+// Sagebox Sobel Edge Detection Example
 // ************************************
 // 
 //  This program shows a quick example of  loading an image with the GetFile functionality of SageBox, then 
 //  converting it to a bitmap. 
 //  
-//  After conversion, a sobel convolution is then applied to get the edges. 
+//  After conversion, a sobel convolution is then applied to calculate the edges. 
 //  
 //  This program shows how easy it is to get a file and to perform image-processing a calculations on an image.
 //  
@@ -21,7 +21,7 @@
 // This is a Console Mode Program
 // ------------------------------
 //
-//  This is a great exampe of a console mode program using SageBox to give it graphic components.
+//  This is a great example of a console mode program using SageBox to give it graphic components.
 //  Note the "conAssert" macro and ErrorExit() function below -- these are console-mode functions to 
 //  exit the program with a message.  These are printed to std::printf.  As a console-mode program,
 //  there is no implementation for passing errors to another window.
@@ -53,10 +53,9 @@ void ErrorExit(const char * sMsg)
     exit(0);
 }
 
-
 int Sobel()
 {
-    CSageBox cSageBox("SageBox Sobel Example");        // Initial Sagebox with a window title
+    CSageBox cSageBox("Sagebox Sobel Example");        // Initial Sagebox with a window title
 
     // Get a file from the user. If the file comes back blank, it was aborted.
     // an stFileOpenStruct_t can be used for more control, such as labels.
@@ -76,16 +75,17 @@ int Sobel()
 
     printf("FileName: %s\nOriginal Size = %dx%d\n",*csFile,cBitmap.GetWidth(),cBitmap.GetHeight());
 
-    // Use two thumbnail/resize tools. The defsault for borth are "BestFit" (it is shown in the QuickThumbnail call for reference, but not required),
+    // Use two thumbnail/resize tools. The default for both are "BestFit" (it is shown in the QuickThumbnail call for reference, but not required),
     // Which will size the image to the smallest dimension in the Width/Height given while keeping the proportions of the image. 
     // If the image is smaller than this, then it will return the image without resizing it. 
+    //
     // "ExactBestFit" will resize the image to the lowest Width/Height value (keeping the image the same proportion), even of the image is smaller.
     // There are also a number of other options.
 
     cSageBox.QuickThumbnail(cBitmap,350,350,ThumbType::BestFit);            // Get a Best Fit thumbnail and display it on the screen
     auto cNewBitmap = cSageBox.QuickResize(cBitmap,1200,800);               // Get a best fit, no more than 1200X, 800Y, if the image is larger than this.
 
-    int iWidth = cNewBitmap.GetWidth();
+    int iWidth  = cNewBitmap.GetWidth();
     int iHeight = cNewBitmap.GetHeight();
      
     auto cBitmapOut = cSageBox.CreateBitmap(cNewBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
@@ -140,7 +140,6 @@ int Sobel()
             int iMag = (int) min(255,sqrt(fGrayV*fGrayV + fGrayH*fGrayH)/fDiv);
 
             cBitmapOut.SetPixel(j,i,{iMag,iMag,iMag });
-
         }
     }
 
