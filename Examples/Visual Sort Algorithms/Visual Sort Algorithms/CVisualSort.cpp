@@ -376,6 +376,7 @@ bool CVisualSort::InitWindow(CSageBox & cSageBox)
     // Set the threshold range between 1-500 --> Lower values slow it down, faster values speed it up.
 
     m_cSliderThreshold = &m_cWin->DevSlider("Threshold",Range(1,500) | Default(m_iThreshold)); 
+    m_cSliderThreshold->SetFineControl();   // Set MouseWheel to move in increments of 1
 
     // Set the location of the Dev Window outside of the main window. 
 
