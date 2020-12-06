@@ -200,6 +200,22 @@ public:
     //
 	CWindow & NewWindow(CWindow * cWin,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
+    // NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+	CWindow & NewWindow(CWindow * cWin,const cwfOpt & cwOpt);
+
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
     //
@@ -1264,11 +1280,16 @@ public:
     // This only applies to the original program thread and will not work for other threads created after
     // the program started.
     //
-    bool StopThread();
-
-    // Restart the main thread if it is suspended.
+    // the value iReturnValue is returned from StopThread() when it wakes up.
     //
-    bool StartThread();
+    //
+    int StopThread();
+
+    // Resume the main thread if it is suspended.
+    //
+    // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
+    //
+    bool ResumeThread(int iValue = 0);
 
     // End the program when in the main message thread.  This is used when StopThread() has been used to stop the main thread but events are
     // still being handled through the Main Windows Message Thread.
@@ -1276,7 +1297,9 @@ public:
     // EndProgram() sets the window closing status and resumes the main thread.  Typically, the main thread will exit and SageBox will end.
     // However, StopThread() can be used anywhere and does not need to exit immediately.  It can take care of cleanup, memory deallocations, etc. 
     //
-    bool EndProgram();
+    // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
+    //
+    bool EndProgram(int iReturnValue = 0);
 };
 }; // namespace Sage;
 

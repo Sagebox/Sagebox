@@ -2261,6 +2261,30 @@ public:
         // When GetEvent() is called, the Event Pending Status is cleared back to false
         //
         __forceinline bool EventReady() { return !m_cWin ? false : m_cWin->EventReady(); };
+
+        // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
+        // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
+        // 
+        // This can be useful as a way to automatically close the window.  Otherwise, when in event-driven mode (i.e. ThreadStop() has been called),
+        // the OnClose() or WM_CLOSE messages need to be handled to call EndProgram() manually (otherwise the program may hang)
+        //
+        // Important Note: If the Window Close has been disabled this is ignored on Window Close.
+        //
+        // iReturnValue specifies the returend value on end program (default is 0)
+        //
+        bool EndProgramOnClose(bool bEndOnClose); 
+
+        // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
+        // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
+        // 
+        // This can be useful as a way to automatically close the window.  Otherwise, when in event-driven mode (i.e. ThreadStop() has been called),
+        // the OnClose() or WM_CLOSE messages need to be handled to call EndProgram() manually (otherwise the program may hang)
+        //
+        // Important Note: If the Window Close has been disabled this is ignored on Window Close.
+        //
+        // iReturnValue specifies the returend value on end program (default is 0)
+        //
+        bool EndProgramOnClose(int iReturnValue = 0); 
     };
 
     WinEvent event;
@@ -6455,11 +6479,15 @@ public:
     // This only applies to the original program thread and will not work for other threads created after
     // the program started.
     //
-    bool StopThread();
-
-    // Restart the main thread if it is suspended.
+    // the value iReturnValue is returned from StopThread() when it wakes up.
     //
-    bool StartThread();
+    int StopThread();
+
+    // Resume the main thread if it is suspended.
+    //
+    // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
+    //
+    bool ResumeThread(int iValue = 0);
 
     // End the program when in the main message thread.  This is used when StopThread() has been used to stop the main thread but events are
     // still being handled through the Main Windows Message Thread.
@@ -6467,7 +6495,33 @@ public:
     // EndProgram() sets the window closing status and resumes the main thread.  Typically, the main thread will exit and SageBox will end.
     // However, StopThread() can be used anywhere and does not need to exit immediately.  It can take care of cleanup, memory deallocations, etc. 
     //
-    bool EndProgram();
+    // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
+    //
+    bool EndProgram(int iValue = 0);
+
+    // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
+    // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
+    // 
+    // This can be useful as a way to automatically close the window.  Otherwise, when in event-driven mode (i.e. ThreadStop() has been called),
+    // the OnClose() or WM_CLOSE messages need to be handled to call EndProgram() manually (otherwise the program may hang)
+    //
+    // Important Note: If the Window Close has been disabled this is ignored on Window Close.
+    //
+    // iReturnValue specifies the returend value on end program (default is 0)
+    //
+    bool EndProgramOnClose(bool bEndOnClose); 
+    
+    // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
+    // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
+    // 
+    // This can be useful as a way to automatically close the window.  Otherwise, when in event-driven mode (i.e. ThreadStop() has been called),
+    // the OnClose() or WM_CLOSE messages need to be handled to call EndProgram() manually (otherwise the program may hang)
+    //
+    // Important Note: If the Window Close has been disabled this is ignored on Window Close.
+    //
+    // iReturnValue specifies the returend value on end program (default is 0)
+    //
+    bool EndProgramOnClose(int iReturnValue = 0); 
 
     CSageBox * GetSageBox();
 

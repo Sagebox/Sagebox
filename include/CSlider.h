@@ -125,7 +125,7 @@ public:
 	// --> iIncrement sets the increment for each Mouse Wheel (i.e. SetFineControl(5) will move the slider value or or down by 5.
 	// --> The default is one (i.e. SetFineControl() is the same as SetFineControl(true,1) or SetFineControl(1);
 	//
-	bool SetFineControl(int iIncrement = 1);
+	bool SetFineControl(int iIncrement);
 
 	HWND	GetWindowHandle();
 	bool	RecalculateWindow();
