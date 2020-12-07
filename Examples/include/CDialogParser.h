@@ -2,13 +2,12 @@
 
 #if !defined(_CDialogParser_H_)
 #define _CDialogParser_H_
-#include "Parser/CCompiler.h"
-#include "Parser/Parser1.h"
-#include "Parser/CCompLink.h"
 #include "CString.h"
-
+#include <vector>
+namespace CSageScript { class CCompLink; }
 namespace Sage
 {
+class CSageScipt;
 
 class CWidget;
 class CDialogParser
@@ -163,14 +162,8 @@ private:
 
 
 public:
-	CDialogParser()
-	{
-		m_cComp = new CSageScript::CCompLink;
-	}
-	~CDialogParser()
-	{
-		if (m_cComp) delete m_cComp;
-	}
+	CDialogParser();
+	~CDialogParser();
 
 	bool Init(char * sPointer);
 	CDialogParser::stControlTypes_t * FindControlName();
