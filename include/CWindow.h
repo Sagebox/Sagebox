@@ -2207,7 +2207,9 @@ public:
         // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
         // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
         //
-        bool ExitButton(const char * sText = nullptr);
+        // ExitButton() returns 0
+        //
+        int ExitButton(const char * sText = nullptr);
  
         // Returns true if the 'X' button was pressed in the window or the window is closing for some other reason.
         // 
@@ -4645,7 +4647,7 @@ public:
     // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
     // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
     //
-    RGBColor_t MakeColor(char * sColor,DWORD rgbColor);
+    RGBColor_t MakeColor(const char * sColor,DWORD rgbColor);
 
     // MakeColor() -- Make a named system color useable throughout SageBox functions.
     //
@@ -4661,7 +4663,7 @@ public:
     // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
     // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
     //
-    RGBColor_t MakeColor(char * sColor,RGBColor_t rgbColor);
+    RGBColor_t MakeColor(const char * sColor,RGBColor_t rgbColor);
 
     // Get a named color.  This returns an RGBColor_t (or DWORD -- see prototypes) of a named color.
     // 
@@ -5445,7 +5447,9 @@ public:
     // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
     // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
     //
-    bool ExitButton(const char * sText = nullptr);
+    // Exit Button return 0
+    //
+    int ExitButton(const char * sText = nullptr);
  
 
     // EnableWindow() -- Enables or Disables the Window and all controls within the window

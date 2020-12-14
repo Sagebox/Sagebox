@@ -1172,7 +1172,9 @@ public:
     // --> sText sets the message to display to the user.  When sText is omitted a message declaring the program has ended
     //     is displayed as the default message.
     // 
-    void ExitButton(const char * sText = nullptr); 
+    // Exit Button returns 0. 
+    //
+    int ExitButton(const char * sText = nullptr); 
 
    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
     // CSageBitmap.
@@ -1254,7 +1256,7 @@ public:
     //
     static bool isConsoleApp() { 
             #ifdef _WINDOWS 
-                return true;        // if _WINDOWS is defined, it's a good bet, so we'll trust it, even if it has defined a console app on its own.
+                return false;        // if _WINDOWS is defined, it's a good bet, so we'll trust it, even if it has defined a console app on its own.
             #else           
                 // When _CONSOLE is defined, lets also make sure we have a console window
                 return GetConsoleWindow() != nullptr;
@@ -1300,6 +1302,55 @@ public:
     // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
     //
     bool EndProgram(int iReturnValue = 0);
+
+   // Get a named color.  This returns an RGBColor_t (or DWORD -- see prototypes) of a named color.
+    // 
+    // Example:
+    //
+    // auto rgbBlue = GetColor("Blue");                 -- Get RGBColor_t value for Blue
+    // RGBColor_t rgbMyColor = GetColor("MyColor");     -- Get RGBColor_t value for "MyColor" created previously.
+    //
+    RGBColor_t  GetColor(const char * sColor,bool * pColorFound = nullptr);
+
+    // Get a named color.  This returns an RGBColor_t (or DWORD -- see prototypes) of a named color.
+    // 
+    // Example:
+    //
+    // auto rgbBlue = GetColor("Blue");                 -- Get RGBColor_t value for Blue
+    // RGBColor_t rgbMyColor = GetColor("MyColor");     -- Get RGBColor_t value for "MyColor" created previously.
+    //
+    bool GetColor(const char * sColor,DWORD & rgbColor);
+   // MakeColor() -- Make a named system color useable throughout SageBox functions.
+    //
+    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagebox
+    // functions.
+    //
+    // Example:
+    //
+    // MakeColor("MyColor",{ 255,128,128} );    -- Make a light red and call it MyColor
+    // LightRed = MakeColor("MyColor",{ 255,128,128} );    -- Make "MyColor" and also store it in the RGBColor_t value LightRed
+    //
+    // cWin.SetFgColor("MyColor");      -- Set the foreground color to the color "MyColor";
+    // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
+    // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
+    //
+    RGBColor_t MakeColor(const char * sColor,DWORD rgbColor);
+
+    // MakeColor() -- Make a named system color useable throughout SageBox functions.
+    //
+    // Make Color can create a color for use with other function, by namin the color and returning an RGBColor_t value that can be used with all Sagebox
+    // functions.
+    //
+    // Example:
+    //
+    // MakeColor("MyColor",{ 255,128,128} );    -- Make a light red and call it MyColor
+    // LightRed = MakeColor("MyColor",{ 255,128,128} );    -- Make "MyColor" and also store it in the RGBColor_t value LightRed
+    //
+    // cWin.SetFgColor("MyColor");      -- Set the foreground color to the color "MyColor";
+    // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
+    // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
+    //
+    RGBColor_t MakeColor(const char * sColor,RGBColor_t rgbColor);
 };
 }; // namespace Sage;
 

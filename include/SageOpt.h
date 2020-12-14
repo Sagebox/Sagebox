@@ -201,6 +201,7 @@ public:
 	optRet fgChecked(const char * sFgColor);
 	optRet fgChecked(DWORD dwFgColor);
 	optRet fgChecked(Sage::RGBColor_t rgbColor);
+	optRet TextColor(Sage::RGBColor_t rgbColor);
 	optRet TextColor(const char * sTextColor);
 	optRet TextColor(DWORD dwTextColor);
 	optRet ValueColor(const char * sValueColor);
@@ -430,13 +431,19 @@ namespace opt
 	// 
 	// See fgColor() for more information.  Text-based, RGB, and RGBColor_t, and variables may be used to set the color
 	//
-	static optRet TextColor(const char * sColor) { return defOpt.TextColor(sColor); }  ;	
+	static optRet TextColor(const char * sColor) { return defOpt.fgColor(sColor); }  ;	
 
 	// Set the TextColor of a control.  This is the same as fgColor()
 	// 
 	// See fgColor() for more information.  Text-based, RGB, and RGBColor_t, and variables may be used to set the color
 	//
-	static optRet TextColor(DWORD dwColor) { return defOpt.TextColor(dwColor); }  ;	
+	static optRet TextColor(DWORD dwColor) { return defOpt.fgColor(dwColor); }  ;	
+
+    // Set the TextColor of a control.  This is the same as fgColor()
+	// 
+	// See fgColor() for more information.  Text-based, RGB, and RGBColor_t, and variables may be used to set the color
+	//
+	static optRet TextColor(Sage::RGBColor_t rgbColor) { return defOpt.fgColor(*rgbColor); }  ;	
 
 	// Set the color for the Value display in a slider.  The option ShowValue() must be used to enable the value to display.
 	//

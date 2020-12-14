@@ -94,9 +94,10 @@ static constexpr int defColor = -1;
 #define FailBox(_FunctionName,_Error) { }
 #endif
 
-class CSageBitmap; 
 namespace Sage
 {
+    class CSageBitmap; 
+
 	constexpr const char * BoolString(bool bValue) { return bValue ? "true" : "false"; };
 	constexpr const char * BoolStringU(bool bValue) { return bValue ? "True" : "False"; };
 	constexpr const char * BoolStringUU(bool bValue) { return bValue ? "TRUE" : "FALSE"; };
