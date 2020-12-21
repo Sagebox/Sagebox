@@ -32,6 +32,26 @@ enum class GroupType
 	Undefined,
 };
 
+// Supported Image Types. 
+//
+// PNG, TIFF, Support to be added soon.
+//
+enum class ImageType
+{
+    Jpeg,
+    Bitmap,
+    Unknown,
+};
+enum class ImageStatus
+{
+    Ok,
+    EmptyPath,
+    NotFound,
+    TooLarge,
+    UnspportedFormat,
+    Corrupted,
+    UnknownError
+};
 static constexpr int defColor = -1;
 #define EmptyString(_x) (!_x || !*_x)
 
@@ -304,6 +324,7 @@ public:
 	{
 		void * cWidget;
 		int iMessage;
+        bool bSendPoll;
 	};
 
 	void FailBoxMsg(char * sFunctionName,char * sError);
@@ -978,6 +999,7 @@ enum class ControlSubStyles
 	int FindIntValues(char * sString,int * iValues,int iMaxValues);
 	[[nodiscard]] Mem<char> ReadTextFile(const char * sFile,bool bNullTerminate = false,bool * bSuccess = nullptr);
 	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,bool * bSuccess = nullptr);
+	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
 	CSageBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 	CSageBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
 

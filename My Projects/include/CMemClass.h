@@ -28,6 +28,7 @@ template <class _t>
 	public:
 		int iSize = 0;
 		_t * pMem = nullptr;
+        _t * GetMem() { return pMem; }
 		bool SetData(_t * pInMem,int iFileSize)
 		{
 			if (!pInMem || iFileSize <= 0) return false;			

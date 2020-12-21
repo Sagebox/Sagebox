@@ -1049,6 +1049,10 @@ public:
     //
 	CWindow & BitmapWindow(int iX,int iY,Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
 
+    CSageBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
+    ImageStatus GetLastImageStatus();
+
+
     // ReadJpegFile -- Read a jpeg file and store it into a CSageBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
     // If the file does not exist or is in an unsupported format, CSageBitmap will come back empty.

@@ -121,7 +121,8 @@ private:
 
     CJpeg::Status m_eLastJpegStatus = CJpeg::Status::Ok;                    // Value of last JPEG call through the window (i.e. success, bad file, etc.)
     bool m_bBaseWindow = false;
-    
+    ImageStatus m_eLastImageStatus = ImageStatus::Ok;                       // Last Read Image Status (this supercedes JpegStatus)
+
     int FindDeleter(void * pObject,Deleter_t * stDeleter = nullptr);        // Find any attached objects that want to be deleted when the window is deleted.
     void SetBaseWindow(bool bisBaseWindow = true);                          // Set as a Base Window, a hidden control-Parent Window 
     bool isBaseWindow();                                                    // true = hidden base window, causing differences in Window ownership, child windows, etc.
@@ -6172,6 +6173,9 @@ public:
 
     bool SetCloseButtonMenu(int iMenuItem = 0);
 
+
+    CSageBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
+    ImageStatus GetLastImageStatus();
 
     // ReadJpegFile -- Read a jpeg file and store it into a CSageBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
