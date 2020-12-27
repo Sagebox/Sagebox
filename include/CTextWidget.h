@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 #if !defined(_CTextWidget_H_)
 #define _CTextWidget_H_
@@ -75,7 +88,7 @@ private:
 	static CTextWidget	m_cEmpty;
 
 	CString			* m_csString;
-	CSageBitmap		* m_cParentBg		= nullptr;
+	CBitmap		* m_cParentBg		= nullptr;
 	void			* m_pOrgObject		= nullptr;
 	bool			  m_bTransparent	= false;
 	WinJustX		  m_eWinJustX		= WinJustX::None;

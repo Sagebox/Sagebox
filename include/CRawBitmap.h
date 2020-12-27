@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 
 #if !defined(_CRawBitmap_H_)
@@ -7,15 +20,15 @@
 namespace Sage
 {
 
-class CSageBitmap;
-using CBitmap = CSageBitmap;
+class CBitmap;
+//using CSageBitmap = CBitmap;
 class CFloatBitmap
 {
 public:
 	FloatBitmap_t fBitmap;
 	FloatBitmap_t & operator *() { return fBitmap; }
 
-	CFloatBitmap(CSageBitmap & cBitmap);
+	CFloatBitmap(CBitmap & cBitmap);
 	CFloatBitmap(RawBitmap_t & stBitmap);
 	CFloatBitmap(FloatBitmap_t & fBitmap) { this->fBitmap = fBitmap; };
 	CFloatBitmap(int iWidth,int iHeight) { fBitmap = CreateFloatBitmap(iWidth,iHeight); }
@@ -24,9 +37,14 @@ public:
 	{ 
 		fBitmap.Init();
 	}
+    CFloatBitmap(CFloatBitmap && p2) noexcept
+    {
+        fBitmap = p2.fBitmap;
+        p2.fBitmap.Clean();
+    }
 	[[nodiscard]] RawBitmap_t ConverttoBitmap() { return fBitmap.ConverttoBitmap(); }
 	[[nodiscard]] RawBitmap_t ConverttoBitmap(RawBitmap_t & stBitmap) { return fBitmap.ConverttoBitmap(stBitmap); }
-	CFloatBitmap & operator = (CSageBitmap stBitmap);
+	CFloatBitmap & operator = (CBitmap stBitmap);
 	CFloatBitmap & operator = (SIZE szSize) { fBitmap.Delete(); fBitmap = CreateFloatBitmap(szSize.cx,szSize.cy); return * this; };
 	CFloatBitmap & operator = (FloatBitmap_t fBitmap) { this->fBitmap.Delete(); this->fBitmap = fBitmap; return *this; }
 	CFloatBitmap & operator = (RawBitmap_t stBitmap) 
@@ -54,7 +72,7 @@ public:
 	FloatBitmapM_t fBitmap;
 	FloatBitmapM_t & operator *() { return fBitmap; }
 
-//	CFloatBitmapM(CSageBitmap & cBitmap);
+//	CFloatBitmapM(CBitmap & cBitmap);
 //	CFloatBitmapM(RawBitmap_t & stBitmap);
 	CFloatBitmapM(int iWidth,int iHeight) { fBitmap = CreateFloatMBitmap(iWidth,iHeight); };
 	CFloatBitmapM(const SIZE szSize) { fBitmap = CreateFloatMBitmap(szSize.cx,szSize.cy); };
@@ -65,6 +83,11 @@ public:
 	{ 
 		fBitmap = {}; 
 	}
+    CFloatBitmapM(CFloatBitmapM && p2) noexcept
+    {
+        fBitmap = p2.fBitmap;
+        p2.fBitmap.Clean();
+    }
 	bool Invert() { return fBitmap.Invert(); };
 	bool Multiply(CFloatBitmapM & cSource,POINT pDestStart = { 0,0 }, POINT pSourceStart = { 0,0 }, SIZE szSize = { 0,0 })
 	{
@@ -72,7 +95,7 @@ public:
 	}
 	[[nodiscard]] RawBitmap_t ConverttoBitmap() { return fBitmap.ConverttoBitmap(); }
 	[[nodiscard]] RawBitmap_t ConverttoBitmap(RawBitmap_t & stBitmap) { return fBitmap.ConverttoBitmap(stBitmap); }
-//	CFloatBitmapM & operator = (CSageBitmap stBitmap);
+//	CFloatBitmapM & operator = (CBitmap stBitmap);
 
 	CFloatBitmapM & operator = (FloatBitmapM_t fBitmap) { this->fBitmap.Delete(); this->fBitmap = fBitmap; return *this; }
 	CFloatBitmapM & operator = (SIZE szSize) { this->fBitmap.Delete(); this->fBitmap = CreateFloatMBitmap(szSize.cx,szSize.cy);; return *this; }
@@ -98,7 +121,7 @@ public:
 
 };
 
-class CSageBitmap
+class CBitmap
 {
 public:
 	RawBitmap_t stBitmap;
@@ -160,47 +183,54 @@ public:
 		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
 	}			
 
-//	CSageBitmap(RawBitmap_t & stBitmap) { this->stBitmap = stBitmap; };
-	CSageBitmap(RawBitmap_t stBitmap) { this->stBitmap = stBitmap; };
-	CSageBitmap(int iWidth,int iHeight) { this->stBitmap = Sage::CreateBitmap(iWidth,iHeight); }
-	CSageBitmap(SIZE szSize) { this->stBitmap = Sage::CreateBitmap(szSize.cx,szSize.cy); }
-	CSageBitmap() 
+//	CBitmap(RawBitmap_t & stBitmap) { this->stBitmap = stBitmap; };
+	CBitmap(RawBitmap_t stBitmap) { this->stBitmap = stBitmap; };
+	CBitmap(int iWidth,int iHeight) { this->stBitmap = Sage::CreateBitmap(iWidth,iHeight); }
+	CBitmap(SIZE szSize) { this->stBitmap = Sage::CreateBitmap(szSize.cx,szSize.cy); }
+	CBitmap() 
 	{ 
 		stBitmap = {}; 
 	}
 
-	CSageBitmap(CFloatBitmap & cBitmap);
-	CSageBitmap(CFloatBitmapM & cBitmap);
-//	CSageBitmap & operator = (RawBitmap_t & stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
-	CSageBitmap & operator = (RawBitmap_t stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
-	CSageBitmap & operator = (SIZE sz) { this->stBitmap.Delete(); this->stBitmap = Sage::CreateBitmap((int) sz.cx,(int) sz.cy); return *this; }
-	CSageBitmap & operator = (CSageBitmap csBitmap) 
+	CBitmap(CFloatBitmap & cBitmap);
+	CBitmap(CFloatBitmapM & cBitmap);
+//	CBitmap & operator = (RawBitmap_t & stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
+	CBitmap & operator = (RawBitmap_t stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
+	CBitmap & operator = (SIZE sz) { this->stBitmap.Delete(); this->stBitmap = Sage::CreateBitmap((int) sz.cx,(int) sz.cy); return *this; }
+	CBitmap & operator = (CBitmap csBitmap) 
 	{ this->stBitmap.Delete();
 		CopyFrom(csBitmap);  return *this; }
-//	CSageBitmap & operator = (FloatBitmap_t fBitmap) 
+//	CBitmap & operator = (FloatBitmap_t fBitmap) 
 //	{ 
 //		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 //	}
-	CSageBitmap & operator = (CFloatBitmap & fBitmap) 
+	CBitmap & operator = (CFloatBitmap & fBitmap) 
 	{ 
 		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 	}
 
-//	CSageBitmap & operator = (FloatBitmapM_t fBitmap) 
+//	CBitmap & operator = (FloatBitmapM_t fBitmap) 
 //	{ 
 //		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 //	}
-	CSageBitmap & operator = (FloatBitmapM_t & fBitmap) 
+	CBitmap & operator = (FloatBitmapM_t & fBitmap) 
 	{ 
 		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 	}
-	CSageBitmap & operator = (CFloatBitmapM & fBitmap) 
+	CBitmap & operator = (CFloatBitmapM & fBitmap) 
 	{ 
 		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 	}
 
+   
+    CBitmap(CBitmap && p2) noexcept
+    {
+        stBitmap = p2.stBitmap;
+        iCurrentLine = p2.iCurrentLine;
+        p2.stBitmap.Clean();
+    }
 	RawBitmap_t & operator *() { return stBitmap; }
-	~CSageBitmap() 
+	~CBitmap() 
 	{ 
 //		printf("Deleting bitmap.. size = %d,%d\n",stBitmap.iWidth,stBitmap.iHeight);	// Debug
 		stBitmap.Delete(); 
@@ -214,35 +244,35 @@ public:
     unsigned char * GetMem() { return stBitmap.stMem; }
 	bool ReverseBitmap() { return stBitmap.ReverseBitmap(); }
 	bool ApplyMaskGraphic(RawBitmap_t & stBackground,RawBitmap_t & stDest) { return stBitmap.ApplyMaskGraphic(stBackground,stDest); }
-	bool ApplyMaskGraphic(CSageBitmap & cBackground,CSageBitmap & cDest) { return stBitmap.ApplyMaskGraphic(*cBackground,*cDest); }
+	bool ApplyMaskGraphic(CBitmap & cBackground,CBitmap & cDest) { return stBitmap.ApplyMaskGraphic(*cBackground,*cDest); }
 		
 	bool ApplyMaskGraphic(POINT pSourceStart, RawBitmap_t & stDest, POINT pDestStart, SIZE & szSize) { return stBitmap.ApplyMaskGraphic(pSourceStart,stDest,pDestStart,szSize); }
-	bool ApplyMaskGraphic(POINT pSourceStart, CSageBitmap & cDest, POINT pDestStart, SIZE & szSize) { return stBitmap.ApplyMaskGraphic(pSourceStart,*cDest,pDestStart,szSize); }
-	bool ApplyMaskGraphic(CSageBitmap & cDest, const POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskGraphic({ 0,0} ,*cDest,pDestStart,stBitmap.GetSize()); }
+	bool ApplyMaskGraphic(POINT pSourceStart, CBitmap & cDest, POINT pDestStart, SIZE & szSize) { return stBitmap.ApplyMaskGraphic(pSourceStart,*cDest,pDestStart,szSize); }
+	bool ApplyMaskGraphic(CBitmap & cDest, const POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskGraphic({ 0,0} ,*cDest,pDestStart,stBitmap.GetSize()); }
 
 	bool ApplyMaskGraphic(RawBitmap_t & stSource, RawBitmap_t & stBackground,RawBitmap_t & stDest) { return stBitmap.ApplyMaskGraphic(stSource,stBackground,stDest); }
-	bool ApplyMaskGraphic(CSageBitmap & cSource,CSageBitmap & cBackground,CSageBitmap & cDest) { return stBitmap.ApplyMaskGraphic(*cSource,*cBackground,*cDest); }
+	bool ApplyMaskGraphic(CBitmap & cSource,CBitmap & cBackground,CBitmap & cDest) { return stBitmap.ApplyMaskGraphic(*cSource,*cBackground,*cDest); }
 
 
 	bool ApplyMaskGraphicR(const POINT pSourceStart, RawBitmap_t & stDest,const POINT pDestStart,const SIZE & szSize) { return stBitmap.ApplyMaskGraphicR(pSourceStart,stDest,pDestStart,szSize); }
-	bool ApplyMaskGraphicR(const POINT pSourceStart, CSageBitmap & cDest,const POINT pDestStart, const SIZE & szSize) { return stBitmap.ApplyMaskGraphicR(pSourceStart,*cDest,pDestStart,szSize); }
-	bool ApplyMaskGraphicR(CSageBitmap & cDest, const POINT pDestStart) { return stBitmap.ApplyMaskGraphicR({ 0,0} ,*cDest,pDestStart,stBitmap.GetSize()); }
+	bool ApplyMaskGraphicR(const POINT pSourceStart, CBitmap & cDest,const POINT pDestStart, const SIZE & szSize) { return stBitmap.ApplyMaskGraphicR(pSourceStart,*cDest,pDestStart,szSize); }
+	bool ApplyMaskGraphicR(CBitmap & cDest, const POINT pDestStart) { return stBitmap.ApplyMaskGraphicR({ 0,0} ,*cDest,pDestStart,stBitmap.GetSize()); }
 	bool ApplyMaskColor(RGBColor_t rgbColor	,RawBitmap_t stMask,POINT pMaskStart, POINT pDestStart, SIZE szSize) { return stBitmap.ApplyMaskColor(rgbColor,stMask,pMaskStart,pDestStart,szSize);	}
 	bool ApplyMaskColorR(RGBColor_t rgbColor,RawBitmap_t stMask,POINT pMaskStart,POINT pDestStart, SIZE szSize) { return stBitmap.ApplyMaskColorR(rgbColor,stMask,pMaskStart,pDestStart,szSize);	}
 	bool ApplyMaskColor(RGBColor_t rgbColor	,RawBitmap_t stMask,POINT pDestStart) { return stBitmap.ApplyMaskColor(rgbColor,stMask,pDestStart); }
 	bool ApplyMaskColorR(RGBColor_t rgbColor,RawBitmap_t stMask,POINT pDestStart) { return stBitmap.ApplyMaskColorR(rgbColor,stMask,pDestStart); }
 
-	bool ApplyMaskColor(RGBColor_t	 rgbColor,	CSageBitmap & cMask,POINT pMaskStart,	POINT pDestStart, SIZE szSize = { 0,0 }) { return stBitmap.ApplyMaskColor(rgbColor,*cMask,pMaskStart,pDestStart,szSize);	}
-	bool ApplyMaskColorR(RGBColor_t	 rgbColor,	CSageBitmap & cMask,POINT pMaskStart,	POINT pDestStart, SIZE szSize = { 0,0 }) { return stBitmap.ApplyMaskColorR(rgbColor,*cMask,pMaskStart,pDestStart,szSize);	}
-	bool ApplyMaskColor(RGBColor_t	 rgbColor,	CSageBitmap & cMask,POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskColor(rgbColor,*cMask,pDestStart); }
-	bool ApplyMaskColorR(RGBColor_t  rgbColor,	CSageBitmap & cMask,POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskColorR(rgbColor,*cMask,pDestStart); }
+	bool ApplyMaskColor(RGBColor_t	 rgbColor,	CBitmap & cMask,POINT pMaskStart,	POINT pDestStart, SIZE szSize = { 0,0 }) { return stBitmap.ApplyMaskColor(rgbColor,*cMask,pMaskStart,pDestStart,szSize);	}
+	bool ApplyMaskColorR(RGBColor_t	 rgbColor,	CBitmap & cMask,POINT pMaskStart,	POINT pDestStart, SIZE szSize = { 0,0 }) { return stBitmap.ApplyMaskColorR(rgbColor,*cMask,pMaskStart,pDestStart,szSize);	}
+	bool ApplyMaskColor(RGBColor_t	 rgbColor,	CBitmap & cMask,POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskColor(rgbColor,*cMask,pDestStart); }
+	bool ApplyMaskColorR(RGBColor_t  rgbColor,	CBitmap & cMask,POINT pDestStart = { 0,0 }) { return stBitmap.ApplyMaskColorR(rgbColor,*cMask,pDestStart); }
 
 
 	bool CopyFrom(RawBitmap_t & stSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0}) { return stBitmap.CopyFrom(stSource,pDestStart,pSourceStart,szSize); }		
-	bool CopyFrom(CSageBitmap & cSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0}) { return stBitmap.CopyFrom(*cSource,pDestStart,pSourceStart,szSize); }		
+	bool CopyFrom(CBitmap & cSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0}) { return stBitmap.CopyFrom(*cSource,pDestStart,pSourceStart,szSize); }		
 		
 	bool Copyto(RawBitmap_t & stDest, POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.Copyto(stDest,pSourceStart,pDestStart,szSize); }
-	bool Copyto(CSageBitmap & cDest,POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 }) { return Copyto(*cDest,pSourceStart,pDestStart,szSize); }
+	bool Copyto(CBitmap & cDest,POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 }) { return Copyto(*cDest,pSourceStart,pDestStart,szSize); }
 		
 	// FillColor() -- Fill the entire bitmap, or a section of it, with a specific color
 	// Using FillColo(Color) with no other parameters fills the entire bitmap.
@@ -268,7 +298,7 @@ public:
 	}
 
 
-	CSageBitmap(const CSageBitmap &p2)
+	CBitmap(const CBitmap &p2)
 	{
 		stBitmap = {};
 		CopyFrom(p2);

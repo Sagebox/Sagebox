@@ -116,7 +116,7 @@ int main()
     auto cResized = cWin.QuickResize(cBitmap,1200,800);     // Resize the bitmap to a Max Width of 1200 OR a max Height of 800, 
                                                             // Whichever the image fits into, keeping it the same proportions. 
 
-    CSageBitmap csNew(cResized.GetSize());                  // Get a bitmap sized to our new resized bitmap.
+    CBitmap csNew(cResized.GetSize());                      // Get a bitmap sized to our new resized bitmap.
 
     int iIndent = 50;                                       // Indent for the bitmap display
 

@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 #if !defined(_CBitmapWidget_H_)
 #define _CBitmapWidget_H_
@@ -11,7 +24,7 @@ class CBitmapWidget : private CWindow
 	SageControlDelete
 private:
 	bool	m_bValid = false;
-	CSageBitmap * m_cBitmap = nullptr;
+	CBitmap * m_cBitmap = nullptr;
 	int			m_iX;
 	int			m_iY;
 	int			m_iWidth;
@@ -26,10 +39,10 @@ private:
 	MsgStatus OnMouseMove(int iMouseX,int iMouseY);
 
 public:
-	CBitmapWidget(CWindow * cParent,int iX,int iY,CSageBitmap & cBitmap);
+	CBitmapWidget(CWindow * cParent,int iX,int iY,CBitmap & cBitmap);
 	bool MouseMoved(); 
 	bool MouseMoved(POINT & pMouse);
-	bool Update(CSageBitmap & cBitmap);
+	bool Update(CBitmap & cBitmap);
 	POINT GetMousePos();
 
 };

@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 
 #if !defined(_CDialog_H_)
@@ -42,7 +55,7 @@ friend CDialogWindow;
 friend CWindow;
 	std::vector<CDialogParser::stControl_t>	m_stControls;
 
-	CSageBitmap m_cBackground;
+	CBitmap m_cBackground;
 	CDialogParser cDialog;
 	bool		m_bDisabled			= false;	// i.e. faux-closed
 	bool		m_bDisableClose		= false;
@@ -165,7 +178,7 @@ public:
 	CTextWidget & NewTextWidget(int iX,int iY,const cwfOpt cwOpt = cwfOpt());
 
 
-	CWindow & NewBitmapWindow(int iX,int iY,CSageBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & NewBitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 	CWindow & NewBitmapWindow(int iX,int iY,Sage::RawBitmap_t & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 
 

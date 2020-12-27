@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 
 #if !defined(__CPARSEHTML_H__)
 #define __CPARSEHTML_H__
@@ -141,7 +154,7 @@ typedef struct
 	int						bDiscard;			// doesn't initially allocate the original file; some other process will get it from the PGR memory. Used for jpegs 
 												// $$ This is transitional: Any volatile bitmap should not be committed to memory if it's a mem PGR
 	int						iOriginalBitmapSize;
-	CSageBitmap				theBitmap;
+	CBitmap				theBitmap;
 	int						bVolatile;		// If true, then the image is uncompressed when needed only, and then deallocated when CHtmlDraw is deleted
 
 	int						bAlternateAddress;

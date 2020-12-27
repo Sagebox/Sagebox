@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 #if !defined(__CSage_H__)
 #define __CSage_H__
@@ -116,7 +129,7 @@ static constexpr int defColor = -1;
 
 namespace Sage
 {
-    class CSageBitmap; 
+    class CBitmap; 
 
 	constexpr const char * BoolString(bool bValue) { return bValue ? "true" : "false"; };
 	constexpr const char * BoolStringU(bool bValue) { return bValue ? "True" : "False"; };
@@ -515,6 +528,7 @@ public:
 							// $$ This is temporary until all legacy functions
 							// are verified to use aligned memory
 
+        void Clean();
 		void Delete();
 		void Init();
 		bool isValid();
@@ -538,6 +552,7 @@ public:
 		int iTotalSize;
 
 		void Delete();
+        void Clean();
 		void Init();
 		bool isValid();
 		bool Invert();
@@ -951,7 +966,7 @@ enum class ControlSubStyles
 	bool CreateBitmap(int iWidth,int iHeight,RawBitmap_t & stBitmap);
 	bool CreateBitmap(RawBitmap_t & stSource,RawBitmap_t & stBitmap);
 	[[nodiscard]] RawBitmap_t CreateBitmap(RawBitmap_t & stSource,bool * bSuccess = nullptr);
-	[[nodiscard]] RawBitmap_t CreateBitmap(CSageBitmap & cBitmap,bool * bSuccess = nullptr);
+	[[nodiscard]] RawBitmap_t CreateBitmap(CBitmap & cBitmap,bool * bSuccess = nullptr);
 	bool CreateBitmap(int iWidth,int iHeight,RawBitmap32_t & stBitmap);
 	bool CreateBitmap(RawBitmap32_t & stSource,RawBitmap32_t & stBitmap);
 	bool FillBitmap(RawBitmap_t & stBitmap,RGBColor_t rgbColor);
@@ -1000,8 +1015,8 @@ enum class ControlSubStyles
 	[[nodiscard]] Mem<char> ReadTextFile(const char * sFile,bool bNullTerminate = false,bool * bSuccess = nullptr);
 	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,bool * bSuccess = nullptr);
 	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
-	CSageBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
-	CSageBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
+	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
+	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
 
 	namespace Win
 	{

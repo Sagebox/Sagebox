@@ -10,21 +10,22 @@ private:
     {
         struct stBit_t
         {
-            RawBitmap_t stTopLeft;
-            RawBitmap_t stTopMiddle;
-            RawBitmap_t stTopRight;
-            RawBitmap_t stTopShadow;
-            RawBitmap_t stLeft;
-            RawBitmap_t stMiddle;
-            RawBitmap_t stRight;
-            RawBitmap_t stShadowRight;
+            RawBitmap_t stTopLeft		;
+            RawBitmap_t stTopMiddle	    ;
+            RawBitmap_t stTopRight	    ;
+            RawBitmap_t stTopShadow	    ;
+            RawBitmap_t stLeft		    ;
+            RawBitmap_t stMiddle		;
+            RawBitmap_t stRight		    ;
+            RawBitmap_t stShadowRight   ;
         };
 
-        stBit_t stBit;
-        int     iMinWidth;       // Less than width just puts a color rectangle;
+        stBit_t         stBit           ;
+        int     iMinWidth               ;       // Less than width just puts a color rectangle;
 
         ~stBarGraph_t();
         float      fHue;
+
     };
 
     bool        m_bDrawShadow = true;
@@ -47,10 +48,9 @@ private:
     int m_iBarListEntries   = 0;
     std::vector<BarType_t> m_vBarList; 
 
-    CSageBitmap m_cBitmapWin; 
-    CSageBitmap m_cBitmapOut;     
+    CBitmap m_cBitmapWin; 
+    CBitmap m_cBitmapOut;     
 
-    static constexpr const char * m_sPGRFile = "c:\\work\\nn\\nn.pgr";
     static constexpr int m_iPadX = 50; 
     static constexpr int m_iPadY = 20; 
 
@@ -64,6 +64,7 @@ public:
 
     bool DrawBar(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor,bool bUpdate = false); 
     bool Test();
+
 };
 #endif // _CBarGraph_H_
 

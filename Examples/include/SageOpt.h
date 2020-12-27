@@ -137,6 +137,7 @@ private:
 	static void UnlockProcess(); 
 	void InitTemp();
 public:
+
 	static cwfOpt * Temp();
 	static cwfOpt m_cEmpty; 
 	static cwfOpt * GetEmptyObj() { return &m_cEmpty; };	// This should only be used for default Empty on prototypes or in case of allocation error.
@@ -303,7 +304,10 @@ public:
 //	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	cwfOpt & operator | (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	const char * operator * () const { return spOpt && *spOpt ? spOpt : (const char *) sOpt; }
-	cwfOpt(const cwfOpt &opt2);
+	cwfOpt(const cwfOpt & opt2);
+    cwfOpt & operator = (cwfOpt && p2) noexcept;
+    cwfOpt(cwfOpt && p2) noexcept;
+
 	inline bool Active() { return iLength > 0 || ipLength > 0; }
 	void ClearMem() 
 	{ 

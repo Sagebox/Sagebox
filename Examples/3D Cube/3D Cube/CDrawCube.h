@@ -55,6 +55,7 @@ private:
     void FillPoly(stPoly_t & stPoly,int i1,int i2,int i3,int i4,Point3D_t pColor);
     void RotatePoints();
 
+    void AddReflections(int i1,int i2,int i3,Point3D_t & pColor);
     void CreateCubePoints();
     void DrawWireframe();
     void DrawSurfaces();

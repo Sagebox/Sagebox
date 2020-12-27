@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma warning( disable : 26444) 
 #pragma once
 
@@ -930,7 +943,7 @@ public:
     //
     // If there is an error in the data (i.e. an empty bitmap), the window is not opened.
     // 
-    // A RawBitmap_t or CSageBitmap must currently be provided.
+    // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
     bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,Sage::ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
@@ -944,7 +957,7 @@ public:
     //
     // If there is an error in the data (i.e. an empty bitmap), the window is not opened.
     // 
-    // A RawBitmap_t or CSageBitmap must currently be provided.
+    // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
 	bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
@@ -958,10 +971,10 @@ public:
     //
     // If there is an error in the data (i.e. an empty bitmap), the window is not opened.
     // 
-    // A RawBitmap_t or CSageBitmap must currently be provided.
+    // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
+    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -972,14 +985,14 @@ public:
     //
     // If there is an error in the data (i.e. an empty bitmap), the window is not opened.
     // 
-    // A RawBitmap_t or CSageBitmap must currently be provided.
+    // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-	bool QuickThumbnail(CSageBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
+	bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
 
 
-    CSageBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
-    CSageBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
+    CBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
+    CBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1013,7 +1026,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-	CWindow & BitmapWindow(CSageBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & BitmapWindow(CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1030,7 +1043,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-	CWindow & BitmapWindow(int iX,int iY,CSageBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1049,29 +1062,29 @@ public:
     //
 	CWindow & BitmapWindow(int iX,int iY,Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
 
-    CSageBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
+    CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
     ImageStatus GetLastImageStatus();
 
 
-    // ReadJpegFile -- Read a jpeg file and store it into a CSageBitmap. 
+    // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
-    // If the file does not exist or is in an unsupported format, CSageBitmap will come back empty.
+    // If the file does not exist or is in an unsupported format, CBitmap will come back empty.
     // Use GetJpegError() to get the status of the last ReadJpegFile() call, which will
     // give information on why the Bitmap came back empty.
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-	CSageBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
+	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 
-    // ReadJpegFile -- Read a jpeg file and store it into a CSageBitmap. 
+    // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
-    // If the file does not exist or is in an unsupported format, CSageBitmap will come back empty.
+    // If the file does not exist or is in an unsupported format, CBitmap will come back empty.
     // Use GetJpegError() to get the status of the last ReadJpegFile() call, which will
     // give information on why the Bitmap came back empty.
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-	CSageBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess);
+	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess);
 
     // Returns the last Jpeg status.  This will return CJpeg::Status::Ok if there was no error, 
     // or an indication of what went wrong with the last call, such as CJpeg::Status::EmptyFilePath or CJpeg::Status::FileNotFound
@@ -1181,13 +1194,13 @@ public:
     int ExitButton(const char * sText = nullptr); 
 
    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
-    // CSageBitmap.
+    // CBitmap.
     //
     // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
     // opening the PGR file and searching for the image.
     //
     // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
-    // if found.  Otherwise, an empty CSageBitmap is returned.
+    // if found.  Otherwise, an empty CBitmap is returned.
     //
     // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
     // error occurred loading the image.
@@ -1196,16 +1209,16 @@ public:
     // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
     // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
     //
-	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr);
 
     // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
-    // CSageBitmap.
+    // CBitmap.
     //
     // This function is used to quick access to BMP or JPEG files embedded in PGR file without 
     // opening the PGR file and searching for the image.
     //
     // ReadPgrBitmap() opens the PGR, searches for the image (BMP, compress BMP (TPC), or JPEG) and loads it
-    // if found.  Otherwise, an empty CSageBitmap is returned.
+    // if found.  Otherwise, an empty CBitmap is returned.
     //
     // if bSucess is passed, this is filled with TRUE if an image was found, and FALSE if there was no image or an 
     // error occurred loading the image.
@@ -1214,7 +1227,7 @@ public:
     // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
     // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
     //
-	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
 
     // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -1224,10 +1237,10 @@ public:
     // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
     // RawBitmap_t::Delete() must be called to delete this memory.
     //
-    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
-    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
+    // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CSageBitmap CreateBitmap(int iWidth,int iHeight = 1);
+    CBitmap CreateBitmap(int iWidth,int iHeight = 1);
 
     // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -1237,10 +1250,10 @@ public:
     // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
     // RawBitmap_t::Delete() must be called to delete this memory.
     //
-    // Assign this to CSageBitmap, such as CSageBitmap cBitmap = GetWindowBitmap(); 
-    // CSageBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
+    // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CSageBitmap CreateBitmap(SIZE szBitmapSize);
+    CBitmap CreateBitmap(SIZE szBitmapSize);
 
     bool ShowConsole(bool bShow = true);
     bool HideConsole(bool bPermanent = false);

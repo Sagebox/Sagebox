@@ -1,4 +1,16 @@
-//#pragma once
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 
 #if !defined(_CDAVINCI_H_)
@@ -144,8 +156,8 @@ public:
 
 	
 	int RegisterWidget(int & iRegistryID);
-	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrPath,bool * bSuccess = nullptr);
-	CSageBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrPath,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
 	HWND GetConsoleWindow() { return m_hConsoleWindow; }
 };
 

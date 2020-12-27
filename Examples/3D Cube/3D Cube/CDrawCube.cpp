@@ -226,35 +226,25 @@ void DrawCube::CreateCubePoints()
         m_fCube[7] = { -1,    -1,    1    };
 }
 
-// FillPoly() -- Fill the output 2-D polygon data, preparing it for output
+// Add specular reflections to incoming color/light, beased on plane formed by (i1,i2) and (i2,i3). 
+// The lighting angle and viewpoint are canned in the routine,
 //
-void DrawCube::FillPoly(stPoly_t & stPoly,int i1,int i2,int i3,int i4,Point3D_t pColor)
+void DrawCube::AddReflections(int i1,int i2,int i3,Point3D_t & pColor)
 {
-    // Fill the polygon with the vertices based on the current output (rotated) point 
-    // that has been converted to a 2D point.
-
-    stPoly = {  { m_iMidX + (int) m_fOut[i1].fX, m_iMidY + (int) m_fOut[i1].fY },
-                { m_iMidX + (int) m_fOut[i2].fX, m_iMidY + (int) m_fOut[i2].fY },
-                { m_iMidX + (int) m_fOut[i3].fX, m_iMidY + (int) m_fOut[i3].fY },
-                { m_iMidX + (int) m_fOut[i4].fX, m_iMidY + (int) m_fOut[i4].fY }, };
-
-    // Determine diffusion and reflection.  If it wasn't for this part, this function would be very small. 
-
-    Point3D_t     m_pView        = { 0,0, m_fEyeDistance };     // Get our viewpoint
-    Point3D_t     m_pLight    = { -0,80000,m_fEyeDistance };    // Set an angle a little off 45-degrees so we see reflections when we spin it in 
-                                                                // any direction. 
-    // Convert the plane in the polygon to a normal vector
-
     Point3D_t & p1 = m_fRot[i1];    // Form a plane from three connected points
     Point3D_t & p2 = m_fRot[i3];    // They're just copied here to make the code cleaner and more 
     Point3D_t & p3 = m_fRot[i2];    // self-documenting, when we could just use m_fRot[i1], etc. directly.
+    
+    Point3D_t     m_pView   = { 0,0, m_fEyeDistance };          // Get our viewpoint
+    Point3D_t     m_pLight  = { -0,80000,m_fEyeDistance };      // Set an angle a little off 45-degrees so we see reflections when we spin it in 
+                                                                // any direction. 
 
     //-------------------------------------------------------------------------------------------------
     // Specular Reflection Code -- Remove this (or ignore it) and the overall routine makes more sense.
     //-------------------------------------------------------------------------------------------------
 
-    Point3D_t pNormal    = ((p2 - p1)^(p3 - p1)).Normalize();   // Get the normal vector (of the plain the polygon forms)
-    Point3D_t pView        = (m_pView-p1).Normalize();          // Get the vector to the viewpoint (it should be the middle of the polygon, but this is easier)
+    Point3D_t pNormal   = ((p2 - p1)^(p3 - p1)).Normalize();    // Get the normal vector (of the plain the polygon forms)
+    Point3D_t pView     = (m_pView-p1).Normalize();             // Get the vector to the viewpoint (it should be the middle of the polygon, but this is easier)
     Point3D_t pLight    = (m_pLight-p1).Normalize();            // Get the vector to the light from the polygon.
     
     double fDiffusion = max(0,pLight | pNormal);                // Dot product of Light Vector and Normal to polygonal plane 
@@ -285,14 +275,25 @@ void DrawCube::FillPoly(stPoly_t & stPoly,int i1,int i2,int i3,int i4,Point3D_t 
     //
     pColor = min3d(sqrt(pAmbient*pAmbient + pDiffuse*pDiffuse + fReflection*fReflection),1.0)*255.0; 
                 
+}
+
+// FillPoly() -- Fill the output 2-D polygon data, preparing it for output
+//
+void DrawCube::FillPoly(stPoly_t & stPoly,int i1,int i2,int i3,int i4,Point3D_t pColor)
+{
+    // Fill the polygon with the vertices based on the current output (rotated) point 
+    // that has been converted to a 2D point.
+
+    stPoly = {  { m_iMidX + (int) m_fOut[i1].fX, m_iMidY + (int) m_fOut[i1].fY },
+                { m_iMidX + (int) m_fOut[i2].fX, m_iMidY + (int) m_fOut[i2].fY },
+                { m_iMidX + (int) m_fOut[i3].fX, m_iMidY + (int) m_fOut[i3].fY },
+                { m_iMidX + (int) m_fOut[i4].fX, m_iMidY + (int) m_fOut[i4].fY }, };
+
+    AddReflections(i1,i2,i3,pColor);        // Add specular reflections.  Not necessary, but nice.
+
     // Set the maximum Z depth so we can sort the polygons by it later. 
 
     stPoly.fMax            = max(m_fOut[i1].fZ,max(m_fOut[i2].fZ,max(m_fOut[i3].fZ,m_fOut[i4].fZ)));
-
-    // ----------------------------
-    // End Specular Reflection Code
-    // ----------------------------
-
     stPoly.rgbColor        = pColor.toRGB();    // Convert the 3D-Point color to an RGB color
 }
 
@@ -338,9 +339,9 @@ void DrawCube::DrawWireframe()
 
     for (int i=0;i<4;i++)
     {
-        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i].fX,m_iMidY    + (int) m_fOut[i].fY,m_iMidX + (int) m_fOut[(i+1) % 4].fX,m_iMidY + (int) m_fOut[(i+1) % 4].fY,rgbColor);
-        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i+4].fX,m_iMidY    + (int) m_fOut[i+4].fY,m_iMidX + (int) m_fOut[((i+1) % 4)+4].fX,m_iMidY + (int) m_fOut[((i+1) % 4)+4].fY,rgbColor);
-        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i].fX,m_iMidY    + (int) m_fOut[i].fY,m_iMidX + (int) m_fOut[i+4].fX,m_iMidY + (int) m_fOut[i+4].fY,rgbColor);
+        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i].fX,m_iMidY   + (int) m_fOut[i].fY,m_iMidX + (int) m_fOut[(i+1) % 4].fX,m_iMidY + (int) m_fOut[(i+1) % 4].fY,rgbColor);
+        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i+4].fX,m_iMidY + (int) m_fOut[i+4].fY,m_iMidX + (int) m_fOut[((i+1) % 4)+4].fX,m_iMidY + (int) m_fOut[((i+1) % 4)+4].fY,rgbColor);
+        m_cWin->DrawLine(m_iMidX + (int) m_fOut[i].fX,m_iMidY   + (int) m_fOut[i].fY,m_iMidX + (int) m_fOut[i+4].fX,m_iMidY + (int) m_fOut[i+4].fY,rgbColor);
     }
 } 
 

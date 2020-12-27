@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 #include <Windows.h>
 #if !defined(_CSagePoint_H_)
@@ -127,6 +140,29 @@ struct CPoint
 	}
 	operator POINT() const { POINT p = { x,y }; return p; };
 	operator SIZE() const { SIZE p = { x,y }; return p; };
+    CPoint & operator = (const CPoint & p2)
+    {
+        x = p2.x;
+        y = p2.y;
+        return *this;
+    }
+ 
+    CPoint(CPoint & p2)
+    {
+        x = p2.x;
+        y = p2.y;
+    }
+   CPoint & operator =(CPoint && p2)
+    {
+        x = p2.x;
+        y = p2.y;
+        return * this;
+    }
+    CPoint(CPoint && p2) noexcept
+    {
+        x = p2.x;
+        y = p2.y;
+    }
 	CPoint() { }
 };
 
@@ -199,12 +235,23 @@ struct CfPoint
 	{
 		return { x * p2.x, y * p2.y };
 	}
-CfPoint & operator -= (const CfPoint & p2)
+    CfPoint & operator -= (const CfPoint & p2)
 	{
 		x -= p2.x;
 		y -= p2.y;
 		return *this;
 	}
+    CfPoint(CfPoint & p2)
+    {
+        x = p2.x;
+        y = p2.y;
+    }
+    
+    CfPoint(CfPoint && p2) noexcept
+    {
+        x = p2.x;
+        y = p2.y;
+    }
 
 	CfPoint() { };
 	CfPoint(double fx,double fy) { x = fx; y = fy; };
@@ -218,6 +265,12 @@ CfPoint & operator -= (const CfPoint & p2)
 		x = (double) p.x;
 		y = (double) p.y;
 	}
+    CfPoint & operator =(CfPoint && p2)
+    {
+        x = p2.x;
+        y = p2.y;
+        return * this;
+    }
 	CfPoint(const SIZE & szSize)
 	{
 		x = (double) szSize.cx;

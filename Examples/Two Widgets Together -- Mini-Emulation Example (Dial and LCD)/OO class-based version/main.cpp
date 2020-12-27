@@ -62,7 +62,7 @@ class CTwoWidgets
     POINT       m_pButtonLoc;       // Start location of lower buttons
     SIZE        m_szDebugSize;      // Size of debug window
     CString     m_csDebugColor;     // background color of the debug window
-    CSageBitmap m_cBitmap;          // The main texture/bitmap image filling the entire window
+    CBitmap     m_cBitmap;          // The main texture/bitmap image filling the entire window
 
     // Basic Controls 
 

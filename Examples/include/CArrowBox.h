@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 #pragma once
 #include "CSageBox.h"
 
@@ -45,22 +58,22 @@ private:
 	CButton * m_cButtonUp	  = nullptr;
 	CButton * m_cButtonDown	  = nullptr;
 
-	CSageBitmap m_cUpMask				;
-	CSageBitmap m_cUpShadowMask			;
-	CSageBitmap m_cUpBevelMask			;
-	CSageBitmap m_cDnMask				;
-	CSageBitmap m_cDnShadowMask			;
-	CSageBitmap m_cDnBevelMask			;
-	CSageBitmap m_cUpPressedMask		;
-	CSageBitmap m_cUpPressedBevelMask	;
-	CSageBitmap m_cDnPressedMask		;
-	CSageBitmap m_cDnPressedBevelMask	;
+	CBitmap m_cUpMask				;
+	CBitmap m_cUpShadowMask			;
+	CBitmap m_cUpBevelMask			;
+	CBitmap m_cDnMask				;
+	CBitmap m_cDnShadowMask			;
+	CBitmap m_cDnBevelMask			;
+	CBitmap m_cUpPressedMask		;
+	CBitmap m_cUpPressedBevelMask	;
+	CBitmap m_cDnPressedMask		;
+	CBitmap m_cDnPressedBevelMask	;
 
-	CSageBitmap m_cUpGraphic;
-	CSageBitmap m_cDnGraphic;
+	CBitmap m_cUpGraphic;
+	CBitmap m_cDnGraphic;
 
-	CSageBitmap m_cUpPrGraphic;
-	CSageBitmap m_cDnPrGraphic;
+	CBitmap m_cUpPrGraphic;
+	CBitmap m_cDnPrGraphic;
 
 	static constexpr const char * sButtonStyleUp = "CArrowBox_ButtonUp";
 	static constexpr const char * sButtonStyleDn = "CArrowBox_ButtonDn";
@@ -81,7 +94,7 @@ private:
 	void CreateButtonBitmaps();
 	void CreateButtonStyle();
 
-	void MergeBevel(CSageBitmap cGraphic,CSageBitmap cBevelMask); 
+	void MergeBevel(CBitmap cGraphic,CBitmap cBevelMask); 
 	void Init(CWindow * cParentWin,CEditBox * cEditBox);
 protected:
 friend CEditBox;

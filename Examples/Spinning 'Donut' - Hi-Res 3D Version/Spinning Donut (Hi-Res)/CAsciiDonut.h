@@ -26,7 +26,7 @@ class CAsciiDonut : public CWindow
 private:
     unsigned char m_ucColorTable[257*4];    // Color table for each intensity element in the output map
                                             // of the donut calculation loop.
-    CSageBitmap cBitmapBg;                  // 1-pixel wide bitmap with the background of the window.
+    CBitmap cBitmapBg;                      // 1-pixel wide bitmap with the background of the window.
     Sage::CPoint m_szWindowSize;
 
     Mem<double> m_fSinIMem = 4000;          // this gets the memory required for the Sin/Cos tables
@@ -34,7 +34,7 @@ private:
     Mem<double> m_fSinJMem = 4000;          // We can check the validity of it later with
     Mem<double> m_fCosJMem = 4000;          // an isValid() call, but we don't worry about it here.
 
-    CSageBitmap m_cOut;                     // Output bitmap for the donut
+    CBitmap m_cOut;                         // Output bitmap for the donut
     Sage::CPoint m_pInsetSize;              // Size if the area the donut traverses -- this helps so we 
                                             // only need to worry about Z-Buffer, bitmap, and other memory
                                             // in that area only, and not the entire window.

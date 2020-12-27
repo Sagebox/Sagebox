@@ -1,4 +1,15 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
 
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
 
 #if !defined(__CProfiles2_H__)
 #define __CProfiles2_H__
@@ -157,7 +168,7 @@ public:
 	Status ReadFile(char * sFile = NULL,int iMemLength = 0);
 	Status ReadMemoryFile(char * sFile,int iMemLength);
 	CString GetString(const char * sTag,const char * sDefault = nullptr);
-	CfPoint GetCfPoint(const char * sTag,const CfPoint & cfDefault = {});
+	CfPoint GetCfPoint(const char * sTag,CfPoint & cfDefault = CfPoint{});
 
 	int GetBool(const char * sTag,bool bDefault = false);
 	int GetInteger(const char * sTag,int iDefault = 0);

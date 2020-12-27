@@ -1,3 +1,16 @@
+// This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
+//
+
+// --------------------------------------------------------------------------------------------------------------
+// PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
+// not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
+// --------------------------------------------------------------------------------------------------------------
+//
+// ****** UNDER CONSTRUCTION ******
+//
+// This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
+//
+
 //#pragma once
 #if !defined(_CMemClass_H_)
 #define _CMemClass_H_
@@ -14,21 +27,46 @@ template <class _t>
 	{
 
 	private:
-	Mem & operator = (const Mem &p2)
-		{
-			if (pMem) free(pMem);
-			memcpy(this,&p2,sizeof(*this));
-			Mem * pMem = (Mem *) &p2;
-			pMem->pMem = nullptr;
-			pMem->iSize = 0;
-
-			return *this;
-		}
+	Mem & operator = (const Mem & p2)
+	{
+        if (this != &p2)
+        {
+		    if (pMem) free(pMem);
+		    memcpy(this,&p2,sizeof(*this));
+		    Mem * pMem = (Mem *) &p2;
+		    pMem->pMem = nullptr;
+		    pMem->iSize = 0;
+        }
+		return *this;
+	}
 
 	public:
+
 		int iSize = 0;
 		_t * pMem = nullptr;
         _t * GetMem() { return pMem; }
+
+    Mem(Mem && p2) noexcept
+    {
+        iSize = p2.iSize;
+        pMem = p2.pMem;
+
+        p2.iSize = 0;
+        p2.pMem = nullptr;
+    }
+    Mem & operator=(Mem && p2) noexcept
+    {
+        if (this != &p2)
+        {
+            iSize = p2.iSize;
+            pMem = p2.pMem ;
+
+            p2.iSize = 0;
+            p2.pMem = nullptr;
+        }
+        return *this;
+    }
+
 		bool SetData(_t * pInMem,int iFileSize)
 		{
 			if (!pInMem || iFileSize <= 0) return false;			
@@ -172,7 +210,27 @@ template <class _t>
 	public:
 		int iSize = 0;
 		_t * pMem = nullptr;
-		bool SetData(_t * pInMem,int iFileSize)
+
+   MemA(MemA && p2) noexcept
+    {
+        iSize = p2.iSize;
+        pMem = p2.pMem; 
+
+        p2.iSize = 0;
+        p2.pMem = nullptr;
+    }
+    MemA & operator=(MemA && p2) noexcept
+    {
+        if (this != &p2)
+        {
+            iSize = p2.iSize;
+            pMem = p2.pMem ;
+
+            p2.iSize = 0;
+            p2.pMem = nullptr;
+        }
+        return *this;
+    }		bool SetData(_t * pInMem,int iFileSize)
 		{
 			if (!pInMem || iFileSize <= 0) return false;			
 			if (pMem) _aligned_free(pMem);
