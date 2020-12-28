@@ -239,10 +239,6 @@ void DrawCube::AddReflections(int i1,int i2,int i3,Point3D_t & pColor)
     Point3D_t     m_pLight  = { -0,80000,m_fEyeDistance };      // Set an angle a little off 45-degrees so we see reflections when we spin it in 
                                                                 // any direction. 
 
-    //-------------------------------------------------------------------------------------------------
-    // Specular Reflection Code -- Remove this (or ignore it) and the overall routine makes more sense.
-    //-------------------------------------------------------------------------------------------------
-
     Point3D_t pNormal   = ((p2 - p1)^(p3 - p1)).Normalize();    // Get the normal vector (of the plain the polygon forms)
     Point3D_t pView     = (m_pView-p1).Normalize();             // Get the vector to the viewpoint (it should be the middle of the polygon, but this is easier)
     Point3D_t pLight    = (m_pLight-p1).Normalize();            // Get the vector to the light from the polygon.
@@ -274,7 +270,7 @@ void DrawCube::AddReflections(int i1,int i2,int i3,Point3D_t & pColor)
     // but it keeps the code simple and we don't really need the speed here since we're just doing a cube. 
     //
     pColor = min3d(sqrt(pAmbient*pAmbient + pDiffuse*pDiffuse + fReflection*fReflection),1.0)*255.0; 
-                
+              
 }
 
 // FillPoly() -- Fill the output 2-D polygon data, preparing it for output
