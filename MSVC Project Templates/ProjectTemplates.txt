@@ -1,0 +1,77 @@
+Project Template .ZIP Files
+---------------------------
+
+The .zip files in this directory are Microsoft Visual C++ Project Templates. 
+
+With these templates, you can start projects using Sagebox easily, all set up to compile and work with Sagebox. 
+
+Also see the file "CreatingProjects.rtf" in the root project directory for more information about setting up 
+projects using the Sagebox libraries. 
+
+Copying the Project Templates
+-----------------------------
+
+The .ZIP files are used as-is by Microsoft Visual Studio to load a project.  These can be copied into the directory:
+
+	\users\<your user account>\Documents\Visual Studio 2019\Templates
+
+Load Projects
+-------------
+
+Once copied, when you invoke "Create Project" in Microsoft Visual Studio, these .ZIP files will come up.
+
+You will see either a green cube with "C++" on the cube to denote a Sagebox Project Template, or a Blue/Teal
+cube to denote an Advanced form of the template that contains streamlined code with no comments are initial code. 
+
+
+The .ZIP Project Templates
+--------------------------
+
+	Sagebox C++ -- Console Mode and Windows Project Template.zip
+	------------------------------------------------------------
+
+	This template is the main base template.  This allows you to create Console-Mode or Windows program with
+	a project setting.  The WinMain() is created for you, and it calls your main() function automatically, where you
+        can then write your program as a procedural program or event-driven program, as a Windows or Console-Mode program,
+	both, or a mixture.
+
+	This template also includes optimized project settings for faster code, and debug settings so you can debug your program
+	with the visual debugger.
+
+	Win32 and x64 can also be used in each project setting.
+
+	note: Although this provides a WinMain() function, you can provide your own be removing the reference to WinMain.obj
+	in the project -- when this is removed, you can use your own WinMain().  Otherwise, see the documentation below on the 
+	.ZIP template "Sagebox C++ -- Windows Project Template.zip", which is a Windows-only version of this template, without
+	the supplied WinMain() or Console-Mode project settings.
+
+
+
+	Sagebox C++ -- Console Mode Windows Project Template (Clean).zip
+	----------------------------------------------------------------
+
+	This is the advanced version (blue cube) of the previous template.  It is exactly the same, except that 
+	the code has no comments or initial code, making the project template clean and ready to go.  
+
+	This is meant for more adbvanced or general usage where you no longer want or need the initial code and comments
+	in the previous template.
+
+
+
+	Sagebox C++ -- Windows Project Template.zip
+	-------------------------------------------
+
+	This is a Windows-only version of the previous templates.  It includes the optimized, debug, x32, and
+	x64 project settings, but does not support console mode. 
+
+	This template is provided for when you want to supply your own WinMain() or wWinMain() function.  The 
+	previous templates include the WinMain() which calls your main() automatically.	
+
+	Sagebox C++ -- Sandbox Project Template (Console Mode and Windows).zip
+	----------------------------------------------------------------------
+
+	This is a very quick template for jumping into creative and casual programming with Sagebox.  The template 
+	places the start code into a sub-classed window, allowing you to program more like console-mode programming 
+	but with the power of Windows and Sagebox functions.
+
+	More will be written about this as more documentation and examples are written for Sagebox.
