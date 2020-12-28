@@ -1,0 +1,62 @@
+Creating and Adapting Projects to Use the Sagebox Library
+---------------------------------------------------------
+
+There are two methods to create and use projects with the Sagebox libraries. 
+
+	1. Use the .ZIP project templates in "MSVC Project Templates"
+	2. Specify paths in your new or existing project (this can also be used for existing 
+	   console-mode, i.e. non-Windows, projects).
+
+Paths
+-----
+
+There are two primary paths: 
+
+	* include
+	* lib
+
+Include Path
+------------
+
+The only requirement is to have a path to the include directory where "CSagebox.H" resides.  This is where 
+all needed Sagebox .H files are kept. With Microsoft projects, you can set an additional include path. 
+
+Lib Path
+--------
+
+The other path is the .LIB path where the x32 and x64 Sagebox libraries reside.  Alternatively, these 
+libraries can be copied into an already-default path. The WinMain.Lib file is also necessary when 
+creating an automatic Windows generation -- i.e. where you can use a regular main() but create it as a 
+Windows program.  This will be discussed in another document, but is currently a project option in the .ZIP 
+files in the "MSVC Project Templates" in the main project directory. 
+
+Microsoft Visual C++ Templates
+------------------------------
+
+There are a number of .ZIP files in the project directory "MSVC Project Templates".  
+These can be unzipped into the path "\users\<your account>\document\Visual Studio 2019\Templates". 
+After this, these can be used to load any of the projects. 
+
+Directory Structure for Templates
+
+The current templates need the following directory structure
+	<main directory>
+		<include> 		(Sagebox include files)
+		<lib>			(Sagebox Library files>
+		<Widgets>		(Optional Widgets directory)
+		<My Projects> 		(Your main project directory)
+			<Project or Solution> 		(The actual project or solution)
+
+For example, if you are creating a project or solution called "Rob's Sagebox Project" in a directory 
+structure "Rob's MSVC Projects", the directory path for the required Sagebox paths are as follows:
+	
+	./Rob's MSVC Projects/include			-- Sagebox includes
+	./Rob's MSVC Projects/lib			-- Sagebox library files
+	./Rob's MSVC Projects/Rob's Sagebox Project	-- Project or solution main directory.
+
+The Sagebox project directory "My Projects" may be used to place projects using the .ZIP project
+templates, or the include, lib, and other directories can be copied into the same relative place from your 
+project in order to use the templates. 
+
+
+
