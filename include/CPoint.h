@@ -147,12 +147,12 @@ struct CPoint
         return *this;
     }
  
-    CPoint(CPoint & p2)
+    CPoint(const CPoint & p2)
     {
         x = p2.x;
         y = p2.y;
     }
-   CPoint & operator =(CPoint && p2)
+   CPoint & operator = (CPoint && p2) noexcept
     {
         x = p2.x;
         y = p2.y;
@@ -172,6 +172,12 @@ struct CfPoint
 	double y;
 
 	CfPoint & operator = (const CPoint & p)
+	{
+		x = (double) p.x;
+		y = (double) p.y;
+		return (*this);
+	}
+	CfPoint & operator = (const CfPoint & p)
 	{
 		x = (double) p.x;
 		y = (double) p.y;
@@ -241,7 +247,7 @@ struct CfPoint
 		y -= p2.y;
 		return *this;
 	}
-    CfPoint(CfPoint & p2)
+    CfPoint(const CfPoint & p2)
     {
         x = p2.x;
         y = p2.y;
@@ -255,7 +261,7 @@ struct CfPoint
 
 	CfPoint() { };
 	CfPoint(double fx,double fy) { x = fx; y = fy; };
-	CfPoint(CPoint & p)
+	CfPoint(const CPoint & p)
 	{
 		x = (double) p.x;
 		y = (double) p.y;
