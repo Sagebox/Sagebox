@@ -33,7 +33,7 @@ int main()
     CSageBox cSageBox("My Program");    // Open SageBox, titling program cSageBox() may also be used for no title 
     auto &cWin = cSageBox.NewWindow();  // Open a sample Window
     
-    cWin.printf("Hello World from the SageBox Window\n");
+    cWin.printf("Hello World from the Sagebox Window\n");
     printf("Hello World from the Console Window\n");        // note: does not print when Project is set to Windows
 
     cWin.WaitforClose();                // Wait for the main window to be closed. 
