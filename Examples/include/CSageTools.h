@@ -40,6 +40,8 @@ public:
 	static void HSLtoRGB(double fH,double fS,double fL,Sage::RGBColor24 & rgbColor);
 	static void HSLtoRGB(double fH,double fS,double fL,Sage::RGBColor_t & rgbColor);
 	static void RGBtoHSL(int iRed,int iGreen,int iBlue,double &frH,double &frS,double &frL);
+    static Sage::HSLColor_t RGBtoHSL(Sage::RGBColor_t rgbColor); 
+    static Sage::HSLColor_t RGBtoHSL(Sage::RGBColor24 rgbColor); 
 	static bool ResizeLanzcos(Sage::CBitmap & cSource,Sage::CBitmap & cDest); 
 	static bool ResizeLanzcos(Sage::RawBitmap_t & stSource,Sage::RawBitmap_t & stDest); 
 	static bool ResizeLanzcos(int iWidth,int iHeight,int iNewWidth,int iNewHeight,unsigned char * sSource,unsigned char * sDest);
@@ -49,6 +51,9 @@ public:
 	static Sage::CBitmap BilinearResize(Sage::RawBitmap_t & stSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
 	static Sage::CBitmap BilinearResize(Sage::CBitmap & cSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
 	static bool BilinearResize(int iOrgWidth,int iOrgHeight,int iNewWidth,int iNewHeight,const unsigned char *sInputMem,unsigned char * sOutputMem);
+    static bool GaussianBlurStd(Sage::CBitmap & cInput,Sage::CBitmap & cOutput,double fRadius);
+    static Sage::CBitmap GaussianBlurStd(Sage::CBitmap & cInput,double fRadius,bool * bRetError = nullptr);
+    static bool NormalizeBitmap(Sage::RawBitmap_t & stInput,Sage::RawBitmap_t & stOutput,double fUpperThreshold = 1,double fLowerThreshold = 0);
 };
 
 #endif	// _CSageTools_h_

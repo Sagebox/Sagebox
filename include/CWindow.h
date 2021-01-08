@@ -475,6 +475,21 @@ public:
     //
     __forceinline bool EventReady() { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(); }
 
+    // ClearEvent() -- Clear a specific pending event (whether it is pending or not).  This can be called before GetEvent() to clear the 
+    // Event Queue of any specific event. For example, ClearEvent(SageEvent::MouseMove) or ClearEvent(SageEvent::WindowResize). 
+    //
+    // The latter example can be used to remove a pending window size when a Windows was initially sized with SetWindowSize(), which will
+    // set a pending WindowResize() event.
+    //
+    // Use ClearEvents() to clear all pending events. 
+    //
+    __forceinline bool ClearEvent(SageEvent eEvent) { return (!this || !m_cUserWin) ? false : m_cUserWin->ClearEvent(eEvent); }
+    
+    // CLearEvents() -- Clear all pending events.  This can be used to clear any incoming events prior to calling GetEvent(). 
+    // This can be useful when a setup, initialization, or other code has caused an unwanted event prior to the GetEvent() loop.
+    //
+    __forceinline bool ClearEvents() { return ClearEvent(SageEvent::All); }
+
     // SetMessageHandler() -- Set the message handler for the window.  This overrides the default message handler.
     // This allows events such as OnMouseMove(), OnButton() press, as well as all other Windows Messages to be 
     // acted upon as received by windows. 
@@ -511,7 +526,33 @@ public:
     // --> Write("Hello World", Font("Arial,40") | fgColor("Red") | CenterX()); 
     //
     CCIO out;
-   
+
+    // *** The following is still under-construction and somewhat experimental ***
+    //
+    // This allows a reference to the window, such as cWin << "Hello World" to print as in cOut. 
+    // It is TBD, to make sure it doesn't interfere with other overloading. 
+
+    CCIO & operator << (cwfOpt & opt)           { return out << opt;            }   // Options such as fgColor(), Font(), etc.
+    CCIO & operator << (char * x)               { return out << x  ;            }          
+    CCIO & operator << (const char * x)         { return out << x  ;            }
+    CCIO & operator << (char x)                 { return out << x  ;            }
+    CCIO & operator << (CDevString & cs)        { return out << *cs ;           }
+    CCIO & operator << (std::string & cs)       { return out << cs.c_str() ;    }
+    CCIO & operator << (CString & cs)           { return out << *cs  ;          }
+    CCIO & operator << (int x)                  { return out << x  ;            }
+    CCIO & operator << (unsigned int x)         { return out << x  ;            }
+    CCIO & operator << (float x)                { return out << x  ;            }
+    CCIO & operator << (double x)               { return out << x  ;            }
+    CCIO & operator << (wchar_t * x)            { return out << x  ;            }
+    
+    // Input operations, allowing CString, std::string, int, options, and double for inputs. 
+    
+    CCIO & operator >> (CString & cs)           { return out >> cs      ;   }
+    CCIO & operator >> (std::string & cs)       { return out >> cs      ;   }
+    CCIO & operator >> (int & fValue)           { return out >> fValue  ;   }
+    CCIO & operator >> (cwfOpt & opt)           { return out >> opt     ;   }
+    CCIO & operator >> (double & fValue)        { return out >> fValue  ;   }
+
     // clone of endl in C++ -- it's much faster to just include '\n' in the stream.
     // i.e. out << "Hello World\n!" is much faster than out << "Hello World" << endl
     //
@@ -980,6 +1021,13 @@ public:
     // making the canvas size smaller.
     //
     bool SetWindowSize(int iWidth,int iHeight,bool bInnerSize = false);
+
+    // GetCanvasSize() -- Get the size of the Window Canvas. 
+    // 
+    // The Window Canvas is the bitmap that is shown in the window and may be larger than the window (but may never be smaller). 
+    // This allows the Window to be resized dynamically, or to use a larger bitmap and move it around in the window, such as for scrolling.
+    //
+    SIZE GetCanvasSize(); 
 
     // Set CanvasSize() -- Set the Canvas size of the window
     // This value must be greater than the displayed window canvas or it is ignored.
@@ -2288,6 +2336,33 @@ public:
         // iReturnValue specifies the returend value on end program (default is 0)
         //
         bool EndProgramOnClose(int iReturnValue = 0); 
+
+        // ClearEvent() -- Clear a specific pending event (whether it is pending or not).  This can be called before GetEvent() to clear the 
+        // Event Queue of any specific event. For example, ClearEvent(SageEvent::MouseMove) or ClearEvent(SageEvent::WindowResize). 
+        //
+        // The latter example can be used to remove a pending window size when a Windows was initially sized with SetWindowSize(), which will
+        // set a pending WindowResize() event.
+        //
+        // Use ClearEvents() to clear all pending events. 
+        //
+        __forceinline bool ClearEvent(SageEvent eEvent) { return (!m_cWin) ? false : m_cWin->ClearEvent(eEvent); }
+        
+        // CLearEvents() -- Clear all pending events.  This can be used to clear any incoming events prior to calling GetEvent(). 
+        // This can be useful when a setup, initialization, or other code has caused an unwanted event prior to the GetEvent() loop.
+        //
+        __forceinline bool ClearEvents() { return ClearEvent(SageEvent::All); }
+        
+        // SendEventsToParent() -- Send all events to Parent Window while also sending them to the Window itself.
+        //
+        // This function is mucnh like SetEventWindow() which will tell Sagebox where else to send all events through GetEvent().
+        // Child windows send events to their parents (as well as themselves) by default, meaning you can use GetEvent() for the parent window
+        // and receive events for the window itself.
+        //
+        // For windows created with Sagebox (and some other instances), there is no Event Window set, and to receive events through the
+        // CSageBox::GetEvent() loop, SendEventsToParent() must be called -- this will send all events to the Sagebox main window (which is hidden)
+        //
+        bool SendEventsToParent(); 
+
     };
 
     WinEvent event;
@@ -2336,7 +2411,16 @@ public:
     public:
         [[nodiscard]] RawBitmap_t CreateBitmap(int iWidth,int iHeight = 1);
         [[nodiscard]] RawBitmap_t ReadBitmap(const char * sPath,bool * bSucceeded = nullptr);
-        bool SendtoClipboard(RawBitmap_t & stBitmap); 
+
+        // Send Contents of Bitmap to the clipboard
+        //
+        // note: This will be changed to use a CBitmap rather than a RawBitmap_t in the next release. 
+        //
+        bool SendtoClipboard(RawBitmap_t & stBitmap);
+        
+        // Send contents of window to the clipboard.
+        //
+        bool SendtoClipboard(); 
 
     };
 
@@ -4230,8 +4314,8 @@ public:
     bool MouseWheelMoved(Peek peek = Peek::No);
     bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No);
     int GetMouseWheelMove(bool bResetEvent = true);
-    bool WindowResized(Peek peek = Peek::No);
     bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No);
+    bool WindowResized(Peek peek = Peek::No);
 
     // SetWritePos() -- Set the output position in the Window for writing text. 
     // 
@@ -4259,6 +4343,15 @@ public:
     //
     ConsoleOp_t SetWritePos(POINT pLoc);
 
+
+    // SetWritePosX() -- Set the output X position in the window for writing text. 
+    //
+    // This sets only the X position in the ouput for printf, Write(), etc. -- anything that prints text.
+    // The current Y position is not changed.
+    //
+    // See SetWritePos() for more information; 
+    //
+    ConsoleOp_t SetWritePosX(int iX);
 
     // SetBkMode() -- Set the text background mode.
     // BkMode returns eeither BkMode::Transparent or BkMode::Opaque
@@ -6287,8 +6380,46 @@ public:
      void getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt());
 
 
-
+    // NewListBox() -- Create a listbox in the window. 
+    //
+    // A listbox is created at (iX,iY) int the window with the Width and height specified.
+    // The Height is adjusted to fit the number of lines available for the current font within the Height given.
+    // If only a partial line will fit within the height, the height is reduced to fit the number of lines with no overlap. 
+    //
+    // The initial colors for the Listbox are the current window's background and foreground (text color).  
+    // Use opt::WinColors() to Set the background and text color to default window colors (usually a 
+    // white background with black text, but this is dependent on the user's settings). 
+    //
+    // Use opt::fgColor() or opt::TextColor() to specify a foreground/text color.
+    // Use opt::bgColor() to set the background color. 
+    // Use opt::Font() to set the font in the listbox. 
+    //
+    // Use CListBox::AddItem or CListBox::AddItems() to add elements to the listbox.
+    //
+    // if a CListBox * cListbox object is supplied, this is used as the object so that the listbox may be subclassed to your own class and object.
+    // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
+    //
     CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+ 
+    // NewListBox() -- Create a listbox in the window. 
+    //
+    // A listbox is created at (iX,iY) int the window with the Width and height specified.
+    // The Height is adjusted to fit the number of lines available for the current font within the Height given.
+    // If only a partial line will fit within the height, the height is reduced to fit the number of lines with no overlap. 
+    //
+    // The initial colors for the Listbox are the current window's background and foreground (text color).  
+    // Use opt::WinColors() to Set the background and text color to default window colors (usually a 
+    // white background with black text, but this is dependent on the user's settings). 
+    //
+    // Use opt::fgColor() or opt::TextColor() to specify a foreground/text color.
+    // Use opt::bgColor() to set the background color. 
+    // Use opt::Font() to set the font in the listbox. 
+    //
+    // Use CListBox::AddItem or CListBox::AddItems() to add elements to the listbox.
+    //
+    // if a CListBox * cListbox object is supplied, this is used as the object so that the listbox may be subclassed to your own class and object.
+    // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
+    //
     CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
 
 
@@ -6297,6 +6428,18 @@ public:
 
     bool SetEventWindow(CWindow * cWin = nullptr);
     bool SetEventWindow(CWindow & cWin);
+
+    // SendEventsToParent() -- Send all events to Parent Window while also sending them to the Window itself.
+    //
+    // This function is mucnh like SetEventWindow() which will tell Sagebox where else to send all events through GetEvent().
+    // Child windows send events to their parents (as well as themselves) by default, meaning you can use GetEvent() for the parent window
+    // and receive events for the window itself.
+    //
+    // For windows created with Sagebox (and some other instances), there is no Event Window set, and to receive events through the
+    // CSageBox::GetEvent() loop, SendEventsToParent() must be called -- this will send all events to the Sagebox main window (which is hidden)
+    //
+    bool SendEventsToParent(); 
+
     bool AddControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bUpdate,const cwfOpt & cwOpt = cwfOpt());
    
     bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate = true,BorderType eBorderType = BorderType::Depressed, LabelJust eLabelType = LabelJust::None,const cwfOpt & cwOpt = cwfOpt());
@@ -6354,11 +6497,20 @@ public:
 	//
     CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
-    // QuickCheckbox() -- Add a checkbox to the default Dev Control Window. This accepts all options as normal buttons, but 
-	// the default will add a regular button. 
-	//
-	// The Name used as a title for the button, but is optional. 
-	//
+    // DevCheckbox() -- Add a checkbox to the DevWindow. 
+    //
+    // All usual options apply to the checkbox, such as providing fgColor, Font, etc. 
+    // If no text is supplied, a name for the checkbox is chosen automatically, such as "Checkbox 1", Checkbox 2", etc.
+    //
+    // --> If the checkbox name is preceded by '~' (i.e. "~My Checkbox"), this tells the DevWindow
+    //     to place multiple checkboxes side-by-side (2 per-line) in the DevWindow to save space.
+    //
+    //     If the '~' is omitted (i.e. "My Checkbox"), all checkboxes are placed in the next vertical space
+    //     in the DevWindow
+    //
+    //     note: to use '~' as the first character of the checkbox name, i.e. ("~Display Image"), use a double "~~". 
+    //           For example, "~~Display Image" will display as "~Display Image"
+    //
     CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
@@ -6531,7 +6683,47 @@ public:
     //
     bool EndProgramOnClose(int iReturnValue = 0); 
 
+    // SendtoClipboard() -- Send contents of window to Windows Clipboard as a bitmap (so it may be pasted into other applications)
+    //
+    // This transfers the visible canvas area only.  It does not copy the window frame or border. 
+    //
+    bool SendtoClipboard();
+
+    // ImportClipboardText() -- Returns Text String in the Windows clipboard, if it exists.
+    //
+    // If there is text within the Windows Clipboard, a CString object will be returned with its contents.
+    // Otherwise, an empty CString will be returned.
+    //
+    // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CString returned is empty);
+    //
+    CString ImportClipboardText(bool * bSuccess = nullptr);
+
+    // ImportClipboardTextW() -- Returns a Unicode Text String in the Windows clipboard, if it exists.
+    //
+    // If there is text within the Windows Clipboard, a CStringW object will be returned with its contents.
+    // Otherwise, an empty CStringW will be returned.
+    //
+    // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CStringW returned is empty);
+    //
+    CStringW ImportClipboardTextW(bool * bSuccess = nullptr);
+
+    // ImportClipboardBitmap() -- Returns a CBitmap with a copy of the Bitmap in the Clipboard buffer. 
+    //
+    // If there is no bitmap in the clipboard buffer, an empty CBitmap will be returned. 
+    //
+    // if a bSuccess pointer is provided, this is fille with the bitmap status (TRUE if the bitmap was filled, FALSE if there is no bitmap
+    // in the Windows Clipboard, and the returned CBitmap is empty)
+    //
+    // This will copy an 8-bit, 24-bit, or 32-bit bitmap.  In the case of an 8-bit bitmap, the grayscale bitmap is returned in the 
+    // CBitmap with the Red, Green, and Blue values filled with the gray value
+    //
+    // With 32-bit bitmaps, a mask element is created in the CBitmap, to which the Alpha channel for the bitmap is copied.
+    //
+    CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr);
+
     CSageBox * GetSageBox();
+
+
 
 };
 }; // namespae Sage

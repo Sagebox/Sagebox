@@ -20,5 +20,8 @@ class CUserWindow
 public:
  struct stFuncGetInputOptions_t;
  bool EventPending();
+ bool ClearEvent(SageEvent eEvent);
+ bool ClearEvents(); 
+
 };
 };

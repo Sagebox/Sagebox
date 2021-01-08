@@ -142,6 +142,40 @@ namespace Sage
 		Unknown,
     };
 
+
+    // SageEvent -- a list of all events that pass through GetEvent() (possibly others) 
+    //
+    // *** This is in-progress ***
+    //
+    // This enum class is used to express single or multiple events when communicating with Sagebox for various reasons.
+    // For example, when clearing the event queue, ClearCent(SageEvent::WindowResize) can be used to remove a pending window resize without
+    // affecting other events in the queue. 
+    //
+    // ClearEvent(SageEvent::All) or ClearEvents() can be used to clear any pending event in the queue. 
+    //
+    // Note:  When ClearEvent() is used, it clears the events for the event request, but it does not clear the pending status.
+    //        Therefore, if an event is in the queue, GetEvent() will still return, but there will be no event found. 
+    // 
+    // ClearEvent() is not applicable to a Window Close Pending.  This must be reset independently with ResetWindowClosing()
+    //
+    //
+    // Possible Additions include Event groups such as "AnyMouse", "AnyEditBox", "AnyButton", etc. to specify any type of event -- for example AnyMouse would
+    // include any mouse movement, presses, unpresses, etc.  -- This is TBD
+    //
+    enum class SageEvent
+    {
+        All,
+        WindowResize,
+        ButtonPress,
+        ButtonUnpress,
+        MouseMoved,
+        MouseLButtonDown,
+        MouseRButtonDown,
+
+        // This list in-progress.  Not all events may be processed with ClearEvent() -- WindowResize is currently the only one intended, but others will follow. 
+
+    };
+
 	// Window Event Signals that can be processed.
 	//
 	// $$ Right now, ONLY WindowClose is supported. 
@@ -499,6 +533,9 @@ public:
 	
 	RGBColor_t & Init();
 	bool Undefined();
+    __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
+    __forceinline RGBColor_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
+    __forceinline RGBColor_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
 	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
 	__forceinline double Gray() { return (double) (iRed+iGreen+iBlue)/3.0; }
 	double LabGray();

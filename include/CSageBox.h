@@ -105,6 +105,11 @@ static constexpr POINT		EmptyPoint{};
 static constexpr SIZE		EmptySize{};
 static constexpr RECT       EmptyRect {};
 static constexpr SizeRect   EmptySizeRect{};
+
+class CSageBox;
+
+using CSagebox = CSageBox;          // Allow CSagebox to be used, as well, since I keep putting CSagebox cSagebox in videos. 
+
 class CSageBox
 {
 public:
@@ -1101,11 +1106,20 @@ public:
 	//
     CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
-    // QuickCheckbox() -- Add a checkbox to the default Dev Control Window. This accepts all options as normal buttons, but 
-	// the default will add a regular button. 
-	//
-	// The Name used as a title for the button, but is optional. 
-	//
+    // DevCheckbox() -- Add a checkbox to the DevWindow. 
+    //
+    // All usual options apply to the checkbox, such as providing fgColor, Font, etc. 
+    // If no text is supplied, a name for the checkbox is chosen automatically, such as "Checkbox 1", Checkbox 2", etc.
+    //
+    // --> If the checkbox name is preceded by '~' (i.e. "~My Checkbox"), this tells the DevWindow
+    //     to place multiple checkboxes side-by-side (2 per-line) in the DevWindow to save space.
+    //
+    //     If the '~' is omitted (i.e. "My Checkbox"), all checkboxes are placed in the next vertical space
+    //     in the DevWindow
+    //
+    //     note: to use '~' as the first character of the checkbox name, i.e. ("~Display Image"), use a double "~~". 
+    //           For example, "~~Display Image" will display as "~Display Image"
+    //
     CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
@@ -1368,7 +1382,41 @@ public:
     // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
     //
     RGBColor_t MakeColor(const char * sColor,RGBColor_t rgbColor);
+
+   // ImportClipboardText() -- Returns Text String in the Windows clipboard, if it exists.
+    //
+    // If there is text within the Windows Clipboard, a CString object will be returned with its contents.
+    // Otherwise, an empty CString will be returned.
+    //
+    // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CString returned is empty);
+    //
+    CString ImportClipboardText(bool * bSuccess = nullptr);
+
+    // ImportClipboardTextW() -- Returns a Unicode Text String in the Windows clipboard, if it exists.
+    //
+    // If there is text within the Windows Clipboard, a CStringW object will be returned with its contents.
+    // Otherwise, an empty CStringW will be returned.
+    //
+    // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CStringW returned is empty);
+    //
+    CStringW ImportClipboardTextW(bool * bSuccess = nullptr);
+
+    // ImportClipboardBitmap() -- Returns a CBitmap with a copy of the Bitmap in the Clipboard buffer. 
+    //
+    // If there is no bitmap in the clipboard buffer, an empty CBitmap will be returned. 
+    //
+    // if a bSuccess pointer is provided, this is fille with the bitmap status (TRUE if the bitmap was filled, FALSE if there is no bitmap
+    // in the Windows Clipboard, and the returned CBitmap is empty)
+    //
+    // This will copy an 8-bit, 24-bit, or 32-bit bitmap.  In the case of an 8-bit bitmap, the grayscale bitmap is returned in the 
+    // CBitmap with the Red, Green, and Blue values filled with the gray value
+    //
+    // With 32-bit bitmaps, a mask element is created in the CBitmap, to which the Alpha channel for the bitmap is copied.
+    //
+    CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr);
+
 };
+
 }; // namespace Sage;
 
 

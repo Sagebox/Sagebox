@@ -173,7 +173,7 @@ template <class _t>
 			if (iSize) pMem = (_t *) std::malloc(iSize*sizeof(_t));
 			return (_t *) pMem;
 		}
-		_t & operator [](int i) { return pMem ? pMem[i] : MemNull; }
+		_t & operator [](int i) { return pMem ? *(pMem + i) : MemNull;  }
 		bool copyFrom(Mem & p2)
 		{
 			if (pMem) free(pMem); 

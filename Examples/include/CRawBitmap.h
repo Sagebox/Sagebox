@@ -236,13 +236,30 @@ public:
 		stBitmap.Delete(); 
 	};
 	__forceinline SIZE GetSize() { return { stBitmap.iWidth, stBitmap.iHeight }; }
+    __forceinline int GetTotalPixels() { return stBitmap.iWidth*stBitmap.iHeight; };
 	__forceinline int GetWidth() { return stBitmap.iWidth; }
 	__forceinline int GetHeight() { return stBitmap.iHeight; }
 	__forceinline int GetWidthBytes() { return stBitmap.iWidthBytes; }
 	__forceinline int GetOverhang() { return stBitmap.iOverHang; }
 
     unsigned char * GetMem() { return stBitmap.stMem; }
-	bool ReverseBitmap() { return stBitmap.ReverseBitmap(); }
+
+    // ReverseBitmapInline() -- Turns the bitmap upside-down inline (i.e. the same bitmap).  This is helpful for many operations, since
+    // Windows bitmaps are upside-down in memory.  This makes the bitmap right-side up and easier to deal with. 
+    //
+    // This returns the current bitmap (which has now been turned upside-down). 
+    //
+	CBitmap & ReverseBitmapInline() { stBitmap.ReverseBitmap(); return *this; }
+
+    // ReverseBitmap() -- Turns the bitmap upside-down inline (i.e. the same bitmap).  This is helpful for many operations, since
+    // Windows bitmaps are upside-down in memory.  This makes the bitmap right-side up and easier to deal with. 
+    //
+    // This functions returns a new CBitmap, leaving the current bitmap untouched. 
+    // 
+    // note; ReverseBitmapInline() can be used to reverse the bitmap without creating a new one.
+    //
+	CBitmap ReverseBitmap();
+
 	bool ApplyMaskGraphic(RawBitmap_t & stBackground,RawBitmap_t & stDest) { return stBitmap.ApplyMaskGraphic(stBackground,stDest); }
 	bool ApplyMaskGraphic(CBitmap & cBackground,CBitmap & cDest) { return stBitmap.ApplyMaskGraphic(*cBackground,*cDest); }
 		
@@ -288,7 +305,91 @@ public:
 
 	void Delete(){ stBitmap.Delete(); }
 	RawBitmap_t  Clean(){ RawBitmap_t stOld = stBitmap; stBitmap.Clean(); return stOld; }
+    
+    // GaussianBlurStd() -- Blur the image with a Gaussian Blur of the given Radius (fRadius)
+    //
+    // If no output bitmap is given, a CBitmap object is returned with the blurred image. 
+    // In this case, bError can also be input to be filled to check for error, OR the return bitmap can be checked for Empty() is !isValid() status to determine an error. 
+    //
+    // When an output bitmap is given, it must be either empty or the same size as the the bitmap in the current CBitmap object. 
+    // TRUE is returned if the blur was successful, FALSE if there was an error.  If the output bitmap was empty, then Empty() or !isValid() may be called to determine an error status
+    // If the output bitmap already exists, it will remain the same as it was before the called (and not a good indicator of an error)
+    //
+    // To blur the bitmap and keep the result in the same bitmap, use MyBitmap.GaussianBlurStd(MyBitmap); -- note that this creates a separate bitmap, blurs the original into this new bitmap as an output,
+    // copies the result into the current bitmap, and then deletes the temporary bitmap.   i.e. it doesn't save memory allocation or time by blurring itself (as with some other funtions)
+    //
+    // ** note: This function is currenty using a slow method for a Gaussian blur until the multi-threading SSE versions are ready
+    //
+    bool GaussianBlurStd(CBitmap & cOutput,double fRadius); 
+
+    // GaussianBlurStd() -- Blur the image with a Gaussian Blur of the given Radius (fRadius)
+    //
+    // If no output bitmap is given, a CBitmap object is returned with the blurred image. 
+    // In this case, bError can also be input to be filled to check for error, OR the return bitmap can be checked for Empty() is !isValid() status to determine an error. 
+    //
+    // When an output bitmap is given, it must be either empty or the same size as the the bitmap in the current CBitmap object. 
+    // TRUE is returned if the blur was successful, FALSE if there was an error.  If the output bitmap was empty, then Empty() or !isValid() may be called to determine an error status
+    // If the output bitmap already exists, it will remain the same as it was before the called (and not a good indicator of an error)
+    //
+    // To blur the bitmap and keep the result in the same bitmap, use MyBitmap.GaussianBlurStd(MyBitmap); -- note that this creates a separate bitmap, blurs the original into this new bitmap as an output,
+    // copies the result into the current bitmap, and then deletes the temporary bitmap.   i.e. it doesn't save memory allocation or time by blurring itself (as with some other funtions)
+    //
+    // ** note: This function is currenty using a slow method for a Gaussian blur until the multi-threading SSE versions are ready
+    //
+    CBitmap GaussianBlurStd(double fRadius,bool * bError = nullptr);
+
+
+    // CreateBitmap() -- Replaces current bitmap and memory with an uninitialized bitmap of input size.
+    // This replaces any current bitmap that already exists, but will not duplicae an existing mask
+    // (a mask is a special property of CBitmap)
+    // 
+    // The new bitmap contains uninitialized memory.  Use Clear() to initially clear it.
+    //
 	bool CreateBitmap(int iWidth,int iHeight);
+
+    // Normalize() -- Normalize the Black and White point levels. 
+    //
+    // This is similar to 'Level' or 'Auto levels' in image processing.
+    // Normalize() will set the black and white points to the lowest highest points found in the image,
+    // adding contrast to items with a lower white point or higher black point than 255 and 0, respectively.
+    //
+    // If no output bitmap is supplied, the normalize operation is performed on the current bitmap in the CBitmap object.
+    // Otherwise, the Normalize() function is processed on the output bitmap, leaving the CBitmap object bitmap untouched.
+    //
+    // *** This function is in-progress ***
+    //
+    // Currently, the Normalize works on the Grayscale translation of the image (i.e. the image is converted to grayscale to determine
+    // the black and white points, as opposed to setting them individually per-channel)
+    //
+    // The inputs fUpperThreshold and fLowerThreshold are TBD
+    //
+    bool Normalize(double fUpperThreshold = 1,double fLowerThreshold = 0);
+
+    // Normalize() -- Normalize the Black and White point levels. 
+    //
+    // This is similar to 'Level' or 'Auto levels' in image processing.
+    // Normalize() will set the black and white points to the lowest highest points found in the image,
+    // adding contrast to items with a lower white point or higher black point than 255 and 0, respectively.
+    //
+    // If no output bitmap is supplied, the normalize operation is performed on the current bitmap in the CBitmap object.
+    // Otherwise, the Normalize() function is processed on the output bitmap, leaving the CBitmap object bitmap untouched.
+    //
+    // *** This function is in-progress ***
+    //
+    // Currently, the Normalize works on the Grayscale translation of the image (i.e. the image is converted to grayscale to determine
+    // the black and white points, as opposed to setting them individually per-channel)
+    //
+    // The inputs fUpperThreshold and fLowerThreshold are TBD
+    //
+    bool Normalize(CBitmap & cOutput,double fUpperThreshold = 1,double fLowerThreshold = 0);
+
+    // CreateBitmap() -- Replaces current bitmap and memory with an uninitialized bitmap of input size.
+    // This replaces any current bitmap that already exists, but will not duplicae an existing mask
+    // (a mask is a special property of CBitmap)
+    // 
+    // The new bitmap contains uninitialized memory.  Use Clear() to initially clear it.
+    //
+	bool CreateBitmap(SIZE szSize);
 
 	RawBitmap_t operator - ()
 	{

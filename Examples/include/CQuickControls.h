@@ -197,6 +197,7 @@ private:
 	void SetWindow();
 	bool AddControl(void * cControl,ControlType type,SIZE szSize);
 	void SetTopWindow();
+    bool isLastCheckbox(stControl_t * & stCheckbox);
 public:
 	// ----------------
 	// Public Interface
