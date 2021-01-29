@@ -303,6 +303,7 @@ public:
 	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 //	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	cwfOpt & operator | (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
+	cwfOpt & operator , (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	const char * operator * () const { return spOpt && *spOpt ? spOpt : (const char *) sOpt; }
 	cwfOpt(const cwfOpt & opt2);
     cwfOpt & operator = (cwfOpt && p2) noexcept;

@@ -7,7 +7,6 @@
 // Many non-public interface declarations and older C++ version code will be removed in the next updates.
 // **************************************************************************************************************
 
-
 // -------------------------------
 // CWindow - CDavinci Window class
 // -------------------------------
@@ -112,7 +111,7 @@ public:
 
    // This private section should disappear altogether in an upcoming update
 private:
-
+    friend CDevControls;
     friend CMenu;
     friend WinOpt;
     friend COutDC;
@@ -129,9 +128,10 @@ private:
     bool m_bNextOpenisSave          = false;
     bool m_bPaintDisabled           = false;
     bool m_bFirstEvent              = false;                                // Allows passthrough on GetEvent() on first event call -- this is already deprecated and will be removed.
-    CBitmap  m_cClsBitmap;                                              // Bitmap used to repaint in window when cls() is issued (i.e. when a user has specified Transparent()
+    CBitmap  m_cClsBitmap;                                                  // Bitmap used to repaint in window when cls() is issued (i.e. when a user has specified Transparent()
                                                                             // on a Child Window or called SetClsBitmap() to set the bitmap for Cls() repaint.
-
+    bool m_bDevWindow               = false;                                // When true, this is a Quick Controls Dev Window, which has a different status for various things.
+    bool m_bNoExitMsg               = false;                                // When true, the Exit Button will not be displayed on the bottom of the window for Sandbox Mode Applications (i.e. QuickSandbox, etc.)
     bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     CDevControls * m_cDevControls = nullptr;    // Not created until first used. 
@@ -615,7 +615,7 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(const char * sText,cwfOpt & cwOptions);
+    void Write(const char * sText,const cwfOpt & cwOptions);
 
     // Write() -- Write text to the window in a simplified manner. 
     // 
@@ -643,26 +643,44 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(int iX,int iY,const char * sText,cwfOpt & cwOptions);
+    void Write(int iX,int iY,const char * sText,const cwfOpt & cwOptions);
+    
+    // Write() -- Write text to the window in a simplified manner. 
+    // 
+    // Write() writes simple text to the window.  This is faster than printf() and other methods and can be used
+    // to create faster output to the window.  
+    //
+    // Text can have the same SageBox-style color encoding and other {} attributes, such as 
+    //            This is cWindow->Write("This is {green}color{/} text and this is another {red}color{/}"); 
+    // 
+    // Text can also have newline and other characters, such as cWindow->Write("This is line 1\nand this is line 2");
+    //
+    // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
+    //
+    void Write(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
     void Writeln(const char * sText = nullptr,const char * sOptions = nullptr);        
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(const char * sText,cwfOpt & cwOptions);                        
+    void Writeln(const char * sText,const cwfOpt & cwOptions);                        
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(cwfOpt & cwOptions);                        
+    void Writeln(const cwfOpt & cwOptions);                        
 
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
     void Writeln(int iX,int iY,const char * sText = nullptr,const char * sOptions = nullptr);               // $$ To be removed  
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(int iX,int iY,const char * sText,cwfOpt & cwOptions);                        
+    void Writeln(int iX,int iY,const char * sText,const cwfOpt & cwOptions);               
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(int iX,int iY,cwfOpt & cwOptions);                        
+
+    void Writeln(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());
+
+    // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
+    void Writeln(int iX,int iY,const cwfOpt & cwOptions);                        
 
     // Put a character on the window just as putchar() in regular 'C'.
     // This is useful for Ansii-text and emulation
@@ -852,6 +870,30 @@ public:
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
     void Cls(RGBColor_t rgbColor,const char * sColor2);    
+
+    // Cls() -- Clear the window with a specified color or with a color gradient
+    //
+    // Once the window is cleared, the window's background color is changed to the new color.
+    // In the case of a gradient, the transparency should be ON, causing the background color to not be used for printing text.
+    //
+    // note: When the background is tranparent, this takes longer to write text to the screen, which can cause slowness for programs that write out to
+    // to the screen alot.  Also see Text Windows (TBD)
+    //
+    // Clear the screen with one color: cWindow->Cls(RGB(255,0,0));                    // Clears the screen to red.
+    // Clear the screen with a Gradient cWindow->Cls(RGB(255,0,0),RGB(0,0,255));    // Clear the screen in a gradient from red to blue.
+    //
+    // Realistically, the gradient is used to set more of a tone, such as:
+    //
+    //        DWORD dwDarkGray = RGB(32,32,32);
+    //        DWORD dwGray = RGB(92,92,92);
+    //
+    //        cWindow->Cls(dwDarkGray,dwGray); 
+    //
+    // This clears the window from Dark Gray to a lighter Gray, which can look nicer than a flat color.
+    //
+    // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
+    //
+    bool Cls(CBitmap & cBitmap);
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -1153,7 +1195,70 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        
+    bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iColor2 = -1);
+
+    // Recangle() -- Put out a filled or outlined rectangle to the window.
+    //
+    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
+    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
+    //
+    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
+    // with this color.
+    //
+    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
+    // Rectangle() or any other function that uses a Windows PEN.
+    //
+    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
+    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
+    //        Rectangle(50,50,400,200,dwRed); 
+    //
+    // Draw a filled rectangle of color RED.
+    //
+    //        Rectangle(50,50,400,200,dwRed,dwGreen);
+    //
+    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
+    //
+    bool DrawRectangle(POINT pLoc,SIZE szSize,int iWidth,int iHeight,int iColor,int iColor2 = -1);
+
+    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawRectangle() and SetPenSize() for more information
+    //
+    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);        
+
+    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawRectangle() and SetPenSize() for more information
+    //
+    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iPenSize = 0);        
+
+    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawRectangle() and SetPenSize() for more information
+    //
+    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+
+    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawRectangle() and SetPenSize() for more information
+    //
+    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,int iColor,int iPenSize = 0);
 
     bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
     bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
@@ -1180,7 +1285,31 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor,RGBColor_t rgbColor2 = { -1,-1,-1 });        
+    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor  = Rgb::Default,RGBColor_t rgbColor2 = Rgb::Undefined);        
+    
+    // Recangle() -- Put out a filled or outlined rectangle to the window.
+    //
+    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
+    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
+    //
+    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
+    // with this color.
+    //
+    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
+    // Rectangle() or any other function that uses a Windows PEN.
+    //
+    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
+    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
+    //        Rectangle(50,50,400,200,dwRed); 
+    //
+    // Draw a filled rectangle of color RED.
+    //
+    //        Rectangle(50,50,400,200,dwRed,dwGreen);
+    //
+    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
+    //
+    bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Undefined,RGBColor_t rgbColor2 = Rgb::Undefined);
+
 
     // Ractangle2() -- Used for testing 
     //
@@ -1228,6 +1357,400 @@ public:
     // The Pen Thickness can be changed with SetPenThickness()
     //
     bool DrawCircle(int iX,int iY,int iRadius,int iColor1,int iColor2 = -1);
+ 
+    // Draw a Circle on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+    bool DrawCircle(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);
+
+    // Draw a Circle on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+    bool DrawCircle(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);
+
+    // Draw a Circle on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+    bool DrawCircle(POINT pLoc,int iRadius,int iColor1,int iColor2 = -1);
+
+    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenCircle(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0);
+
+    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenCircle(int iX,int iY,int iRadius,int iColor,int iPenSize = 0);
+    
+    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenCircle(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0 );
+    
+    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenCircle(POINT pLoc,int iRadius,int iColor,int iPenSize =0 );
+
+    // Draw an Ellipse on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Size can be changed with SetPenSize()
+    //
+    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);
+ 
+    // Draw a ellipse on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);
+
+    // Draw a ellipse on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+    bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);
+
+    // Draw a ellipse on the Window
+    //
+    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
+    // The second color is the outline color (if ommitted, there is no outline).
+    // The outline size is determine by the Pen Thickness, which defaults to 1.
+    //
+    // The Pen Thickness can be changed with SetPenThickness()
+    //
+   bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);
+
+    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+    
+    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);
+
+    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+
+    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
+    // is not drawn, only the border). 
+    //
+    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
+    // override the current pen setting without changing the value of the current pen size
+    //
+    // See DrawCircle() and SetPenSize() for more information
+    //
+    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);
+
+    // Set the  color for new lines, circles, rectangles,e tc. using SetPenColor() (or MoveTo()) and then DrawLine() (or LineTo())
+    // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
+    // don't need to set the color. 
+    //
+    // With all drawing routines, a color may be specified.  This does not change the pen color, drawing the shape in the 
+    // color specified, leaving the pen color the same as it was before the call to the function.
+    //
+    // note: This does not work with DrawLine().  When using DrawLine(), the color must be specifieed.
+    //
+    // note: This function is in progress and does not work with all drawing routines yet.  For some drawing routines, you may
+    // need to specify a color.
+    //
+    bool SetPenColor(int iColor);
+
+    // Set the  color for new lines, circles, rectangles,e tc. using SetPenColor() (or MoveTo()) and then DrawLine() (or LineTo())
+    // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
+    // don't need to set the color. 
+    //
+    // With all drawing routines, a color may be specified.  This does not change the pen color, drawing the shape in the 
+    // color specified, leaving the pen color the same as it was before the call to the function.
+    //
+    // note: This does not work with DrawLine().  When using DrawLine(), the color must be specifieed.
+    //
+    // note: This function is in progress and does not work with all drawing routines yet.  For some drawing routines, you may
+    // need to specify a color.
+    //
+    bool SetPenColor(const char * sColor);
+
+    // Set the DrawLine color for new lines using SetLinePos() (or MoveTo()) and then DrawLine() (or LineTo())
+    // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
+    // don't need to set the color. 
+    //
+    // note: This does not work with DrawLine().  When using DrawLine(), the color must be specifieed.
+    //
+    bool SetPenColor(RGBColor_t rgbColor);
+
+    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
+    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
+    //
+    bool SetLinePos(int iX,int iY,int iColor);
+
+    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
+    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
+    //
+    bool SetLinePos(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
+    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
+    //
+    bool SetLinePos(POINT pLoc,int iColor);
+
+    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
+    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
+    //
+    bool SetLinePos(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    //
+    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
+    //
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    bool MoveTo(int iX,int iY,int iColor);
+
+    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    //
+    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
+    //
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    //
+    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
+    //
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    bool MoveTo(POINT pLoc,int iColor);
+
+    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
+    //
+    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
+    //
+    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
+    // has been used and the draw position is set to the next position. 
+    //
+    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
+    // or a default color.
+    //
+    // A color may also be specified to LineTo()
+    //
+    bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool LineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+
+    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool LineTo(int iX,int iY,int iColor); 
+
+    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool LineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool LineTo(POINT pLoc,int iColor);
+
+    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool DrawLineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+
+    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool DrawLineTo(int iX,int iY,int iColor); 
+
+    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool DrawLineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
+    // a previous DrawLine() or SetLinePos(). 
+    //
+    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
+    //
+    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
+    //
+    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
+    // and other Draw functions
+    //
+    bool DrawLineTo(POINT pLoc,int iColor =-1);
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1235,9 +1758,77 @@ public:
     // The color can be RGB() or RGBColor_t
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
+    // If the color is omitted, the current line color is used.
+    // The line color can be set or changed with SetLineColor() or SetLinePos()
+    //
     bool DrawLine(int ix1,int iy1,int ix2,int iy2,int iColor);
+ 
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    // If the color is omitted, the current line color is used.
+    // The line color can be set or changed with SetLineColor() or SetLinePos()
+    //
+    bool DrawLine(POINT p1,POINT p2,int iColor);
+
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    // If the color is omitted, the current line color is used.
+    // The line color can be set or changed with SetLineColor() or SetLinePos()
+    //
+    bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default);
+
+
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    // If the color is omitted, the current line color is used.
+    // The line color can be set or changed with SetLineColor() or SetLinePos()
+    //
+    bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default);
+
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
     bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,int iColor);
+
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default);
     
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    bool DrawLine2(POINT p1,SIZE szDist,int iColor);
+
+    // Draw a line in the window.  
+    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
+    //
+    // The color can be RGB() or RGBColor_t
+    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
+    //
+    bool DrawLine2(POINT p1,SIZE szDist,RGBColor_t rgbColor = Rgb::Default);
+
     // SetPenThickness -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
     //
     // This value defaults to 1, but can be set prior to drawing any control that uses an outline or draws a line.
@@ -1247,9 +1838,26 @@ public:
     // go below the minimum of 1.
     //
     int SetPenThickness(int iThickness);
+
+    // GetPenThickness() -- Returns the size (i.e. thickness) of the current pen)
+    //
     int GetPenThickness();
 
-    // DrawPixel() draw a piel on the screen. 
+    // SetPenSize -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
+    //
+    // This value defaults to 1, but can be set prior to drawing any control that uses an outline or draws a line.
+    // SetPenThickness() must be used again to revert back to the original thickness.  
+    // 
+    // SetPenThickness() returns the new thickness of the pen -- this useful to ensure the value does not 
+    // go below the minimum of 1.
+    //
+    int SetPenSize(int iThickness);
+
+    // GetPenSize() -- Returns the size (i.e. thickness) of the current pen)
+    //
+    int GetPenSize();
+
+   // DrawPixel() draw a pixel on the screen. 
     //
     // This sets a pixel on the screen and can be useful in prototyping and general drawing.
     // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
@@ -1260,7 +1868,10 @@ public:
     //
     bool DrawPixel(int iX,int iY,DWORD dwColor);
  
-    // DrawPixel() draw a piel on the screen. 
+    bool DrawPixel(POINT pPoint,DWORD dwColor)          { return DrawPixel(pPoint.x,pPoint.y,dwColor); }
+    bool DrawPixel(POINT pPoint,RGBColor_t rgbColor)    { return DrawPixel(pPoint.x,pPoint.y,rgbColor); }
+
+    // DrawPixel() draw a pixel on the screen. 
     //
     // This sets a pixel on the screen and can be useful in prototyping and general drawing.
     // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
@@ -1536,9 +2147,14 @@ public:
         int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
         int GetInteger(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         int GetInteger(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
+        bool GetInteger(const char * sTitle,int & iInteger,const cwfOpt & cwOptions = cwfOpt());
+        bool GetInteger(int & iInteger,const cwfOpt & cwOptions = cwfOpt());
 
         double GetFloat(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         double GetFloat(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
+        bool GetFloat(const char * sTitle,double & fFloat,const cwfOpt & cwOptions = cwfOpt());
+        bool GetFloat(double & fFloat,const cwfOpt & cwOptions = cwfOpt());
+
         CString GetString(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         CString GetString(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
@@ -1739,6 +2355,7 @@ public:
     //
     struct WinGroup
     {
+        friend CDevControls;
         friend CWindow;
     private:
         CWindow * m_cWin                ;
@@ -1778,6 +2395,14 @@ public:
         // A subsequent call will return false until another button is pressed.
         //
         bool isPressed(int iRadioGroup,int & iPressedID);
+
+        bool SliderMoved(int iGroupID,int & iSliderID,int & iSliderValue,Peek peek = Peek::No);
+        bool SliderMoved(int iGroupID,SliderStruct & stSlider,Peek peek = Peek::No);
+        bool SliderMoved(int iGroupID,Peek peek = Peek::No);
+
+        bool SliderMoved(const char * sGroupID,int & iSliderID,int & iSliderValue,Peek peek = Peek::No);
+        bool SliderMoved(const char * sGroupID,SliderStruct & stSlider,Peek peek = Peek::No);
+        bool SliderMoved(const char * sGroupID,Peek peek = Peek::No);
 
 #if 0
         // GetPressed() has been deprecated
@@ -2013,6 +2638,18 @@ public:
         // Use GetMouseClickPos() to retrieve the last mouse-click coordinates.
         //
         bool MouseClicked(Peek peek = Peek::No);
+        bool MouseClicked(POINT & pMouse,Peek peek = Peek::No);
+
+        bool MouseDragEvent(Peek peek = Peek::No);
+        bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No);
+
+        bool MouseDragEnded(Peek peek = Peek::No);
+        bool MouseDragEnded(POINT & pMouse,Peek peek = Peek::No);
+
+        bool isMouseDragging(); 
+        bool isMouseDragging(POINT & pStartDrag); 
+        
+        POINT GetMouseDragStart();
 
         // LButtonPressed() -- returns true if the Left Mouse Button was clicked (same as MouseClicked())
         //
@@ -2092,7 +2729,7 @@ public:
         // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
         // You can also use GetMousePos() to retrieve the current mouse cooordinates.
         //
-        bool MouseMoved(POINT & pPoint);
+        bool MouseMoved(POINT & pPoint,Peek peek = Peek::No);
 
         // ButtonPressed() -- returns the ID of a button that has an active "press" status.
         // When a button is pressed, the individual Button.Pressed() function can be called to determine the press event.
@@ -2251,7 +2888,13 @@ public:
         // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
         // This can be a quick method to stop program execution and prevent exiting the program until the window is closed.
         //
-        void WaitforClose();     
+        // WaitforClose() returns 0 by default.  if iReturnValue is specifid, this is the value that will be returned from the WaitforClose() call.
+        // This is implemented specifically to allow int main-style() returns to avoid a singular return iValue; on the next line.
+        // for example, using return WaitforClose(1234) will wait for the window close and return 1234 to the calling process. 
+        //
+        // If the window is invalid, -1 will be returned.
+        //
+        int WaitforClose(int iReturnValue = 0);     
 
         // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
         // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
@@ -2260,6 +2903,18 @@ public:
         //
         int ExitButton(const char * sText = nullptr);
  
+        // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
+        //
+        // NoExitMsg() returns 0 unless a return code is specified.
+        //
+        int NoExitMsg(bool bNoExit=true); 
+
+        // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
+        //
+        // NoExitMsg() returns 0 unless a return code is specified.
+        //
+        int NoExitMsg(int iReturnCode,bool bNoExit=true); 
+
         // Returns true if the 'X' button was pressed in the window or the window is closing for some other reason.
         // 
         // By default in Sagebox, main windows do not close when the 'X' button is pressed.  Instead, the WindowClosing() flag
@@ -3439,16 +4094,20 @@ public:
         void Write(int iX,int iY,const char * sText,cwfOpt & cwOptions);
 
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-        void Writeln(const char * sText = nullptr,const char * sOptions = nullptr);        
+        void Writeln(const char * sText = nullptr,const char * sOptions = nullptr);    
+
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-        void Writeln(const char * sText,cwfOpt & cwOptions);                        
+        void Writeln(const char * sText,cwfOpt & cwOptions);         
+
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
         void Writeln(cwfOpt & cwOptions);                        
 
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-        void Writeln(int iX,int iY,const char * sText = nullptr,const char * sOptions = nullptr);        
+        void Writeln(int iX,int iY,const char * sText = nullptr,const char * sOptions = nullptr);   
+
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-        void Writeln(int iX,int iY,const char * sText,cwfOpt & cwOptions);                        
+        void Writeln(int iX,int iY,const char * sText,cwfOpt & cwOptions);                       
+
         // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
         void Writeln(int iX,int iY,cwfOpt & cwOptions);                        
 
@@ -3973,6 +4632,17 @@ public:
     // See DisplayBitmap() for more details on this function.
     //
     bool DisplayBitmapR(int iX,int iY,RawBitmap_t & stBitmap);    
+    
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(RawBitmap_t & stBitmap);    
 
     //Display a 32-bit bitmap. 
     //
@@ -4014,6 +4684,32 @@ public:
     // Blend a bitmap with a pre-defined mask
     //
     bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap,RawBitmap_t & stMask);
+
+    // StretchBitmap() -- Display a stretched bitmap to the window.  
+    //
+    // The source bitmap can be stretched to any size, and from any portion of the bitmap.
+    // 
+    // Important Note: If the szSource (source rectangle from which to draw from the original bitmap) is different from 
+    // the size of the bitmap, szSourceBitmap MUST BE INCLUDED with the size of the entire source bitmap.  Otherwise the function
+    // will fail.  When specifyin a CBitmap or RawBitmap_t as the source, szSourceBitmap does not need to be filled.
+    // szSourceBitmap only needs to be filled when sending raw bitmap data and the source size differs from the source bitmap size.
+    //
+    bool StretchBitmap(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0});
+    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest); 
+    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource);
+
+    bool StretchBitmapR(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0});
+    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest); 
+    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource);
+
+    bool DisplayBitmapEx(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap);
+    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,SIZE szSize); 
+    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize);
+
+    bool DisplayBitmapExR(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap);
+    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,SIZE szSize); 
+    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize);
+
 
     // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
     //
@@ -4226,7 +4922,7 @@ public:
     // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
     // You can also use GetMousePos() to retrieve the current mouse cooordinates.
     //
-    bool MouseMoved(POINT & pPoint);
+    bool MouseMoved(POINT & pPoint,Peek peek = Peek::No);
 
 
     // ButtonPressed() -- returns the ID of a button that has an active "press" status.
@@ -4270,7 +4966,7 @@ public:
     //
     bool MouseClicked(Peek peek = Peek::No);
 
-    // MouseClicked() -- returns true if the Left Mouse Button was clicked.
+   // MouseClicked() -- returns true if the Left Mouse Button was clicked.
     //
     // This is an event and is a one-time only read so that the status is reset 
     // (i.e. the status wont become true again until the next mouse click)
@@ -4283,7 +4979,18 @@ public:
     // Include a POINT (i.e. MouseClicked(MyPoint)) to get the mouse-click coodrinates.
     // You can also use GetMouseClickPos() to retrieve the last mouse-click coordinates.
     //
-    bool MouseClicked(POINT & pMouse);
+    bool MouseClicked(POINT & pMouse,Peek peek = Peek::No);
+    
+    bool MouseDragEvent(Peek peek = Peek::No);
+    bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No);
+
+    bool MouseDragEnded(Peek peek = Peek::No);
+    bool MouseDragEnded(POINT & pMouse,Peek peek = Peek::No);
+
+    bool isMouseDragging(); 
+    bool isMouseDragging(POINT & pStartDrag); 
+
+    POINT GetMouseDragStart();
 
     // GetMousePos() -- Returns the current mouse coordinates relative to the window
     //
@@ -4480,6 +5187,24 @@ public:
     // rather than the bitmap.
     //
     HDC GetCurDC();
+
+    // Get the Windows Desktop Device Context of the current window, i.e. the static Device Context.
+    //
+    // This returns the Windows Device Context (HDC) for the actual Window rather than the bitmap that Sagebox uses
+    // for output. 
+    // 
+    // See GetCurDC() for more information
+    //
+    HDC GetDesktopDC();
+
+    // Get the Windows Device Context for the internal bitmap Sagebox uses for output functions (i.e. Write(), printf(), drawing, etc.)
+    //
+    // See GetDesktopDC() to get the Windows Device Context for the actual window rather than the internal bitmap (canvas).
+    // 
+    // See GetCurDC() for more information
+    //
+    HDC GetBitmapDC();
+
 
     // GetWritePos() -- Returns the current X,Y output position for all text-based functions.
     //
@@ -5400,15 +6125,17 @@ public:
     //
     int    EndY();
 
-    // getWidth() - returns the width of the displayed canvas of the window.
-    // For Width of the window, including the frame, see GetWindowSize(true);
+    // GetWindowWidth() - returns the width of the displayed canvas of the window.
+    // Use GetWindoWidth(true) to get the full width of the widow, including the frame.
+    // See GetWindowSize() to return both Width and Height in SIZE structure.
     //
-    int getWidth();
+    int GetWindowWidth(bool bFrameSize = false);
 
-    // getWidth() - returns the height of the displayed canvas of the window.
-    // For Width of the window, including the frame, see GetWindowSize(true);
+    // GetWindowHeight() - returns the height of the displayed canvas of the window.
+    // Use GetWindowHeight(true) to get the full width of the height, including the frame.
+    // See GetWindowSize() to return both Width and Height in SIZE structure.
     //
-    int getHeight();
+    int GetWindowHeight(bool bFrameSize = false);
 
     // Returns true if the Window is showing on the desktop.  False is returned if the Window is invisible.
     //
@@ -5427,24 +6154,32 @@ public:
     // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
     // and other functions.
     //
-    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
-    // RawBitmap_t::Delete() must be called to delete this memory.
+    // The parameter bDesktopView does the following:
+    // 
+    //      bDesktopView == true         -- Gets the window as seen on the desktop, including any child controls (Widgets, buttons, sub-windows) showing
+    //                                      in the window.  This will not capture other windows overlapping the window, and will return the pure desktop bitmap
+    //                                      for the window
     //
-    // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
-    // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //      bDesktopView = false         -- Gets the internal bitmap.  This will only return the graphics output to the bitmap, such as writing (printf, write(), etc.)
+    //                                      or drawn items such as lines, bitmaps, etc.  Any child controls (i.e. buttons, sliders, text widgets, etc.) will not be 
+    //                                      copied as part of the bitmap and the area underneath the control will be returned in the bitmap.
     //
-    CBitmap GetWindowBitmap(POINT pLoc,SIZE szSize);
+    CBitmap GetWindowBitmap(POINT pLoc,SIZE szSize,bool bDesktopView = false);
     
     // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
     // and other functions.
     //
-    // [[nodiscard]] -- Important note: This returns a RawBitmap_t structure which has allocate memory.
-    // RawBitmap_t::Delete() must be called to delete this memory.
+    // The parameter bDesktopView does the following:
+    // 
+    //      bDesktopView == true         -- Gets the window as seen on the desktop, including any child controls (Widgets, buttons, sub-windows) showing
+    //                                      in the window.  This will not capture other windows overlapping the window, and will return the pure desktop bitmap
+    //                                      for the window
     //
-    // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
-    // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
+    //      bDesktopView = false         -- Gets the internal bitmap.  This will only return the graphics output to the bitmap, such as writing (printf, write(), etc.)
+    //                                      or drawn items such as lines, bitmaps, etc.  Any child controls (i.e. buttons, sliders, text widgets, etc.) will not be 
+    //                                      copied as part of the bitmap and the area underneath the control will be returned in the bitmap.
     //
-    CBitmap GetWindowBitmap();
+    CBitmap GetWindowBitmap(bool bDesktopView = false);
 
     // SendWidgetMessage()
     // 
@@ -5535,7 +6270,18 @@ public:
     // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
     // This can be a quick method to stop program execution and prevent exiting the program until the window is closed.
     //
-    void WaitforClose();
+    // WaitforClose() returns 0 by default.  if iReturnValue is specifid, this is the value that will be returned from the WaitforClose() call.
+    // This is implemented specifically to allow int main-style() returns to avoid a singular return iValue; on the next line.
+    // for example, using return WaitforClose(1234) will wait for the window close and return 1234 to the calling process. 
+    //
+    // If the window is invalid, -1 will be returned.
+    //
+    int WaitforClose(int iReturnValue = 0);
+    
+    // WaitforMouseClick() -- Waits for a mouse click in the current window. 
+    // This function will return on receipt of a mouseclick or the window close, unless the automatic Window Close is disabled
+    // (see DisableClose())
+    //
     bool WaitforMouseClick();    // false return means window is closing down
 
     // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
@@ -5545,6 +6291,17 @@ public:
     //
     int ExitButton(const char * sText = nullptr);
  
+    // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
+    //
+    // NoExitMsg() returns 0;
+    //
+    int NoExitMsg(bool bNoExit = true); 
+
+    // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
+    //
+    // NoExitMsg() returns 0 unless a return code is specified.
+    //
+    int NoExitMsg(int iReturnCode,bool bNoExit=true); 
 
     // EnableWindow() -- Enables or Disables the Window and all controls within the window
     //
@@ -6464,6 +7221,26 @@ public:
     bool DrawSimpleDoc(const unsigned char * sPgrData,const cwfOpt & cwOpt = cwfOpt()); 
     bool DrawSimpleDoc(const char * sPgrPath, const cwfOpt & cwOpt = cwfOpt());
 
+    // DevGetWindow() -- Returns the Window (i.e. CWindow) of the default DevWindow.  This can be used to access window functions for the 
+    // the default DevWindow. 
+    //
+    // For user-created Dev Control Windows, use the CDevControls::GetWindow() function, i.e. cMyDevWindow->GetWindow(); 
+    //
+    CWindow * DevGetWindow();
+
+    // DevGetGroup() -- returns the group (i.e. WinGroup) substructure for the default Dev Window.  This can be used to perform group functions.
+    // For example, when using multiple DevSlider() calls with a declared common group (i.e. DevSlider("MySlider",opt::Group(100,1)), group.SliderMoved(100)
+    // can be used to determine if any slider in the group was moved, the slider ID and the slider position.
+    //
+    // Groups created in DevControls must be used through that Dev Controls Window's group function, which is why DevGroup is provided.
+    //
+    // For example, using DevGetGroup()->SliderMoved(MyGroup,..) will check any sliders within the given group within the DevWindow.
+    //
+    // This function only works for the default DevWindow.  For user-created DevWindows, use the CDevControls::group() function, i.e.
+    // cMyDevWindow->group().SliderMoved(MyGroup,...)
+    //
+    CWindow::WinGroup * DevGetGroup();
+
     // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
     // GUI functions with GUI controls. 
@@ -6532,13 +7309,14 @@ public:
 
     CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
     CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt());
     CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
 
 
- 	// AddDevSction() -- Adds a text section to the default Dev Controls window, to separate types of controls.
+ 	// DevAddSection() -- Adds a text section to the default Dev Controls window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
-    bool AddDevSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
     // *** Important note *** -- this will return NULLPTR until a control is created with
@@ -6639,9 +7417,15 @@ public:
     // This only applies to the original program thread and will not work for other threads created after
     // the program started.
     //
-    // the value iReturnValue is returned from StopThread() when it wakes up.
+    // When bEndProgramOnClose == true, the prgoram is ended when the the window the window is closed.
+    // Otherwise it is up to the program code to call EndProgram() when responding to an event such as WindowClose, etc.
     //
-    int StopThread();
+    // iOkReturnValue is returned when bEndProgramClose == true and the window is closed by the user -- otherwise the program must
+    // set the return code in EndProgram().  Since EndProgram is called automatically, iOkReturnValue provides a method to return 
+    // an "Ok" or "Window Closed" return value.  The default value (when iOkReturnValue is not specified) is 0.
+    // the value iReturnValue is returned from EndProgram() when it wakes up.
+    //
+    int StopThread(bool bEndProgramOnClose = false,int iOkReturnValue = 0);
 
     // Resume the main thread if it is suspended.
     //
@@ -6685,9 +7469,20 @@ public:
 
     // SendtoClipboard() -- Send contents of window to Windows Clipboard as a bitmap (so it may be pasted into other applications)
     //
+    // If a Bitmap is included, the bitmap is sent to the clipoard instead.
+    //
     // This transfers the visible canvas area only.  It does not copy the window frame or border. 
     //
     bool SendtoClipboard();
+
+    // SendtoClipboard() -- Send contents of window to Windows Clipboard as a bitmap (so it may be pasted into other applications)
+    //
+    // If a Bitmap is included, the bitmap is sent to the clipoard instead.
+    //
+    // This transfers the visible canvas area only.  It does not copy the window frame or border. 
+    //
+    bool SendtoClipboard(CBitmap & cBitmap);
+
 
     // ImportClipboardText() -- Returns Text String in the Windows clipboard, if it exists.
     //
@@ -6721,8 +7516,16 @@ public:
     //
     CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr);
 
+    bool isDevWindow() { return m_bDevWindow; }
     CSageBox * GetSageBox();
 
+    // CenterInlineFonts() -- When true, this will center the text when font changes occur in output with {<font>} changes.
+    // For example Write("This is a {Arial45}Centered{/} Font" will center the larger font in the middle of the text line when
+    // Centering is active.  Otherwise, it will put the font start at and all other text in the line at the same Y value. 
+    //
+    // This is primarily used for specialized text, such as a TextWidget()
+    //
+    bool CenterInlineFonts(bool bCenterFonts = true);
 
 
 };

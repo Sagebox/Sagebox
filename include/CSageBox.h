@@ -20,6 +20,8 @@
 
 //#include "SageIncludes.h"
 #include <cstdlib>
+//#undef _CSTD
+//#define _CSTD std::
 #include <cstdio>
 #include <ctime>
 
@@ -170,6 +172,7 @@ public:
 	//
 	CWindow & ConsoleWin(cwfOpt & cwOpt);
 
+
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
     //
@@ -185,6 +188,8 @@ public:
     // CloseButtonPressed() event will be triggerred.
     //
 	CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
+    static CSagebox * m_cStaticSagebox;
+
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -298,6 +303,219 @@ public:
     //
     CWindow & NewWindow(cwfOpt & cwOpt);
 
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // Note when using NewWindow(SIZE(),..) varations, InnerSize() is assumed and the window size supplied will be the interior size.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(SIZE szSize,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // Note when using NewWindow(SIZE(),..) varations, InnerSize() is assumed and the window size supplied will be the interior size.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(SIZE szSize,const cwfOpt & cwOpt); 
+
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(CPoint pLoc,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+	// NewWindow -- Create a new popup window.
+    // This creates a regular window with all of the functions and properties of the parent window.
+    //
+    // The Event properties (i.e. through EventLoop() and WaitforEvent() also run through the parent.
+    // Therefore, the Parent's WaitforEvent() and EventLoop() can be used to check for the new window's events.
+    //
+    // A subclassed window object may be passed in to override event callbacks, Main(), and other CWindow components.
+    // This object is deleted automatically (i.e. the object passed in)
+    //
+    // SetMessageHandler() can be used to override event messages without overriding the window class
+    //
+    // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
+    // CloseButtonPressed() event will be triggerred.
+    //
+    CWindow & NewWindow(CPoint pLoc,const cwfOpt & cwOpt); 
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+	static CWindow & AutoWindow(int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+	static CWindow & AutoWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(const cwfOpt & cwOpt);
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(SIZE szSize,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // Note when using AutoWindow(SIZE(),..) varations, InnerSize() is assumed and the window size supplied will be the interior size.
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(SIZE szSize,const cwfOpt & cwOpt);
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // Note when using AutoWindow(SIZE(),..) varations, InnerSize() is assumed and the window size supplied will be the interior size.
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(CPoint pLoc,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+    static CWindow & AutoWindow(CPoint pLoc,const cwfOpt & cwOpt);
+
+    // GetStaticSagebox() -- Returns the object for m_cStaticSagebox created when AutoWindow() is used. 
+    //
+    static CSagebox * GetStaticSagebox();
+
+
     // Main() -- Creates a new window from a newly created class and runs the windows Main() function.
 	//
 	// This is designed to be used with the QuickConsole macro, where the defined classname is used in the Main() function
@@ -319,6 +537,10 @@ public:
 	// through CSageBox, SageBox manages it and deletes the object when the window is destroyed.
 	//
 	int Main(CWindow * cWin,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+    static int AutoMain(CWindow * cWin,const cwfOpt & cwOpt);
+    static int AutoMain(CWindow * cWin,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+ 	static int AutoMain(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // This is used to register a widget with SageBox.
     // The primary use for this is for the widget to register with Sagebox when called by Sagebox.
@@ -1142,13 +1364,14 @@ public:
 
     CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
     CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt());
     CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
 
 
- 	// AddDevSction() -- Adds a text section to the default Dev Controls window, to separate types of controls.
+ 	// DevAddSection() -- Adds a text section to the default Dev Controls window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
-    bool AddDevSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
     // *** Important note *** -- this will return NULLPTR until a control is created with
@@ -1160,6 +1383,26 @@ public:
     //
     CDevControls * GetDevControlsPtr();
 
+    // DevGetWindow() -- Returns the Window (i.e. CWindow) of the default DevWindow.  This can be used to access window functions for the 
+    // the default DevWindow. 
+    //
+    // For user-created Dev Control Windows, use the CDevControls::GetWindow() function, i.e. cMyDevWindow->GetWindow(); 
+    //
+    CWindow * DevGetWindow();
+
+    // DevGetGroup() -- returns the group (i.e. WinGroup) substructure for the default Dev Window.  This can be used to perform group functions.
+    // For example, when using multiple DevSlider() calls with a declared common group (i.e. DevSlider("MySlider",opt::Group(100,1)), group.SliderMoved(100)
+    // can be used to determine if any slider in the group was moved, the slider ID and the slider position.
+    //
+    // Groups created in DevControls must be used through that Dev Controls Window's group function, which is why DevGroup is provided.
+    //
+    // For example, using DevGetGroup()->SliderMoved(MyGroup,..) will check any sliders within the given group within the DevWindow.
+    //
+    // This function only works for the default DevWindow.  For user-created DevWindows, use the CDevControls::group() function, i.e.
+    // cMyDevWindow->group().SliderMoved(MyGroup,...)
+    //
+    CWindow::WinGroup * DevGetGroup();
+    
     // DevControlsWindow() -- Create a CDevControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
     // GUI functions with GUI controls. 

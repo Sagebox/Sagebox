@@ -10,14 +10,16 @@
 //
 // This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
 //
-
-//#pragma once
-#if !defined(_CMemClass_H_)
-#define _CMemClass_H_
 #include <cstdlib>
 #include <cstdio>
 #include <memory>
 #include <malloc.h>
+#include "Sage.h"
+#include "ErrCtl.h"
+
+//#pragma once
+#if !defined(_CMemClass_H_)
+#define _CMemClass_H_
 
 namespace Sage
 {
@@ -140,6 +142,188 @@ template <class _t>
 			pMem->pMem = nullptr;
 			pMem->iSize = 0;
 		}
+
+        // SetMaxBlock() -- Keep Memory sized to a certain block size past the current size. 
+        //
+        // **** Use this function BEFORE accessing the next pointer to ensure memory is available ****
+        //
+        // Input:  iEval        --> Current place to evaluate (i.e. an index into the array)
+        //         iThreshold   --> Threshold within the current block that should cause a reallocation.
+        //                          if iThreshold is omitted, it iBlockSize is used in its place.
+        //         iBlockSize   --> Memory Block Size
+        //
+        // Return: Pointer to current memory
+        //        
+        // Important Notes:     1. When calling this function, only use the returned pointer. 
+        //                         Once SetMaxBlock() is called, the memory pointer may be changed. 
+        //
+        //                      2. This function is only evaluated once and is not continuous. 
+        //                         It must be used as necessary as memory grows, and does not
+        //                         grow memory automatically.
+        //
+        // Example:  SetMaxBlock(1234,700,1000)
+        //           This declares a block size of 1000, and that the next block should be allocated
+        //           if the current index (iEval) is 700.
+        //
+        //           Since the iEvel is 1234 and the block size is 1000, this means the place in the current
+        //           block is iEval % iBlockSize, or 1234 % 1000 or 234.  Since 234 is < 700, the new block won't be added
+        //           
+        //           SetMaxBlock(1812,700,1000) will allocated new memory since the current position would
+        //           be evaluate as 1812 % 1000, or 812, which is >= 700.
+        //
+        //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
+        //
+        _t * SetMaxBlock(int iEval,int iThreshold,int iBlockSize,bool bClearNewBlock = false)
+        {
+            int iEvalMod = iEval % iBlockSize; 
+            
+            // Correct for when iEval is a multiple of the block size. 
+
+            if (!iEvalMod && iEval && iThreshold == iBlockSize) iEvalMod = iBlockSize; // We're at a multiple of blocksize.. 
+
+            if ((iEvalMod >= iThreshold || iSize < iBlockSize || iSize < iEval) && iSize-iEval < iBlockSize)
+            {
+                // If the iEval is preemptive (i.e. bigger than current memory, allocate to the iEval value + Blocksize margin)
+
+                if (iEval > iSize) iBlockSize = iBlockSize*((iEval + iBlockSize-1)/iBlockSize) - iSize + iBlockSize;
+                _sbDebug(printf("%s: Allocated Memory: OrgEval = %d, iEvalMod = %d, iBlockSize = %d, iMem = %d, iNewMem = %d\n",    \
+                                                                    __func__,iEval,iEvalMod,iBlockSize,iSize,iSize+iBlockSize));
+                int iCurSize = iSize;
+                ResizeMax(iSize+iBlockSize);
+                if (bClearNewBlock && pMem && iSize == iCurSize+iBlockSize)
+                {
+                    debugMsg(CString() << __func__ << ": Cleared New Memory (" << iSize-iCurSize << ") bytes.\n"); 
+                    memset(pMem + iCurSize,0,(iSize-iCurSize)*sizeof(_t));
+                }
+            }
+            return pMem;
+        }
+
+        // SetMaxBlockFast() -- Inlined version of SetMaxBlock() for when speed is an issue
+        //
+        // This allows the query to be fast so that SetMaxBlockSizeFast() can be called in a tight loop without
+        // calling out to a function.  Note that ResizeMax is also inlined. 
+        //
+        //
+        // Input:  iEval        --> Current place to evaluate (i.e. an index into the array)
+        //         iThreshold   --> Threshold within the current block that should cause a reallocation.
+        //                          if iThreshold is omitted, it iBlockSize is used in its place.
+        //         iBlockSize   --> Memory Block Size
+        //
+        // Return: Pointer to current memory
+        //        
+        // Important Notes:     1. When calling this function, only use the returned pointer. 
+        //                         Once SetMaxBlockFast() is called, the memory pointer may be changed. 
+        //
+        //                      2. This function is only evaluated once and is not continuous. 
+        //                         It must be used as necessary as memory grows, and does not
+        //                         grow memory automatically.
+        //
+        // Example:  SetMaxBlockFast(1234,700,1000)
+        //           This declares a block size of 1000, and that the next block should be allocated
+        //           if the current index (iEval) is 700.
+        //
+        //           Since the iEvel is 1234 and the block size is 1000, this means the place in the current
+        //           block is iEval % iBlockSize, or 1234 % 1000 or 234.  Since 234 is < 700, the new block won't be added
+        //           
+        //           SetMaxBlockFast(1812,700,1000) will allocated new memory since the current position would
+        //           be evaluate as 1812 % 1000, or 812, which is >= 700.
+        //
+        //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
+        //
+        __forceinline _t * SetMaxBlock(int iEval,int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlock(iEval,iBlockSize,iBlockSize,bClearNewBlock); }
+
+        // SetMaxBlockFast() -- Inlined version of SetMaxBlock() for when speed is an issue
+        //
+        // This allows the query to be fast so that SetMaxBlockSizeFast() can be called in a tight loop without
+        // calling out to a function.  Note that ResizeMax is also inlined. 
+        //
+        //
+        // Input:  iEval        --> Current place to evaluate (i.e. an index into the array)
+        //         iThreshold   --> Threshold within the current block that should cause a reallocation.
+        //                          if iThreshold is omitted, it iBlockSize is used in its place.
+        //         iBlockSize   --> Memory Block Size
+        //
+        // Return: Pointer to current memory
+        //        
+        // Important Notes:     1. When calling this function, only use the returned pointer. 
+        //                         Once SetMaxBlockFast() is called, the memory pointer may be changed. 
+        //
+        //                      2. This function is only evaluated once and is not continuous. 
+        //                         It must be used as necessary as memory grows, and does not
+        //                         grow memory automatically.
+        //
+        // Example:  SetMaxBlockFast(1234,700,1000)
+        //           This declares a block size of 1000, and that the next block should be allocated
+        //           if the current index (iEval) is 700.
+        //
+        //           Since the iEvel is 1234 and the block size is 1000, this means the place in the current
+        //           block is iEval % iBlockSize, or 1234 % 1000 or 234.  Since 234 is < 700, the new block won't be added
+        //           
+        //           SetMaxBlockFast(1812,700,1000) will allocated new memory since the current position would
+        //           be evaluate as 1812 % 1000, or 812, which is >= 700.
+        //
+        //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
+        //
+      __forceinline _t * SetMaxBlockFast(int iEval,int iThreshold,int iBlockSize,bool bClearNewBlock = false)
+        {
+           int iEvalMod = iEval % iBlockSize; 
+            
+            // Correct for when iEval is a multiple of the block size. 
+
+            if (!iEvalMod && iEval && iThreshold == iBlockSize) iEvalMod = iBlockSize; // We're at a multiple of blocksize.. 
+
+            if ((iEvalMod >= iThreshold || iSize < iBlockSize || iSize < iEval) && iSize-iEval < iBlockSize)
+            {
+                // If the iEval is preemptive (i.e. bigger than current memory, allocate to the iEval value + Blocksize margin)
+
+                if (iEval > iSize) iBlockSize = iBlockSize*((iEval + iBlockSize-1)/iBlockSize) - iSize + iBlockSize;
+                _sbDebug(printf("%s: Allocated Memory: OrgEval = %d, iEvalMod = %d, iBlockSize = %d, iMem = %d, iNewMem = %d\n",    \
+                                                                    __func__,iEval,iEvalMod,iBlockSize,iSize,iSize+iBlockSize));
+                int iCurSize = iSize;
+                ResizeMax(iSize+iBlockSize);
+                if (bClearNewBlock && pMem && iSize == iCurSize+iBlockSize)
+                {
+                    debugMsg(CString() << __func__ << ": Cleared New Memory (" << iSize-iCurSize << ") bytes.\n"); 
+                    memset(pMem + iCurSize,0,(iSize-iCurSize)*sizeof(_t));
+                }
+            }
+            return pMem;
+        }
+
+        // SetMaxBlockFast() -- Inlined version of SetMaxBlock() for when speed is an issue
+        //
+        // This allows the query to be fast so that SetMaxBlockSizeFast() can be called in a tight loop without
+        // calling out to a function.  Note that ResizeMax is also inlined. 
+        //
+        //
+        // Input:  iEval        --> Current place to evaluate (i.e. an index into the array)
+        //         iThreshold   --> Threshold within the current block that should cause a reallocation.
+        //                          if iThreshold is omitted, it iBlockSize is used in its place.
+        //         iBlockSize   --> Memory Block Size
+        //
+        // Return: Pointer to current memory
+        //        
+        // Important Notes:     1. When calling this function, only use the returned pointer. 
+        //                         Once SetMaxBlockFast() is called, the memory pointer may be changed. 
+        //
+        //                      2. This function is only evaluated once and is not continuous. 
+        //                         It must be used as necessary as memory grows, and does not
+        //                         grow memory automatically.
+        //
+        // Example:  SetMaxBlockFast(1234,700,1000)
+        //           This declares a block size of 1000, and that the next block should be allocated
+        //           if the current index (iEval) is 700.
+        //
+        //           Since the iEvel is 1234 and the block size is 1000, this means the place in the current
+        //           block is iEval % iBlockSize, or 1234 % 1000 or 234.  Since 234 is < 700, the new block won't be added
+        //           
+        //           SetMaxBlockFast(1812,700,1000) will allocated new memory since the current position would
+        //           be evaluate as 1812 % 1000, or 812, which is >= 700.
+        //
+        //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
+        //
+        __forceinline _t * SetMaxBlockFast(int iEval,int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlockFast(iEval,iBlockSize,iBlockSize,bClearNewBlock); }
 
 		// ResizeMax() -- Resize the memory to the new value or keep the current size, whichever is greater
 		// if the parameter iMemSize is larger than the current memory size, the memory is reallocated.

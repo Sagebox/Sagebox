@@ -23,14 +23,20 @@ struct CComplex
 	double fR;
 	double fI;
 
-	//__forceinline CeComplex operator * (const CeComplex & p2) { return ComplexMult(*this,p2); }
 	__forceinline CComplex operator * (const CComplex & p2) { return { fR*p2.fR - fI*p2.fI, fR*p2.fI + fI*p2.fR }; };
+	__forceinline CComplex & operator *= (const CComplex & p2) {  double fTemp = fR*p2.fR - fI*p2.fI; fI = fR*p2.fI + fI*p2.fR; fR = fTemp; return *this; };
 	__forceinline CComplex operator * (double fVal) { return { fR*fVal, fI*fVal }; };
+	__forceinline CComplex & operator *= (double fVal) {  fR *= fVal; fI *= fVal; return *this; };
 	__forceinline CComplex operator / (double fVal) { return { fR/fVal, fI/fVal }; };
+	__forceinline CComplex & operator /= (double fVal) { fR/=fVal; fI/=fVal; return *this; };
 	__forceinline CComplex operator - (double fVal) { return { fR - fVal, fI }; };
+    __forceinline CComplex & operator -= (double fVal) { fR -= fVal; return *this; }
 	__forceinline CComplex operator + (double fVal) { return { fR + fVal, fI }; };
+	__forceinline CComplex & operator += (double fVal) { fR += fVal; return *this; };
 	__forceinline CComplex operator + (const CComplex & p2) { return { fR + p2.fR, fI + p2.fI }; }
+	__forceinline CComplex & operator += (const CComplex & p2) { fR += p2.fR; fI += p2.fI; return *this; }
 	__forceinline CComplex operator - (const CComplex & p2) { return { fR - p2.fR, fI - p2.fI }; }
+	__forceinline CComplex & operator -= (const CComplex & p2) { fR -= p2.fR; fI -= p2.fI; return *this; }
 	__forceinline double abs() { return sqrt(fR*fR + fI*fI); };
 	__forceinline double absSq() { return fR*fR + fI*fI; };
 	__forceinline CComplex sq() { return { fR*fR - fI*fI,  2*fR*fI };};
@@ -40,6 +46,15 @@ struct CComplex
 		double fDiv = p2.fR * p2.fR + p2.fI*p2.fI;
 		if (!fDiv) return { 0,0 };
 		return { (fR*p2.fR + fI*p2.fI)/fDiv, (fI*p2.fR - fR*p2.fI)/fDiv };
+	}
+	__forceinline CComplex & operator /= (const CComplex & p2)
+	{
+		double fDiv = p2.fR * p2.fR + p2.fI*p2.fI;
+        if (!fDiv) { fR = fI = 0; return *this; }
+        double fTemp = (fR*p2.fR + fI*p2.fI)/fDiv;
+        fI = (fI*p2.fR - fR*p2.fI)/fDiv;
+        fR = fTemp;
+        return *this;
 	}
 	__forceinline CComplex & Normalize() { double fValue = abs(); if (!fValue) *this = { 0,0 }; else *this = *this/fValue; return *this; }
 

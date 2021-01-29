@@ -32,6 +32,8 @@
 									cSageBox.Main(new _Class);				\
 																			\
 									return(0);								\
-								}											\
+								}											
+
+#define AutoSandbox(Class) QuickSandbox(Class) int main() { return CSageBox::AutoMain(new Class); }
 
 #endif // _CSageMacros_H_

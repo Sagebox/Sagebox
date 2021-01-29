@@ -419,6 +419,37 @@ public:
 	bool SetSignal(ButtonSignal & stSignal);
 	bool SetSignal(bool * bSignal,bool * bSignalData = nullptr);
 
+    // SendCloseMessage() -- Closes Parent Window when the button is pressed. 
+    //
+    // SendCloseMessage() sends a WM_CLOSE message to the parent window (or the window specified). 
+    // If no window is specified, the Button's parent window is chosen by default.
+    //
+    // Use SendCloseMessage(false) to turn off the window close message.
+    // For programmatic/logic uses, use SendCloseMessage(bSendCloseMsg,cWin) to specify on/off and a window in the case bSendCloseMsg == true
+    //
+    // In the case of a Quick Controls DevWindow, SendCloseMessage() may be used -- the window closure will affect the Dev Window's owner and
+    // not the Dev Window itself.
+    //
+    // The button's reference is returns so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
+    // as a quick way to create the button and assign it as a window-closing button in one line.
+    //
+    CButton & SendCloseMessage(CWindow * cWin = nullptr);
+
+    // SendCloseMessage() -- Closes Parent Window when the button is pressed. 
+    //
+    // SendCloseMessage() sends a WM_CLOSE message to the parent window (or the window specified). 
+    // If no window is specified, the Button's parent window is chosen by default.
+    //
+    // Use SendCloseMessage(false) to turn off the window close message.
+    // For programmatic/logic uses, use SendCloseMessage(bSendCloseMsg,cWin) to specify on/off and a window in the case bSendCloseMsg == true
+    //
+    // In the case of a Quick Controls DevWindow, SendCloseMessage() may be used -- the window closure will affect the Dev Window's owner and
+    // not the Dev Window itself.
+    //
+    // The button's reference is returns so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
+    // as a quick way to create the button and assign it as a window-closing button in one line.
+    //
+    CButton & SendCloseMessage(bool bSendCloseMsg,CWindow * cWin = nullptr);
 
 };
 }; // namespace Sage

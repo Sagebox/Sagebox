@@ -14,7 +14,7 @@
 //#pragma once
 #if !defined(_EventOpt_h_)
 #define _EventOpt_h_
-#include <stdio.h>
+#include <cstdio>
 #include <math.h>
 #include <cstdlib>
 #include <memory>

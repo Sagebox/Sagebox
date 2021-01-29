@@ -45,13 +45,6 @@
 //
 #define conAssert(_x,_Msg) { if (!(_x)) ErrorExit(_Msg); }
 
-// ErrorExit() -- Print an error message then exit back to the command window.
-//
-void ErrorExit(const char * sMsg)
-{
-    printf("Error: %s\n",sMsg);
-    exit(0);
-}
 
 int Sobel()
 {

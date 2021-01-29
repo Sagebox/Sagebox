@@ -20,21 +20,57 @@
 
 namespace Sage
 {
+class CString;
+class CStringW;
+using CStr = CString;
+using CStrW = CStringW;
 class CString
 {
 	class CStringW;
+public:
+    struct csFloatType
+    {
+        const char * sFloatStyle;
+    };
 
 private:
+    // Since Init() is in the interface, this can be changed to set a different default style for all CString() usage.
+    static constexpr const char * kDefaultFloatStyle = "%g";
 	int m_iMaxSize		= 300; 
 	int m_iMinAllocSize	= 1000;
 	int m_iAllocSize;
 	char * s;
 	char sStatic[301];
+    char sFloatStyle[10];   // String for the float style, to override the default
+                            // This allows the caller to set how floating-point values are output. 
 	char * sAlloc;
 	int iPlace;
+    bool bDefaultFloatStyle;
+    void SetFloatStyle(csFloatType csStyle);
 public:
 	char * Return(int x);
 
+    // CString::fs() -- Set the floating-point output style. 
+    //
+    // This can be used via streaming, i.e. CString() << "This is a number " << fs("%.10f") << MyNumber; 
+    // It can be used anywhere or anytime with the current CString(), but does not take effect for numbers preceding the 
+    // fs() call. 
+    //
+    // Note: When using the default style, 0 is represented as "0" and trailing 0's are removed.
+    // Setting the float style, this no longer occurs to support the new style.  This also means that setting the style
+    // to the same string as the default style will also disable the post-formatting.
+    //
+    // Use fs() to restore the default style. 
+    //
+    CString & fs(const char * sStyle = nullptr) { SetFloatStyle({sStyle}); return *this; }
+
+
+    // GetDefaultFloatStyle() -- returns the default floating-point style for CString floating-point output.
+    // Use CString::fs() to set the floating-point style. 
+    //
+    const char * GetDefaultFloatStyle() { return kDefaultFloatStyle; };
+
+//    __forceinline CString & FloatStyle(const char * sStyle) { return _fsX(sStyle); } // Inlined so we don't do a double call
 
 	CString & operator << (std::string & x)		{ AddString((char *) x.c_str()); return((CString &) *this); }
 //	CString & operator << (char * x)			{ AddString(x); return((CString &) *this); }
@@ -46,6 +82,7 @@ public:
 	CString & operator << (unsigned int x)		{ AddNumber((int) x); return((CString &) *this); }
 	CString & operator << (DWORD x)				{ AddNumber((unsigned int) x); return((CString &) *this); }
 	CString & operator << (double x2)			{ AddDouble(x2); return((CString &) *this); }
+	CString & operator << (csFloatType csft)	{ SetFloatStyle(csft); return *this; }
 
 	CString & operator >> (std::string & x)		{ StartString((char *) x.c_str()); return((CString &) *this); }
 	CString & operator >> (char * x)			{ StartString(x); return((CString &) *this); }
@@ -77,7 +114,7 @@ public:
 
 	operator const char * () const { return (const char *) s; }
 	operator char * () const { return (char *) s; }
-//	operator void * () const { return (void *) s; }
+	
 	void Init()
 	{
 		iPlace				= 0; 
@@ -86,6 +123,8 @@ public:
 		s = (char *) sStatic;
 		m_iAllocSize		= 0;
 		sAlloc				= nullptr;
+        strcpy(sFloatStyle,kDefaultFloatStyle);
+        bDefaultFloatStyle = true;
 	}
 	~CString()
 	{
@@ -138,23 +177,48 @@ public:
 	void AddNumber(int x); 
 	void AddNumber(unsigned int x); 
     void AddDouble(double x2);
-
+    const char * printf(const char * Format,...);
 };
 
 
 class CStringW
 {
+public:
+    struct csFloatType
+    {
+        const char * sFloatStyle;
+    };
 private:
+    static constexpr const char * kDefaultFloatStyle = "%g";
 	int m_iMaxSize		= 300; 
 	int m_iMinAllocSize	= 1000;
 	int m_iAllocSize;
 	wchar_t * s;
 	wchar_t sStatic[301];
+    char sFloatStyle[10];   // String for the float style, to override the default
+
 	wchar_t * sAlloc;
 	int iPlace;
+    bool bDefaultFloatStyle;
+    void SetFloatStyle(csFloatType csStyle);
 public:
 	wchar_t * Return(int x);
 
+    // CStringW::fs() -- Set the floating-point output style. 
+    //
+    // This can be used via streaming, i.e. CStringW() << "This is a number " << fs("%.10f") << MyNumber; 
+    // It can be used anywhere or anytime with the current CStringW(), but does not take effect for numbers preceding the 
+    // fs() call. 
+    //
+    // Note: When using the default style, 0 is represented as "0" and trailing 0's are removed.
+    // Setting the float style, this no longer occurs to support the new style.  This also means that setting the style
+    // to the same string as the default style will also disable the post-formatting.
+    //
+    // Use fs() to restore the default style. 
+    //
+    // Note: fs() takes a char value, not wchar_t -- i.e. fs(".4f") works, but not fs(L".4f");
+    //
+    CStringW & fs(const char * sStyle = nullptr) { SetFloatStyle({sStyle}); return *this; }
 
 	CStringW & operator << (std::string & x)	{ AddString((wchar_t *) x.c_str()); return((CStringW &) *this); }
 	CStringW & operator << (wchar_t * x)		{ AddString(x); return((CStringW &) *this); }
@@ -179,6 +243,7 @@ public:
 	wchar_t * operator * () { return (wchar_t *) s; };
 
 	CStringW & operator << (double x2) {  AddDouble(x2); return((CStringW &) *this); }
+	CStringW & operator << (csFloatType csft)	{ SetFloatStyle(csft); return *this; }
 	CStringW & operator >> (double x2) { iPlace = 0; AddDouble(x2); return((CStringW &) *this); }
 	wchar_t * operator * (int x) { return(Return(x)); }
 //	char * operator * (float x) { return(Return((int) x)); }
@@ -202,6 +267,8 @@ public:
 		s = (wchar_t *) sStatic;
 		m_iAllocSize		= 0;
 		sAlloc				= nullptr;
+        strcpy(sFloatStyle,kDefaultFloatStyle);
+        bDefaultFloatStyle = true;
 	}
 	~CStringW()
 	{

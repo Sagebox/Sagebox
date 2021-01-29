@@ -53,15 +53,15 @@ private:
 	int m_iControlID;
 	void * m_pClassInfo = nullptr;
 	const char * m_sControlName;
+	static bool m_bHandlerTimeout;	// Used for debugging to see if we have any case where the destructor encountered a lengthy wait 
+										// to come out of the handler (i.e. m_bInHandler == true).  This looks for bugs, but also 
 	bool m_bPostProcess;		// Initially FALSE.  When CallAgain is returned, this will add a second call at the bottom of the processing 
 								// When it will be set to true.
 	int m_iInHandler = false;	// This used when the handler is being deleted and their are active controls that use the handler. 
-								// This allows the Delete to wait to make sure we don't delete the memory when we're using it. 
-	static bool m_bHandlerTimeout;	// Used for debugging to see if we have any case where the destructor encountered a lengthy wait 
-										// to come out of the handler (i.e. m_bInHandler == true).  This looks for bugs, but also 
-										// a potential case where some unseen lock issue occurs. 
+protected:										// a potential case where some unseen lock issue occurs. 
 	CSlider * m_cSlider;
-	virtual void HandlerTimeOut() { };			// This is just for debugging to see if there is ever a timeout.  Used for testing.
+	virtual void HandlerTimeOut() { };		// This is just for debugging to see if there is ever a timeout.  Used for testing.
+								            // This allows the Delete to wait to make sure we don't delete the memory when we're using it. 
 public:
 	virtual void Init(void * pClassInfo)					{ } // Set info to your class type, i.e. MyClassPtr = (MyClass *) pClassInfo, or MyClassRef = & (MyCLass *) pClassInfo
 	virtual MsgStatus OnParentNotify(NMHDR * nmh)			{ return MsgStatus::Ok; }	// Continue as normal

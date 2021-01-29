@@ -15,6 +15,12 @@
 #if !defined(__CSage_H__)
 #define __CSage_H__
 
+#define EmptyString(_x) (!_x || !*_x)
+
+#define kStdMsg(_x)		nullptr
+#define kStdPassThrough nullptr			// i.e. "@", or some other token to refer to passing the last error 
+#define stdNoMsg		nullptr
+
 
 #include "CMemClass.h"
 // SageBox defines for .DLL output. 
@@ -42,6 +48,7 @@ enum class GroupType
 	Generic,
 	RadioButton,
 	EditBox,
+	Slider,
 	Undefined,
 };
 
@@ -66,11 +73,6 @@ enum class ImageStatus
     UnknownError
 };
 static constexpr int defColor = -1;
-#define EmptyString(_x) (!_x || !*_x)
-
-#define kStdMsg(_x)		nullptr
-#define kStdPassThrough nullptr			// i.e. "@", or some other token to refer to passing the last error 
-#define stdNoMsg		nullptr
 
 
 #ifdef _WIN64
@@ -134,6 +136,9 @@ namespace Sage
 	constexpr const char * BoolString(bool bValue) { return bValue ? "true" : "false"; };
 	constexpr const char * BoolStringU(bool bValue) { return bValue ? "True" : "False"; };
 	constexpr const char * BoolStringUU(bool bValue) { return bValue ? "TRUE" : "FALSE"; };
+	constexpr const char * BoolStringY(bool bValue) { return bValue ? "yes" : "no"; };
+	constexpr const char * BoolStringYU(bool bValue) { return bValue ? "Yes" : "No"; };
+	constexpr const char * BoolStringYUU(bool bValue) { return bValue ? "YES" : "NO"; };
 
 	enum class ThreadStatus
     {
@@ -171,6 +176,7 @@ namespace Sage
         MouseMoved,
         MouseLButtonDown,
         MouseRButtonDown,
+        CloseWindowPressed,
 
         // This list in-progress.  Not all events may be processed with ClearEvent() -- WindowResize is currently the only one intended, but others will follow. 
 
@@ -238,6 +244,12 @@ namespace Sage
 		constexpr const char * GetText() { return (const char *) sText; }
 	};
 
+    struct SliderStruct
+    {
+        bool bMoved;
+        int iPosition;
+        int iID; 
+    };
 struct ButtonSignal
 {
 	// bPressed -- true when the button is pressed, until reset.  See GetSignal()
@@ -513,6 +525,8 @@ public:
 	void SetUndefined() { fH = fS = fL = -1; }
 	bool Undefined() { return fH < 0 || fH > 1 || fS < 0 || fS > 1 || fL < 0 || fL > 1; }
 };
+using RgbColor = RGBColor_t;
+
 struct RGBColor_t
 {
 public:
@@ -520,8 +534,13 @@ public:
 	int iGreen;
 	int iBlue;
 public:
-	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
 	__forceinline RGBColor_t operator * (const RGBColor_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
+	__forceinline RGBColor_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
+    __forceinline RGBColor_t & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
+	__forceinline RGBColor_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
+    __forceinline RGBColor_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
+
 	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
 	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
 
@@ -534,6 +553,7 @@ public:
 	RGBColor_t & Init();
 	bool Undefined();
     __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
+    __forceinline RGBColor_t fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
     __forceinline RGBColor_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
     __forceinline RGBColor_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
 	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
@@ -1054,6 +1074,48 @@ enum class ControlSubStyles
 	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
 	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
+
+    // Console Functions
+
+    // ErrorExit() -- Used to exit program quickly with an optional message.
+    //
+    // ErrorExit() simply prints an optional message and exits with the error-code specified or -1
+    // This is a function that is used for a convenient exit of a program that is in a state of development.
+    //
+    // This exits the program directly with no clean up, memory deallocations, and so-forth.
+    //
+    // For a Windows program, ErrorExit() is meant for development or an emergency exit.
+    // For a console-mode program, since the message is printed to the console-mode window, ErrorExit() can 
+    // also be used as a solid and permanent way to exit a program on an error.
+    //
+    // In a Windows program, a Windows Message Box appears with the error message.
+    // In a Console Mode program, the error message is written to the console window.
+    //
+    void ErrorExit(const char * sErrMsg,int iExitCode = -1);
+
+    // ErrorExit() -- Used to exit program quickly with an optional message.
+    //
+    // ErrorExit() simply prints an optional message and exits with the error-code specified or -1
+    // This is a function that is used for a convenient exit of a program that is in a state of development.
+    //
+    // This exits the program directly with no clean up, memory deallocations, and so-forth.
+    //
+    // For a Windows program, ErrorExit() is meant for development or an emergency exit.
+    // For a console-mode program, since the message is printed to the console-mode window, ErrorExit() can 
+    // also be used as a solid and permanent way to exit a program on an error.
+    //
+    // In a Windows program, a Windows Message Box appears with the error message.
+    // In a Console Mode program, the error message is written to the console window.
+    //
+    void ErrorExit(int iExitCode = -1);
+
+    namespace Rgb
+    {
+        static constexpr RGBColor_t Transparent = RGBColor_t{-1,-1,-1};     // Use to specify transparency for Circle(), Rectangle(), etc.
+        static constexpr RGBColor_t None        = RGBColor_t{-1,-1,-1};     // Used to specify non-existent color, such as Pen color for Circle(), Rectangle(), etc.
+        static constexpr RGBColor_t Undefined   = RGBColor_t{-1,-1,-1};     // Used to specify undefined color (i.e. defaults and such).
+        static constexpr RGBColor_t Default     = RGBColor_t{-1,-1,-1};     // Used to specify default color (i.e. DrawLine() or LineTo()
+    };
 
 	namespace Win
 	{

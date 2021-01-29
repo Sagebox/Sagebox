@@ -176,9 +176,11 @@ public:
 	int GetID() { return m_cWin->GetID(); }
 	const char * GetName() { return m_cWin->GetName(); }
 
+    // Overloads to allow things like MyTextWidget << "output string"
 
-
-
+    CTextWidget & operator << (CString & cString);
+    CTextWidget & operator << (const char * sMessage);
+    CTextWidget & operator << (std::string sString);
 };
 }; // namespace Sage
 #endif // _CTextWidget_H_

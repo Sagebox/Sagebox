@@ -22,38 +22,44 @@
 #include "Point3D.h"
 #include <cmath>
 
+namespace Sage
+{
+    class CSageTools;
+    using CTools = CSageTools;
+
 class CSageTools
 {
 public:
 	static void RGBtoHSV(double& fH, double& fS, double& fV,int iRed,int iGreen,int iBlue);
 	static void HSVtoRGB(double fH, double fS, double fV,int & iRed, int & iGreen, int & iBlue);
 
-	static void HSVtoRGB(Sage::HSLColor_t stHSL,Sage::RGBColor24 & rgbColor);
-	static void HSVtoRGB(Sage::HSLColor_t stHSL,Sage::RGBColor_t & rgbColor);
+	static void HSVtoRGB(HSLColor_t stHSL,RGBColor24 & rgbColor);
+	static void HSVtoRGB(HSLColor_t stHSL,RGBColor_t & rgbColor);
 
-	static Sage::RGBColor_t HSVtoRGB(Sage::HSLColor_t stHSL);
+	static RGBColor_t HSVtoRGB(HSLColor_t stHSL);
+	static HSLColor_t RGBtoHSV(RGBColor_t stRGB);
 
-	static void HSLtoRGB(Sage::HSLColor_t stHSL,Sage::RGBColor24 & rgbColor);
-	static void HSLtoRGB(Sage::HSLColor_t stHSL,Sage::RGBColor_t & rgbColor);
-	static Sage::RGBColor_t HSLtoRGB(Sage::HSLColor_t stHSL);
+	static void HSLtoRGB(HSLColor_t stHSL,RGBColor24 & rgbColor);
+	static void HSLtoRGB(HSLColor_t stHSL,RGBColor_t & rgbColor);
+	static RGBColor_t HSLtoRGB(HSLColor_t stHSL);
 	static void HSLtoRGB(double fH,double fS,double fL,int &iRed,int &iGreen,int &iBlue);
-	static void HSLtoRGB(double fH,double fS,double fL,Sage::RGBColor24 & rgbColor);
-	static void HSLtoRGB(double fH,double fS,double fL,Sage::RGBColor_t & rgbColor);
+	static void HSLtoRGB(double fH,double fS,double fL,RGBColor24 & rgbColor);
+	static void HSLtoRGB(double fH,double fS,double fL,RGBColor_t & rgbColor);
 	static void RGBtoHSL(int iRed,int iGreen,int iBlue,double &frH,double &frS,double &frL);
-    static Sage::HSLColor_t RGBtoHSL(Sage::RGBColor_t rgbColor); 
-    static Sage::HSLColor_t RGBtoHSL(Sage::RGBColor24 rgbColor); 
-	static bool ResizeLanzcos(Sage::CBitmap & cSource,Sage::CBitmap & cDest); 
-	static bool ResizeLanzcos(Sage::RawBitmap_t & stSource,Sage::RawBitmap_t & stDest); 
+    static HSLColor_t RGBtoHSL(RGBColor_t rgbColor); 
+    static HSLColor_t RGBtoHSL(RGBColor24 rgbColor); 
+	static bool ResizeLanzcos(CBitmap & cSource,CBitmap & cDest); 
+	static bool ResizeLanzcos(RawBitmap_t & stSource,RawBitmap_t & stDest); 
 	static bool ResizeLanzcos(int iWidth,int iHeight,int iNewWidth,int iNewHeight,unsigned char * sSource,unsigned char * sDest);
-	static Sage::CBitmap ResizeLanzcos(Sage::RawBitmap_t & stSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
-	static Sage::CBitmap ResizeLanzcos(Sage::CBitmap & cSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
+	static CBitmap ResizeLanzcos(RawBitmap_t & stSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
+	static CBitmap ResizeLanzcos(CBitmap & cSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
 
-	static Sage::CBitmap BilinearResize(Sage::RawBitmap_t & stSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
-	static Sage::CBitmap BilinearResize(Sage::CBitmap & cSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
+	static CBitmap BilinearResize(RawBitmap_t & stSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
+	static CBitmap BilinearResize(CBitmap & cSource,int iNewWidth,int iNewHeight,bool * bSuccess = nullptr);
 	static bool BilinearResize(int iOrgWidth,int iOrgHeight,int iNewWidth,int iNewHeight,const unsigned char *sInputMem,unsigned char * sOutputMem);
-    static bool GaussianBlurStd(Sage::CBitmap & cInput,Sage::CBitmap & cOutput,double fRadius);
-    static Sage::CBitmap GaussianBlurStd(Sage::CBitmap & cInput,double fRadius,bool * bRetError = nullptr);
-    static bool NormalizeBitmap(Sage::RawBitmap_t & stInput,Sage::RawBitmap_t & stOutput,double fUpperThreshold = 1,double fLowerThreshold = 0);
+    static bool GaussianBlurStd(CBitmap & cInput,CBitmap & cOutput,double fRadius);
+    static CBitmap GaussianBlurStd(CBitmap & cInput,double fRadius,bool * bRetError = nullptr);
+    static bool NormalizeBitmap(RawBitmap_t & stInput,RawBitmap_t & stOutput,double fUpperThreshold = 1,double fLowerThreshold = 0);
 };
-
+};// namespace Sage
 #endif	// _CSageTools_h_

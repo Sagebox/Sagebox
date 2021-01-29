@@ -19,7 +19,7 @@
 #include "CDavinci.h"		// Include Davinci references
 #include <cmath>
 
-using namespace std;
+//using namespace std;
 //using namespace SageWin;
 
 // Point3d_t - Create a vector-based point structure.  This allows us to use
@@ -48,6 +48,9 @@ struct Point3D_t
 	Point3D_t RotateZ(double fAngle) { return { fX *cos(fAngle) - fY*sin(fAngle),fX *sin(fAngle) + fY*cos(fAngle),fZ }; }	// Rotate point around Y-Axis
 	__forceinline RGBColor_t toRGB() { return RGBColor_t{(int) fX,(int) fY,(int) fZ}; };
 	__forceinline DWORD toColorRef() { return RGB((int) fX,(int) fY,(int) fZ); };
+    operator POINT() const { POINT p = { (int) fX,(int) fY }; return p; };
+    operator CfPoint() const { CfPoint p = { fX,fY }; return p; };
+
 };
 }; // namespace Sage
 #endif		// _Point3D_h_

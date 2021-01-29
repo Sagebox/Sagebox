@@ -138,6 +138,24 @@ public:
 		iCurrentLine++;
 		return stBitmap.stMem ? stBitmap.stMem + iCurrentLine * stBitmap.iWidthBytes : nullptr;
 	}
+	__forceinline  void SetPixel(int iX,int iY,DWORD dwColor)
+    {
+		if (!stBitmap.stMem || iX < 0 || iX >= stBitmap.iWidth || iY < 0 || iY >= stBitmap.iHeight) return;
+		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
+		*sTemp++ = GetBValue(dwColor);
+		*sTemp++ = GetGValue(dwColor);
+		*sTemp++ = GetRValue(dwColor);
+
+    }
+
+	__forceinline  void SetPixel(int iX,DWORD dwColor)
+    {
+		if (!stBitmap.stMem || iX < 0 || iX >= stBitmap.iWidth || iCurrentLine < 0 || iCurrentLine >= stBitmap.iHeight) return;
+		unsigned char * sTemp = stBitmap.stMem + iCurrentLine*stBitmap.iWidthBytes + iX*3;
+		*sTemp++ = GetBValue(dwColor);
+		*sTemp++ = GetGValue(dwColor);
+		*sTemp++ = GetRValue(dwColor);
+    }
 
 	__forceinline  void SetPixel(int iX,int iY,RGBColor_t rgbColor) 
 	{ 
@@ -154,7 +172,24 @@ public:
 		*sTemp++ = rgbColor.iBlue;
 		*sTemp++ = rgbColor.iGreen;
 		*sTemp++ = rgbColor.iRed;
-	}			
+	}		
+
+	__forceinline  void SetFastPixel(int iX,int iY,DWORD dwColor) 
+	{ 
+		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
+		*sTemp++ = GetBValue(dwColor);
+		*sTemp++ = GetGValue(dwColor);
+		*sTemp++ = GetRValue(dwColor);
+	}	
+	__forceinline  void SetFastPixel(int iX,DWORD dwColor) 
+	{ 
+		unsigned char * sTemp = stBitmap.stMem + iCurrentLine*stBitmap.iWidthBytes + iX*3;
+		*sTemp++ = GetBValue(dwColor);
+		*sTemp++ = GetGValue(dwColor);
+		*sTemp++ = GetRValue(dwColor);
+	}	
+
+
 	__forceinline  void SetFastPixel(int iX,int iY,RGBColor_t rgbColor) 
 	{ 
 		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
@@ -170,14 +205,14 @@ public:
 		*sTemp++ = rgbColor.iRed;
 	}	
 
-	__forceinline  RGBColor_t GetPixel(int iX,int iY) 
+	__forceinline  RGBColor_t GetPixel(int iX,int iY = 0) 
 	{ 
 		if (!stBitmap.stMem || iX < 0 || iX >= stBitmap.iWidth || iY < 0 || iY >= stBitmap.iHeight) return { 0,0,0};
 		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
 		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
 	}			
 
-	__forceinline  RGBColor_t GetFastPixel(int iX,int iY,RGBColor_t rgbColor) 
+	__forceinline  RGBColor_t GetFastPixel(int iX,int iY = 0) 
 	{ 
 		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
 		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };

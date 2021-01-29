@@ -219,6 +219,23 @@ public:
     //
 	CDevControls(CWindow * cWin,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
 
+    // GetWindow() -- Returns the Window object pointer (i.e. CWindow object) of the Dev Controls Window.
+    // This can be used for various operations with the window.
+    //
+    // note: The Dev Controls Window is self-managed.  Use the Window functions with care.
+    //
+    CWindow * GetWindow(); 
+
+    // group() -- returns the group (i.e. WinGroup) substructure for the Dev Controls Window.  This can be used to perform group functions.
+    // For example, when using multiple DevSlider() calls with a declared common group (i.e. DevSlider("MySlider",opt::Group(100,1)), group.SliderMoved(100)
+    // can be used to determine if any slider in the group was moved, the slider ID and the slider position.
+    //
+    // Groups created in DevControls must be used through that Dev Controls Window's group function, which is why group() is provided.
+    //
+    // For example, using cMyDevWindow->group()->SliderMoved(MyGroup,..) will check any sliders within the given group within the DevWindow.    
+    //
+    CWindow::WinGroup * group(); 
+
 	// AddButton() -- Add a button to the Quick Control Window.  This accepts all options as normal buttons, but 
 	// the default will add a regular button. 
 	//
@@ -240,6 +257,8 @@ public:
 
 	CTextWidget & AddText(const char * sText,const cwfOpt & cwOpt = cwfOpt());
 	CTextWidget & AddText(const char * sText,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+	CTextWidget & AddText(int iHeight,const cwfOpt & cwOpt = cwfOpt());
+	CTextWidget & AddText(const cwfOpt & cwOpt = cwfOpt());
 
 	// AddSlider() -- Add a slider to the Quick Controls Window.  The default width is 200 with a 0-100 range.  The Range can be 
 	// changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.

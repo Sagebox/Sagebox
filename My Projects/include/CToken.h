@@ -15,7 +15,7 @@
 #if !defined(_CToken_h_)
 #define _CToken_h_
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <memory>
 //#pragma warning( disable : 4996) 

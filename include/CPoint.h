@@ -32,6 +32,20 @@ public:
 	bool EmptyAny() { return (!size.cx && !size.cy) || ( !loc.x && !loc.y); };
 };
 
+// CSize struct -- right now, this structure exists for the sole purpose of converting to SIZE 
+// more easily, so that CSize(x,y) can be entered on a parameter list, for instance.
+//
+// This will grow over time to support CPOINT conversions as well as being added to CPOINT.
+//
+struct CSize
+{
+public:
+    int cx;
+    int cy;
+    CSize(int cx,int cy) { this->cx = cx; this->cy = cy; }
+	operator SIZE() const { SIZE p = { cx,cy }; return p; };
+};
+
 struct CPoint
 {
 	int x;
@@ -258,6 +272,16 @@ struct CfPoint
         x = p2.x;
         y = p2.y;
     }
+    CfPoint(CPoint & p2) noexcept
+    {
+        x = p2.x;
+        y = p2.y;
+    }
+    CfPoint(POINT & p2) noexcept
+    {
+         x = p2.x;
+         y = p2.y;
+     }
 
 	CfPoint() { };
 	CfPoint(double fx,double fy) { x = fx; y = fy; };
@@ -283,6 +307,7 @@ struct CfPoint
 		y = (double) szSize.cy;
 	}
 	POINT operator * () { return { (int) x,(int) y }; }
+	operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
 };
 }; // namespace Sage
 #endif // _CSagePoint_H_
