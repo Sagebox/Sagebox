@@ -2,6 +2,11 @@
 10-Line Sagebox Windows C++ Examples
 ************************************
 
+The full GitHub Sagebox libraries for Windows C++ (using Microsoft Visual Stuio) can be downloaded:
+
+https://www.github.com/Sagebox/Sagebox
+
+
 This is a set of examples that originated with a Quora Question:
 
 "What is the coolest C++ program you can write in 10 lines of code."
