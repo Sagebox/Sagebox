@@ -1,16 +1,15 @@
 // File Copyright (c) 2021 Rob Nelson, All Rights Reserved.    Sagebox is free for personal use. 
 // Please feel free to use and copy-paste elements of this program for your own programs that use Sagebox.
 
-
 // ------------------------------
 // Fractal Tree - Fancier Version
 // ------------------------------
 //
 // This program is about 20 lines of code, just as the Basic Fractal Tree, showing using Sagebox in more-or-less
-// minimal way -- most of the code is about the Fractal Tree, and Sagebox is mostly to create the main window 
+// minimal way -- most of the code is about the Fractal Tree, and Sagebox usage is mostly to create the main window 
 // and put out the graphics. 
 // 
-// The main different in this version is that it uses a color table to put out some nice color for the tree, and 
+// The main difference in this version is that it uses a color table to put out some nice color for the tree, and 
 // converts DrawTree() into a recursive lambda to make it easier to use (this part has nothing to do with Sagebox, 
 // but C++ proramming)
 //
@@ -18,7 +17,7 @@
 // did not provide a color, relying on the current Pen Color.  In this example, the same line is used, provided
 // from the color table -- this tells DrawLine() to use this color instead, and does not change the current Pen Color. 
 //
-// This is a sample of using Sagebox to create Procedural C++ Windows programs.
+// This is an example of using Sagebox to create Procedural C++ Windows programs.
 //
 // The original source code for this program was found at Rosetta Stone at http://rosettacode.org/wiki/Category:C%2B%2B
 //
@@ -41,7 +40,7 @@ RgbColor rgbColors[15] = {  { 213,88 ,31  }, { 194,50 ,0   }, { 193,86 ,0   },
                             { 255,21 ,41  }, { 244,52 ,0   }, { 172,76 ,0   },
                             { 81 ,96 ,0   }, { 151,168,0   }, { 248,250,0   },  };
 
-// use std::function for the lamdba.  This is used because DrawTres() is a lambda function.
+// use std::function for the lamdba.  This is used because DrawTree() is a lambda function.
 // Since it's recursive, it has to be declared beforehand, so 'auto' can't be used. 
 //
 using fDrawTree = std::function<void(Point3D_t &, double, double, double)>;
@@ -86,7 +85,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
     Point3D_t sp{szWinSize.x/2,szWinSize.y-1 - line_len};
 
     // DrawLine2() is the same as DrawLine() except that you only need to specify length rather
-    // than the actual endpoints, which is often convenience. 
+    // than the actual endpoints, which is often convenient. 
 
     cWin.DrawLine2(sp,{0,(int) line_len},rgbColors[0]);
  
@@ -94,12 +93,12 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
 	DrawTree(sp, line_len, 0, 1 );
 }
 
-
+// Main Entry Point -- Create the window and call FractalTree() to draw the tree
+//
 int main( int argc, char* argv[] )
 { 
-
     // Create a window and CSagebox object together.  This is useful when you only want to create a Window
-    // and don't need a cSagebo object.  You can obtain the CSagebox object created if necessary.
+    // and don't need a cSagebox object.  You can obtain the CSagebox object created if necessary.
     //
     // Title()          - sets the name of the window
     // bgGradient()     - clears the background of the window in a gradient with the colors used.

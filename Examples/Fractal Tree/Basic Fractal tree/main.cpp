@@ -1,7 +1,6 @@
 // File Copyright (c) 2021 Rob Nelson, All Rights Reserved.    Sagebox is free for personal use. 
 // Please feel free to use and copy-paste elements of this program for your own programs that use Sagebox.
 
-
 // ----------------------------
 // Fractal Tree - Basic Version
 // ----------------------------
@@ -10,7 +9,7 @@
 // most of the code is about the Fractal Tree, and Sagebox is mostly to create the main window and put out the graphics. 
 // 
 
-// This is a sample of using Sagebox to create Procedural C++ Windows programs.
+// This is an example of using Sagebox to create Procedural C++ Windows programs.
 //
 // The original source code for this program was found at Rosetta Stone at http://rosettacode.org/wiki/Category:C%2B%2B
 //

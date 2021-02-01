@@ -20,7 +20,7 @@
 // will popup documentation on the function or option.
 //
 // ------------------------------------------------------------------------------------------------------------
-// The main() code which performs all program duties except displaying the Fractal Tree, is only about 40 lines, 
+// The main() code which performs all program duties (except displaying the Fractal Tree) is only about 40 lines, 
 // but may look larger with the numerous comments explaining the code (try removing the comments) to see how small
 // the code is)
 //
@@ -31,8 +31,8 @@
 // Some Sagebox components used in this program are as follows:
 //
 //    1. Point3D_t        -- A class used for Point & Vector math.  It is used as a 2-D vector in this program
-//    2. CString()        -- A very powerful String class, similar std::string() but with much more power, felxibilty, and speed
-//    3. RGbColor         -- A simple RGB class comprised of Red,Green, and Blue, but with powerful functions and expression overloads.
+//    2. CString()        -- A String class similar std::string() but with much more power, felxibilty, and speed.
+//    3. RGbColor         -- A simple RGB class comprised of Red,Green, and Blue, but with various functions and expression overloads.
 //    4. Window Options   -- In the main AutoWindow call, many options are used.  These are easy to use once the nomenclature is understood. 
 //    5. Text Widget      -- Text Widgets are easy to use, but also very expansive.  This program uses some of the more advanced options.
 //    6. Dev Window       -- The Dev Window is a very quick and easy way to get controls going for programs where you don't need a formal 
@@ -42,13 +42,13 @@
 //    8. Fonts            -- This program creates some fonts with AddFont(), names them, and uses them in inline text.
 //                           for example, the font "SmallFont" is used to switch to smaller font just after print the Frame Size,
 //                           which is in a Text Widget pre-created with an "Arial 25" font
-//    9. Update Background    -- The UpdateBg() call below update the background of the widget, copying the window
+//    9. Update Background    -- The UpdateBg() call below updates the background of the Text Widgets, copying the window
 //                               beneath.  Since we're animating, this is always changing, and the background are updated just prior
 //                               to writing out the frame.
-//   10. Manual Update        -- Most of the time, programs can be written in Sagebox with an automatic update. 
-//                               But when performing animations or changing graphics, it can be better to turn off the auto-update and
+//   10. Manual Update        -- Most of the time, programs can be written in Sagebox with an automatic window update as you go.
+//                               When performing animations or changing graphics, it can be better to turn off the auto-update and
 //                               perform it manually.  The NoAutoUpdate() option in AutoWindow() tells Sagebox not to update the window
-//                               automatically.  Later, the Update() call updates the window once the Fractal tree has been displayed. 
+//                               automatically.  Later, the Update() call updates the window once the Fractal tree has been drawn. 
 //   11. Reading & Display Images, etc. -- There are a few more things used here in the Sagebox library that make it easy to use.  For example,
 //                                         the main background image is read in and displayed with just 2 lines of code.  If the image is not found
 //                                         the display just falls through.  Though this program doesn't check for it (because it doesn't care), it is 
@@ -83,7 +83,7 @@ static constexpr bool   bWriteFrames    = false;    // Set this to true to write
 static constexpr const char * sAviOutputFile    = "c:\\sagebox\\avi\\avitest.avi";
 static constexpr const char * sBackgroundImage  = "C:\\SageBox\\git\\Examples\\Fractal Tree\\Fractal Tree Animated\\texture-fractal-tree.jpg";
 
-// Set a color table for each depth.  If the depth limitation moves past 15, extra RGB values need to be added.
+// Set a color table for each depth.  If the max depth limitation moves past 15, extra RGB values need to be added.
 //
 RgbColor rgbColors[15] = {  { 213,88 ,31  }, { 194,50 ,0   }, { 193,86 ,0   }, 
                             { 164,116,22  }, { 45 ,122,163 }, { 35 ,89 ,242 },
@@ -91,7 +91,7 @@ RgbColor rgbColors[15] = {  { 213,88 ,31  }, { 194,50 ,0   }, { 193,86 ,0   },
                             { 255,21 ,41  }, { 244,52 ,0   }, { 172,76 ,0   },
                             { 81 ,96 ,0   }, { 151,168,0   }, { 248,250,0   },  };
 
-// use std::function for the lamdba.  This is used because DrawTres() is a lambda function.
+// use std::function for the lamdba.  This is used because DrawTree() is a lambda function.
 // Since it's recursive, it has to be declared beforehand, so 'auto' can't be used. 
 //
 using fDrawTree = std::function<void(Point3D_t &, double, double, double)>;
@@ -157,8 +157,8 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
 //    Some fonts are created that are used as controls in text strings to the Dev Window and
 //    Dev TextWidgets, to have different font sizes for output. 
 //
-//     While not necessary, these differnet font sizes make the output look nicer. 
-
+//     While not necessary, these different font sizes make the output look nicer. 
+//
 // 2. Drawing The Fractal Tree, Updating Status, and Writing the Frame
 //
 //    The actual drawing of the Fractal tree is accomplished in one line.  There are a few lines of setup that aren't necessary,
@@ -184,7 +184,7 @@ int main( int argc, char* argv[] )
 { 
 
     // Create a window and CSagebox object together.  This is useful when you only want to create a Window
-    // and don't need a cSagebo object.  You can obtain the CSagebox object created if necessary.
+    // and don't need a cSagebox object.  You can obtain the CSagebox object created if necessary.
     //
     // Title()          - sets the name of the window
     // bgGradient()     - clears the background of the window in a gradient with the colors used.
@@ -198,7 +198,7 @@ int main( int argc, char* argv[] )
     // Note the opt::NoClose() -- when opt:: is specified, Microsoft Visual Studio will give you a list of all available options, so
     // you don't have to remember them all.  
     //
-    // opt:: is a namespace that is being used, so NoAutoUpdate() is actually opt::NoAutoUpdate(), and I probably used opt:: because I 
+    // opt:: is a namespace that is being used, so NoAutoUpdate() is actually opt::NoAutoUpdate(), and I probably used opt::NoClose() because I 
     // wasn't sure of the name I wanted.  Try putting opt:: in the line below for Visual Studio to present you with a list of options you 
     // can send to controls and other functions.
     // 
@@ -266,7 +266,7 @@ int main( int argc, char* argv[] )
     int iFramesWritten = 0;
 
     // Call the Fractal Tree.  GetWindowSize() returns a generic SIZE structure even though FractalTree()
-    // receives it as a CPoint object -- Cpoint is a ubqiqitous object-oriented POINT replacement (much like MSVC's Cpoint),
+    // receives it as a CPoint object -- CPoint is a ubqiqitous object-oriented POINT replacement (much like MSVC's Cpoint),
     // and translates back-and-forth between SIZE and POINT automatically. 
     //
     for (int j=iTotalFrames-1;j>=0;j-=1)
@@ -326,11 +326,11 @@ int main( int argc, char* argv[] )
         cTextWin << iFramesWritten << " frames written to Avi file.\n";
     }
 
-    // WaitforClose() simple waits for the user to close the window.  cWin.ExitButton() can be used to automatically
+    // WaitforClose() simply waits for the user to close the window.  cWin.ExitButton() can be used to automatically
     // create a button with a message (default or set by the function call) to tell the user to press the button to close the window.
     //
     // WaitforClose() returns 0 (or you can set the value as a parameter).  Many programs end right after WaitforClose(), so it returns
-    // a value for the convineince of  using it on the same line as the return. 
+    // a value for the convineince of using it on the same line as the return. 
     //
     // Now wait for window to close or the cancel button to be pressed again to exit. 
 
