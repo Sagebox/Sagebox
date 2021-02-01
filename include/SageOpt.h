@@ -132,7 +132,11 @@ private:
 	static cwfOpt m_OptArray[iMaxArray];			// Global array of recycled cwfOpt() objects for pre-defined opt:: calls
 	static int m_iMaxArray;
 	static int m_iArrayIndex;
+#ifdef _WIN64
+	static volatile __int64 m_iProcessLock64;						// Lock used creating Temp() cwfOpt() objects due to Microsft Compiler Warning error
+#else
 	static int m_iProcessLock;						// Lock used creating Temp() cwfOpt() objects due to Microsft Compiler Warning error
+#endif
 	static void LockProcess();						// Used when allocating memory to allow multi-threading. 
 	static void UnlockProcess(); 
 	void InitTemp();
@@ -241,6 +245,8 @@ public:
 	optRet HideCancel();
 	optRet ProgressBar();
 	optRet Transparent();
+	optRet Transparent(int iBlendValue);
+	optRet Blend(int iBlendValue);
 	optRet Hidden();
 	optRet FastMode();
 	optRet Center();
@@ -829,7 +835,31 @@ namespace opt
 	// --->When this option is not active, the text, control or widget will have a solid background.  For most windows, which have a solid background, this is fine.
 	// --->However, with textures, bitmaps, and gradients, this will allow blending in a seamless manner.
 	//
+    // Adding a blend percent sets the blending percent of the object, where
+    // 0 = fully opaque and 100 = fully transparent. 
+    //
 	static optRet Transparent() { return defOpt.Transparent(); }  ;	
+	// Causes Text, Control, or Widget to have a transparent background.
+	// --->This will cause the background of the parent window to show through, allowing the Text, control or widget to blend in.
+	// --->When this option is not active, the text, control or widget will have a solid background.  For most windows, which have a solid background, this is fine.
+	// --->However, with textures, bitmaps, and gradients, this will allow blending in a seamless manner.
+	//
+    // Adding a blend percent sets the blending percent of the object, where
+    // 100 = fully opaque and 0 = fully transparent. 
+    //
+	static optRet Transparent(int iBlendPercent) { return defOpt.Transparent(iBlendPercent); }  ;	
+
+    // Sets the blending percent of the control or target object. 
+    // 0 = fully transparent, 100 = fully opaque.
+    // This only work controls or widgets where it supported, for example:
+    //
+    // --> TextWidget(100,200,0,0,"This is a 75% visible line of text",Blend(75)); 
+    //
+    // Transparent() may be used to combine blending and transparency of the control, such as:
+    //
+    // --> TextWidget(100,200,0,0,"This is a 25% visible line of text",Transparent(25)); 
+    //
+	static optRet Blend(int iBlendPercent) { return defOpt.Blend(iBlendPercent); }  ;	
 
 	// Keeps the control, widget, or window hidden as it is created.
 	// By default, all Windows, Widgets, and Controls appear upon creation. 

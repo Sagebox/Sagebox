@@ -61,9 +61,15 @@ The programs contained in the project
     The Fractal Tree will be its own Example Sagebox Project soon, including a version that writes out an AVI to create a 60fps
     animation that can be converted into a WEBM, GIF, or MP4.
 
+    6. Lissajous (with user input)
+
+    Lissjous is somewhat of a basic program, but shows some nice use of the simple graphics routines, as well as showing a little more
+    advanced/intermediate programming with the use of the CfPoint structure for point-based math operations, as well as the powerful
+    dialog.GetFloat() function to get a number from the user.
+
     5. Circles
 
-    A basic program, but still preety.  This program prints 50 circles around a larger circle. 
+    An even more basic program, but still pretty.  This program prints 50 circles around a larger circle. 
     This program displays an Exit Button on the bottom of the screen, which is a function used to let the
     user know the program has ended -- other examples simply wait for the window to close (without a button)
 
@@ -99,7 +105,7 @@ If you want to see the bitmap each line, you can just make a one line bitmap and
 
     1. On the top loop:                 auto cBitmap = cWin.NewBitmap(Width)
     2. When putting out the pixel:      cBitmap.SetPixel(x);                    // use no y here
-    3. When the inner X loop is done:   cWin.DisplayBitmap(y,0,cBitmap);        // Display the bitmap on the Y line we're on
+    3. When the inner X loop is done:   cWin.DisplayBitmap(0,y,cBitmap);        // Display the bitmap on the Y line we're on
 
 This will be at least 10x faster per-pixel than using DrawPixel() (aka SetPixel() in Windows).
 

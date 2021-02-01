@@ -28,7 +28,7 @@
 //
 int main()
 {
-    // Create a window of a specifix size.  AutoWindow() also creates a static CSagebox class that
+    // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
     auto& cWin = CSagebox::AutoWindow(CSize(1300,1000)); 
@@ -41,7 +41,7 @@ int main()
             while ((z = z*z + c).absSq() < 65536 && ++iIter < 250) dz *= z*2;
             CComplex cVec = (z/dz).Normalize();     // Get the light angle 
             cWin.DrawPixel(j+900,i+500,iIter == 250 ? 0 :  
-                RGBColor_t().fromGray((int) (90*(cVec.fR + cVec.fI) + 128)));   // Formula calculate the difussion
+                RGBColor_t().fromGray((int) (90*(cVec.fR + cVec.fI) + 128)));   // Calculate the diffusion
         }
 
     return cWin.WaitforClose(); // Wait for the user to close the window

@@ -29,7 +29,7 @@ int main()
     //
     // bgGradient() -- Clears the window using a gradient from the first color to the second.
 
-    auto& cWin = CSagebox::AutoWindow(bgGradient("black","blue"));
+    auto& cWin = CSagebox::AutoWindow(bgGradient("black","darkblue"));
 
     double fR = 150;        // Set a radius. 
 
@@ -40,7 +40,7 @@ int main()
     {
         double fAngle = (double) i*3.14159/25;
 
-        // Use a floating-point structure so we can to some math with it. 
+        // Use a floating-point structure so we can do some math with it. 
         // Similar to MSVC Point but a floating-pointer version
 
         CfPoint pLoc = pWinSize/2 + CfPoint{ sin(fAngle), cos(fAngle) }*fR;

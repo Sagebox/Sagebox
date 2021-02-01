@@ -40,7 +40,7 @@ int main()
     for (int i=-500;i<500;i++)
         for (int j=-400;j<400;j++)
         { 
-            CComplex dz{0,1},z{(double)j/400,(double) i/400},c{.285,0};
+            CComplex z{(double)j/400,(double) i/400},c{.285,0};
             int iIter = 0;
             while (z.abs() < 65536 && iIter++ < 55) z = z*z + c;
             auto iValue = (int) (255.0*(((double) iIter)+1 - log2(log2(z.absSq())/2))/55);

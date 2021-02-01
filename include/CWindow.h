@@ -1608,7 +1608,7 @@ public:
     // has been used and the draw position is set to the next position. 
     //
     // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
+    // or a default color.l
     //
     // A color may also be specified to LineTo()
     //
@@ -1704,6 +1704,62 @@ public:
     //
     bool LineTo(POINT pLoc,int iColor);
 
+    // LineToEx() -- Draw a Line to the current Point or Set the current point.
+    // LineToEx() is the same as DrawLineTo()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool LineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+
+    // LineToEx() -- Draw a Line to the current Point or Set the current point.
+    // LineToEx() is the same as DrawLineTo()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool LineToEx(bool bFirstPoint,int iX,int iY,int iColor); 
+
+    // LineToEx() -- Draw a Line to the current Point or Set the current point.
+    // LineToEx() is the same as DrawLineTo()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool LineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // LineToEx() -- Draw a Line to the current Point or Set the current point.
+    // LineToEx() is the same as DrawLineTo()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool LineToEx(bool bFirstPoint,POINT pLoc,int iColor);
+
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
     //
@@ -1751,6 +1807,63 @@ public:
     // and other Draw functions
     //
     bool DrawLineTo(POINT pLoc,int iColor =-1);
+
+    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
+    // DrawLineToEx() is the same as LineToEx()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+
+    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
+    // DrawLineToEx() is the same as LineToEx()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,int iColor); 
+
+    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
+    // DrawLineToEx() is the same as LineToEx()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+
+    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
+    // DrawLineToEx() is the same as LineToEx()
+    //
+    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
+    // This allows loops to not distingiush between first point vs future points.
+    //
+    // For Example,
+    //
+    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
+    //
+    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
+    //
+    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,int iColor);
+
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -3973,6 +4086,22 @@ public:
         //
         HFONT CreateNewFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
     
+        // Create the Font for the window (Same as CreateNewFont) -- this works the same as SetFont(), creating the font 
+        // but not setting it in the window. Use SetFont to set the returned font or to Create-and-Set a font simultaneously.
+        //
+        // This can take forms such as Text and HFONT, as well as fonts named by previous AddFont() or SetFont() calls.
+        //
+        // Bold and italic are created for all fonts. 
+        //
+        // AddFont(MyFont)                            -- Creates the font to the HFONT MyFont Value
+        // AddFont("Arial,20")                        -- Creates the font to Arial,20
+        // AddFont = SetFont("Arial,20","TestFont")   -- Create the font to Arial,20 and name it TestFont.  Store it in MyFont
+        // AddFont("TestFont");                       -- Create the Font named "TestFont"
+        // AddFont(MyFont)                            -- Create the font to the HFONT MyFont Value
+        //
+        __forceinline HFONT AddFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr)
+                                                                            { return CreateNewFont(sFont,sNewFontName,ucStatus); }
+
         // GetFont() -- Get a font created through SageBox.
         //
         // Example, GetFont("MyFont") -- retrieves a font created with CreateFont("Arial,20","TestFont"), or SetFont()
@@ -4878,6 +5007,21 @@ public:
     //
     HFONT CreateNewFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
 
+    // Create the Font for the window (Same as CreateNewFont) -- this works the same as SetFont(), creating the font 
+    // but not setting it in the window. Use SetFont to set the returned font or to Create-and-Set a font simultaneously.
+    //
+    // This can take forms such as Text and HFONT, as well as fonts named by previous AddFont() or SetFont() calls.
+    //
+    // Bold and italic are created for all fonts. 
+    //
+    // AddFont(MyFont)                            -- Creates the font to the HFONT MyFont Value
+    // AddFont("Arial,20")                        -- Creates the font to Arial,20
+    // AddFont = SetFont("Arial,20","TestFont")   -- Create the font to Arial,20 and name it TestFont.  Store it in MyFont
+    // AddFont("TestFont");                       -- Create the Font named "TestFont"
+    // AddFont(MyFont)                            -- Create the font to the HFONT MyFont Value
+    //
+    __forceinline HFONT AddFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr)
+                                                                            { return CreateNewFont(sFont,sNewFontName,ucStatus); }
     // Returns true of the middle mouse button mouse was double clicked.
     // *** This function is still in development and may not work.
     // This is tied to the status of the window an whether or not it will accept double-clicks.

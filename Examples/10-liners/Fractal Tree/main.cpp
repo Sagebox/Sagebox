@@ -29,7 +29,7 @@
 // Since it doesn't use the Console Mode Window, it is better off as a Windows program.  
 // Console-Mode can be turned back on for debugging output and other I/O.
 //
-// The original source code for this program was found at Rosetta Stone at http://rosettacode.org/wiki/Category:C%2B%2B
+// The original source code for this program was found at Rosetta Code at http://rosettacode.org/wiki/Category:C%2B%2B
 //
 // The comments in this program are oriented towards showing how Sagebox works and less about the
 // Fractal Tree.  I intend to do a non-shortened version (that is larger but more self-documenting) that will
@@ -38,7 +38,6 @@
 // Note: This project is set for a Windows program.  You can change it to 
 //       a console-mode  program in the Build->Configuration settings
 //
-
 
 // use std::function for the lamdba.  This is used because DrawTree() is a lambda function.
 // Since it's recursive, it has to be declared beforehand, so 'auto' can't be used. 
@@ -55,7 +54,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len)
     fDrawTree DrawTree = [&](Point3D_t & sp, double line_len, double a,  double rg,double fDepth)
     {
         auto r = Point3D_t{0,-line_len}.RotateZ(a += rg *_ang) + sp;
-        cWin.DrawLine(sp,r,CTools::HSVtoRGB({.25 + fDepth/12,1,.9}));
+        cWin.DrawLine(sp,r,CTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
 	    for (int i=0;i<2;i++) if (fDepth < 12) DrawTree(r, line_len*.75, a, i*2-1,fDepth+1 );
     };
 
@@ -72,8 +71,8 @@ int main( int argc, char* argv[] )
     // we don't use it, we can just get a window.  The CSagebox object can be retreived with 
     // CSagbox::GetStaticSagebox()
     //
-    auto& cWin = CSagebox::AutoWindow(CSize(650,450),Title("Fractal Tree") | bgGradient("black","darkblue")); 
-    FractalTree(cWin,cWin.GetWindowSize(),24*3.14159/180,130.0f*1.7/2.5);
+    auto& cWin = CSagebox::AutoWindow(CSize(1300,900),Title("Fractal Tree") | bgGradient("black","darkblue")); 
+    FractalTree(cWin,cWin.GetWindowSize(),24*3.14159/180,130.0f*1.45);
     return cWin.WaitforClose(); // Wait for user to close the window
 
 }

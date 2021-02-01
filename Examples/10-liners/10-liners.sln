@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Circles", "Circles\Circles.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Fractal Tree", "Fractal Tree\Fractal Tree.vcxproj", "{A5E4299C-F1DA-4516-BA5C-B9DF635EDD78}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lissajous", "Lissajous\Lissajous.vcxproj", "{395AABCA-9E55-4CED-A46C-EE81804F9DB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug Optimized|x64 = Debug Optimized|x64
@@ -105,6 +107,22 @@ Global
 		{A5E4299C-F1DA-4516-BA5C-B9DF635EDD78}.Windows Debug|x64.Build.0 = Windows Debug|x64
 		{A5E4299C-F1DA-4516-BA5C-B9DF635EDD78}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
 		{A5E4299C-F1DA-4516-BA5C-B9DF635EDD78}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug Optimized|x64.ActiveCfg = Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug Optimized|x64.Build.0 = Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug|x64.ActiveCfg = Debug|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug|x64.Build.0 = Debug|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug|x86.ActiveCfg = Debug|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Debug|x86.Build.0 = Debug|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{395AABCA-9E55-4CED-A46C-EE81804F9DB6}.Windows Debug|x86.Build.0 = Windows Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

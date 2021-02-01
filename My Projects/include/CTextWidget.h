@@ -100,7 +100,7 @@ private:
 	CWindow			* m_cWin			= nullptr;
 	CDavinci		* m_cDavinciMain	= nullptr;
 	bool			  m_bValid			= false;
-					  
+    double            m_fBlend          = 0;    // Blend percent of output -- 0 = transparent, 100 = fully opaque					  
 	int					m_iWinOffsetY		= 0;
 	int					m_iWidth			= 0;
 	int					m_iHeight			= 0;
@@ -148,6 +148,15 @@ public:
 	void Show(bool bShow = true);
 	void Hide(bool bHide = true);
 	void SetLocation(int iX,int iY);
+
+    // SetBlend() -- Sets the blending percent of the textwidget
+    //
+    // 0 = Fully Transparent, 100 = fully opaque
+    //
+    // note: This sets the blend value but does not update the text widget. 
+    //       Updating the Text Widget must be done separately. 
+    //
+    bool SetBlend(double fBlendPercent); 
 	bool UpdateBg(bool bUpdate = true);
 	void SetFont(char * sFont);
 	void SetFont(HFONT hFont);
@@ -165,6 +174,7 @@ public:
 	int Width();
 	int Height();
 	SIZE GetWindowSize(); 
+    POINT GetLocation();
 	Sage::CWidget * GetWidgetObj() { return m_cWidget; }
 	static CTextWidget & GetEmptyObject() { return m_cEmpty; }
 	// Basic functions that all Widgets need.  These are TBD and will probably

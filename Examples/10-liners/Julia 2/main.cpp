@@ -32,7 +32,7 @@
 //
 int main()
 { 
-    // Create a window of a specifix size.  AutoWindow() also creates a static CSagebox class that
+    // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
     auto& cWin = CSageBox::AutoWindow(CSize(1200,1000));

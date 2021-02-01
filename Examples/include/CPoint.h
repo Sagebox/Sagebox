@@ -77,15 +77,15 @@ struct CPoint
 
 		return { x * p2.cx,y*p2.cy };
 	}
-	CPoint operator * (int iValue) { return { x * iValue,y * iValue }; }
-	CPoint operator / (int iValue) { return { x / iValue,y / iValue }; }
-	CPoint operator + (int iValue) { return { x + iValue,y + iValue }; }
-	CPoint operator - (int iValue) { return { x - iValue,y - iValue }; }
+	__forceinline CPoint operator * (int iValue) { return { x * iValue,y * iValue }; }
+	__forceinline CPoint operator / (int iValue) { return { x / iValue,y / iValue }; }
+	__forceinline CPoint operator + (int iValue) { return { x + iValue,y + iValue }; }
+	__forceinline CPoint operator - (int iValue) { return { x - iValue,y - iValue }; }
 
-	CPoint & operator *= (int iValue) { x *= iValue; y *= iValue; return *this; }
-	CPoint & operator /= (int iValue) { x /= iValue; y /= iValue; return *this; }
-	CPoint & operator += (int iValue) { x += iValue; y += iValue; return *this; }
-	CPoint & operator -= (int iValue) { x -= iValue; y -= iValue; return *this; }
+	__forceinline CPoint & operator *= (int iValue) { x *= iValue; y *= iValue; return *this; }
+	__forceinline CPoint & operator /= (int iValue) { x /= iValue; y /= iValue; return *this; }
+	__forceinline CPoint & operator += (int iValue) { x += iValue; y += iValue; return *this; }
+	__forceinline CPoint & operator -= (int iValue) { x -= iValue; y -= iValue; return *this; }
 
 	CPoint operator * (const POINT & p2)
 	{
@@ -211,26 +211,7 @@ struct CfPoint
 		y /= p2.y;
 		return *this;
 	}
-	CfPoint operator / (double fDiv)
-	{
-		return { x /fDiv, y/fDiv };
-	}
-	CfPoint & operator /= (double fDiv)
-	{
-		x /= fDiv;
-		y /= fDiv;
-		return *this;
-	}
-	CfPoint & operator *= (double fMul)
-	{
-		x *= fMul;
-		y *= fMul;
-		return *this;
-	}
-	CfPoint operator * (double fMul)
-	{
-		return { x * fMul, y*fMul };
-	}
+
 	CfPoint operator - (const CfPoint & p2)
 	{
 		return { x - p2.x, y-p2.y };
@@ -282,6 +263,25 @@ struct CfPoint
          x = p2.x;
          y = p2.y;
      }
+	__forceinline CfPoint operator * (int iValue) { return { x * (double) iValue,y * (double) iValue }; }
+	__forceinline CfPoint operator / (int iValue) { return { x / (double) iValue,y / (double) iValue }; }
+	__forceinline CfPoint operator + (int iValue) { return { x + (double) iValue,y + (double) iValue }; }
+	__forceinline CfPoint operator - (int iValue) { return { x - (double) iValue,y - (double) iValue }; }
+
+	__forceinline CfPoint & operator *= (int iValue) { x *= (double) iValue; y *= (double) iValue; return *this; }
+	__forceinline CfPoint & operator /= (int iValue) { x /= (double) iValue; y /= (double) iValue; return *this; }
+	__forceinline CfPoint & operator += (int iValue) { x += (double) iValue; y += (double) iValue; return *this; }
+	__forceinline CfPoint & operator -= (int iValue) { x -= (double) iValue; y -= (double) iValue; return *this; }
+
+	__forceinline CfPoint operator * (double fValue) { return { x * fValue,y * fValue }; }
+	__forceinline CfPoint operator / (double fValue) { return { x / fValue,y / fValue }; }
+	__forceinline CfPoint operator + (double fValue) { return { x + fValue,y + fValue }; }
+	__forceinline CfPoint operator - (double fValue) { return { x - fValue,y - fValue }; }
+
+	__forceinline CfPoint & operator *= (double fValue) { x *= fValue; y *= fValue; return *this; }
+	__forceinline CfPoint & operator /= (double fValue) { x /= fValue; y /= fValue; return *this; }
+	__forceinline CfPoint & operator += (double fValue) { x += fValue; y += fValue; return *this; }
+	__forceinline CfPoint & operator -= (double fValue) { x -= fValue; y -= fValue; return *this; }
 
 	CfPoint() { };
 	CfPoint(double fx,double fy) { x = fx; y = fy; };
