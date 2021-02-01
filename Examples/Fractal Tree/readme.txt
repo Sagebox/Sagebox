@@ -11,11 +11,11 @@ Fractal Tree Project -- Sagebox Example Code
 --------------------------------------------
 
 This project is a good example of how to use Sagebox, both with simple applications and more advanced applications
-using moderate-to-avanced C++ programming, as well as Sagebox functions.
+using moderate-to-advanced C++ programming, as well as Sagebox functions.
 
 All 3 programs are purely procedural, written in plain, procedural C++ without using events, callbacks, or the need
 to understand Windows internals or event-driven programming.  Basically, they are written in the same way one might write
-a scripted language, console mode application, or even a Basic program, but with the power, speed, and structur of compiled
+a scripted language, console mode application, or even a Basic program, but with the power, speed, and structure of compiled
 C++ running directly on the CPU and not through a VM or interpreter. 
 
 
@@ -40,8 +40,8 @@ The programs show how Sagebox works to create simple and powerful programs for b
 3. Fractal Tree Animated
 ------------------------
 
-This program -- also 100 procedural -- uses quite a few different Sagebox functions to create a UI, animate the Fractal Tree, write it out
-to an AVI file, as well as display debug information and look for input from the user -- All in 40 lines of code!
+This program -- also 100% procedural -- uses quite a few different Sagebox functions to create a UI, animate the Fractal Tree, write it out
+to an AVI file, as well as display output information and look for input from the user -- All in 40 lines of code!
 
 The main() function is 40 lines (and it calls out to the above code using about 20 lines) and performs a lot in those few lines of code.
 
