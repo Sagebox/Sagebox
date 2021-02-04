@@ -1,7 +1,7 @@
 # Sagebox
 Libraries and Project Templates for Sagebox
 
-Sagebox is a set of C++ utilities and functions designed to make writing C/C++ programs in Windows much simple, fun an creative.
+Sagebox is a set of C++ utilities and functions designed to make writing C/C++ programs in Windows much simpler, fun and creative.
 
 Sagebox comes from a package that I have been using for a long time to write commercial and other professional applications (for example, Sagelight Image Editor (www.sagelighteditor.com). 
 
