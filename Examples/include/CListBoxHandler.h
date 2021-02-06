@@ -66,7 +66,7 @@ public:
 	virtual MsgStatus OnDoubleClick(int iSelection)			{ return MsgStatus::Ok; }	// Continue as normal
 	virtual MsgStatus OnSelChange(int iSelection)			{ return MsgStatus::Ok; }
 
-	WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
+	virtual WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
 
 	void SetPostProcess(bool bPostProcess);
 	void SetCore(CPasWindow * cWinCore,void * pClassInfo) { m_cWinCore = cWinCore; m_pClassInfo = pClassInfo; Init(pClassInfo); }

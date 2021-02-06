@@ -135,7 +135,7 @@ private:
     bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     CDevControls * m_cDevControls = nullptr;    // Not created until first used. 
-
+    void _vprintf(const char * Format,va_list va_args);                                 // Used internally
 
     // Bitmap Message Handle for BitmapWindow() returned windows
     // The main component is that pressing the 'X' button on the window
@@ -4132,6 +4132,25 @@ public:
         //
         BkMode GetBkMode();
         
+        // SetWordWrap() -- sets whether text printed to the screen wraps to the next line when exceeding the window's edge. 
+        //
+        // When ON (SetWordWrap(true)), text printed out to the window wraps to the next line.
+        // When OFF, text printed will not wrap around the window and will not appear once it reaches the edge of the widow. 
+        //
+        // Word wrap is generally used for console-based windows.
+        //
+        // For general and default windows, Word Wrap is set to OFF by default.  For Text Windows, word wrap is set to ON by default.
+        //
+        // Word wrap is off for Text Widgets and other text controls and can be turned on only for widgets that have WordWrap() functions of their own.
+        // When using "console" functions (i.e. MyWidow.console.Write() or MyWindow.console.printf()) word wrap is always on. 
+        // When using regular Write(), printf() and other functions, word wrap is only on if it has been set with SetWordWrap()
+        //
+        bool SetWordWrap(bool bWrap = true);
+
+        // GetWordWrap() -- returns the current word-wrap status for the window (see SetWordWrap());
+        //
+        bool GetWordWrap();
+
         // getCharWidth() -- get the average character width for the current window font.
         // For proportional fonts, this returns the average chacter width for the font. 
         // For termainl fonts (i.e. Courier New, etc.) this returns the width for all characters.
@@ -4166,6 +4185,24 @@ public:
         //
         int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
     
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void printf(const char * Format,...);
+
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void printf(int iX,int iY,const char * Format,...);
+
         // Write() -- Write text to the window in a simplified manner. 
         // 
         // Write() writes simple text to the window.  This is faster than printf() and other methods and can be used
@@ -5225,6 +5262,27 @@ public:
     //                           background color overwriting any text or graphics behind the new text.
     //
     BkMode GetBkMode();
+
+    // SetWordWrap() -- sets whether text printed to the screen wraps to the next line when exceeding the window's edge. 
+    //
+    // When ON (SetWordWrap(true)), text printed out to the window wraps to the next line.
+    // When OFF, text printed will not wrap around the window and will not appear once it reaches the edge of the widow. 
+    //
+    // Word wrap is generally used for console-based windows.
+    //
+    // For general and default windows, Word Wrap is set to OFF by default.  For Text Windows, word wrap is set to ON by default.
+    //
+    // Word wrap is off for Text Widgets and other text controls and can be turned on only for widgets that have WordWrap() functions of their own.
+    //
+    // Word wrap is off for Text Widgets and other text controls and can be turned on only for widgets that have WordWrap() functions of their own.
+    // When using "console" functions (i.e. MyWidow.console.Write() or MyWindow.console.printf()) word wrap is always on. 
+    // When using regular Write(), printf() and other functions, word wrap is only on if it has been set with SetWordWrap()
+    //
+    bool SetWordWrap(bool bWrap = true);
+
+    // GetWordWrap() -- returns the current word-wrap status for the window (see SetWordWrap());
+    //
+    bool GetWordWrap();
 
     // Sets the Program/Application name.  This can also be set when initiating Sagebox, i.e. CSageBox("My Application"); 
     //

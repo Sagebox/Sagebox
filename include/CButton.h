@@ -75,6 +75,7 @@ class CWindow				;
 class CButton : public CButtonHandler
 {
 friend CWindow;
+friend CButtonSignal;
 
 kAdvPublic:		// Public or --Adanced define
 				// delete() operator is set to private.  The created EditBox is managed by Davinci, so no
@@ -413,11 +414,26 @@ public:
 	int GetID();
 	const char * GetName();
 	Sage::CWidget * GetWidgetObj();
+    HWND GetWindowHandle();
 
 	int GetControlID();
 	bool SetHoverMsg(const char * sMessage);
 	bool SetSignal(ButtonSignal & stSignal);
 	bool SetSignal(bool * bSignal,bool * bSignalData = nullptr);
+
+    // signal -- this is used to access button data and events without using the normal CButton call process.
+    //           This makes getting presses and status changes much quicker. 
+    //
+    // The signal can be accessed through it's class (CButtonSignal) or thorugh the stSignal in the class directly.
+    // The addresses of the stSignal data may be passed as references for direct acess in tight loops. 
+    //
+    // Access is guaranteed to be safe as long as the CButton object exists. 
+    //
+    // You can create a new signal that will stay local (and does not need to be dereferenced).  Only
+    // one signal is available at a time -- creating a new signal will deactivate the CButton signal.
+    // The signal may be restored with signal.RestoreSignal() or deactivated with signal KillSignal().
+    //
+    CButtonSignal signal; 
 
     // SendCloseMessage() -- Closes Parent Window when the button is pressed. 
     //

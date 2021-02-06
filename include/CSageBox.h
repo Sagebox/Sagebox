@@ -20,8 +20,6 @@
 
 //#include "SageIncludes.h"
 #include <cstdlib>
-//#undef _CSTD
-//#define _CSTD std::
 #include <cstdio>
 #include <ctime>
 
@@ -189,7 +187,6 @@ public:
     //
 	CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
     static CSagebox * m_cStaticSagebox;
-
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.

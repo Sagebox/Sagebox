@@ -77,7 +77,7 @@ public:
 	virtual MsgStatus OnMouseWheel(int iDelta)				{ return MsgStatus::Ok;	}
 	virtual ValidateStatus Validate(const char * sText)		{ return ValidateStatus::NotChecked; }
 
-	WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
+	virtual WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
 
 	void SetPostProcess(bool bPostProcess);
 	void SetCore(CPasWindow * cWinCore,void * pClassInfo) { m_cWinCore = cWinCore; m_pClassInfo = pClassInfo; Init(pClassInfo); }

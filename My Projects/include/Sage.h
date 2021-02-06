@@ -132,7 +132,8 @@ static constexpr int defColor = -1;
 namespace Sage
 {
     class CBitmap; 
-
+    class CSlider;
+    class CButton;
 	constexpr const char * BoolString(bool bValue) { return bValue ? "true" : "false"; };
 	constexpr const char * BoolStringU(bool bValue) { return bValue ? "True" : "False"; };
 	constexpr const char * BoolStringUU(bool bValue) { return bValue ? "TRUE" : "FALSE"; };
@@ -140,6 +141,11 @@ namespace Sage
 	constexpr const char * BoolStringYU(bool bValue) { return bValue ? "Yes" : "No"; };
 	constexpr const char * BoolStringYUU(bool bValue) { return bValue ? "YES" : "NO"; };
 
+	enum class Peek : bool
+	{
+		No = false,
+		Yes = true,
+	};
 	enum class ThreadStatus
     {
         Running, 
@@ -236,6 +242,57 @@ namespace Sage
 		constexpr bool GetSignal() { bool bReturn = bMoved; bMoved = false; return bReturn; };
 		constexpr int GetPos() { return iPosition; };
 	};
+
+    typedef void(*SliderSignalCallback)(SliderSignal & stSignal,void * pData)  ;
+
+    class CSignal
+    {
+    public:
+        HWND hWnd;   
+        HWND hWndParent;   
+    };
+    // CSliderSignal -- contsainer class for SLiderSignal.  See notes for the "signal" class object in CSlider.cpp
+    //
+    // Using signals is a much faster way to access control data and events than using the regular class, which must validate 
+    // the control. 
+    //
+    // Using the default signal (i.e. in the control class) guarantees safe pointer access as long as the control exists.
+    // If a new signal is created to bypass the control's internal signal, then it is up to the user-program to make sure
+    // the Signals are not used if the control is deleted. 
+    //
+    // Documentation TBD
+    //
+    class CSliderSignal : public CSignal
+    {
+    private:
+        CSlider * cSlider;
+   public:
+        void Init(CSlider & cSlider);
+        SliderSignal stSignal; 
+        CSliderSignal(CSlider & cSlider);
+        CSliderSignal();
+        ~CSliderSignal();
+
+        bool KillSignal();
+        bool RestoreSignal();
+        __forceinline bool Moved(Peek peek = Peek::No) { bool bReturn = (bool) stSignal.bMoved; stSignal.bMoved &= *(bool *)&peek; return bReturn; }
+        __forceinline bool Moved2(Peek peek = Peek::No) { bool bReturn = (int) stSignal.bMoved; if (peek == Peek::No) stSignal.bMoved = false; return bReturn; }
+        __forceinline bool Moved(int & iPosition,Peek peek = Peek::No) { bool bReturn = (bool)stSignal.bMoved; if (bReturn) iPosition = stSignal.iPosition;  stSignal.bMoved &= *(bool *)&peek; return bReturn; }
+        __forceinline bool GetPos() { return stSignal.iPosition; }
+        
+        // Setcallback() -- Sets a call back for the event signal.  This is a low-level function for easy prototyping
+        // An equivalent and safer method is to override the button class and override the event functions.
+        //
+        // This can be much faster to prototype development, but is not meant as permanent code in the program.
+        //
+        // pData is your object or whatever data you want to send the signal function.  It can be omitted.
+        //
+        // The call back function should be in this form: 
+        //
+        //void SliderButtonCallback(SliderSignal & stSignal,void * pData) { ... code here ... }
+        //
+        bool SetCallback(SliderSignalCallback fCallback,void * pPrivateData = nullptr);
+    };
 	struct EditBoxSignal
 	{
 		bool bCRPressed; 
@@ -269,8 +326,55 @@ struct ButtonSignal
 	// --> GetSignal(MyButtonSignal.bPressed) can be used instead of the member function.
 	// 
 	constexpr bool GetSignal() { bool bReturn = bPressed; bPressed = false; return bReturn; };
+    __forceinline bool Pressed(Peek peek = Peek::No) { bool bReturn = (bool) bPressed; bPressed &= *( bool *)&peek; return bReturn; }
+    __forceinline bool Checked(Peek peek = Peek::No) { bool bReturn = (bool) bChecked; bChecked &= *( bool *)&peek; return bReturn; }
 
 };
+
+typedef void(*ButtonSignalCallback)(ButtonSignal & stSignal,void * pData)  ;
+
+// CButtonSignal -- contsainer class for ButtonSignal.  See notes for the "signal" class object in Cbutton.cpp
+//
+// Using signals is a much faster way to access control data and events than using the regular class, which must validate 
+// the control. 
+//
+// Using the default signal (i.e. in the control class) guarantees safe pointer access as long as the control exists.
+// If a new signal is created to bypass the control's internal signal, then it is up to the user-program to make sure
+// the Signals are not used if the control is deleted. 
+//
+// Documentation TBD
+//
+class CButtonSignal : public CSignal
+    {
+    private:
+        CButton * cButton;
+   public:
+       void Init(CButton & cButton);
+        ButtonSignal stSignal; 
+        CButtonSignal(CButton & cButton);
+        CButtonSignal();
+        ~CButtonSignal();
+
+        bool KillSignal();
+        bool RestoreSignal();
+        __forceinline bool Pressed(Peek peek = Peek::No) { bool bReturn = (bool) stSignal.bPressed; stSignal.bPressed &= *( bool *)&peek; return bReturn; }
+        __forceinline bool Pressed2(Peek peek = Peek::No) { bool bReturn = (bool) stSignal.bPressed; if (peek == Peek::No) stSignal.bPressed = false; return bReturn; }
+        __forceinline bool Checked(Peek peek = Peek::No) { bool bReturn = (bool) stSignal.bChecked; stSignal.bChecked &= *( bool *)&peek; return bReturn; }
+
+        // Setcallback() -- Sets a call back for the event signal.  This is a low-level function for easy prototyping
+        // An equivalent and safer method is to override the button class and override the event functions.
+        //
+        // This can be much faster to prototype development, but is not meant as permanent code in the program.
+        //
+        // pData is your object or whatever data you want to send the signal function.  It can be omitted.
+        //
+        // The call back function should be in this form: 
+        //
+        //void ButtonCallback(ButtonSignal & stSignal,void * pData) { ... code here ... }
+        //
+        bool SetCallback(ButtonSignalCallback fCallback,void * pPrivateData = nullptr);
+
+    };
 constexpr bool GetSignal(SliderSignal stSignal) { bool bReturn = stSignal.bMoved; stSignal.bMoved = false; return bReturn; };
 constexpr bool GetSignal(ButtonSignal stSignal) { bool bReturn = stSignal.bPressed; stSignal.bPressed = false; return bReturn; };
 constexpr bool GetSignal(EditBoxSignal stSignal) { bool bReturn = stSignal.bCRPressed; stSignal.bCRPressed = false; return bReturn; };
@@ -488,11 +592,6 @@ typedef RGBColor32* pRGB32;
 		Auto,					// This is TBD and its effect is currently undefined.  use ENABLED or DISABLED only.
 	};
 
-	enum class Peek
-	{
-		No,
-		Yes,
-	};
 	struct RawBitmap_t;
 	struct RawBitmap32_t;
 	void freeBitmap(Sage::RawBitmap_t & stBitmap);

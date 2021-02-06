@@ -45,6 +45,7 @@ class CSlider : CSliderHandler
 
 
 friend CWindow;
+friend CSliderSignal;
 kAdvPublic:		// Public or --Adanced define
 				// delete() operator is set to private.  The created EditBox is managed by Davinci, so no
 				// other process should delete it.   This will cause a compiler error if it is used.
@@ -167,6 +168,19 @@ public:
 	bool SetSignal(bool * bSignal,int * iSignalPos);
 	bool SetSignal(SliderSignal & stSignal);
 
+    // signal -- this is used to access Sliider data and events without using the normal CSlider call process.
+    //           This makes getting presses and status changes much quicker. 
+    //
+    // The signal can be accessed through it's class (CSliderSignal) or thorugh the stSignal in the class directly.
+    // The addresses of the stSignal data may be passed as references for direct acess in tight loops. 
+    //
+    // Access is guaranteed to be safe as long as the CSlider object exists. 
+    //
+    // You can create a new signal that will stay local (and does not need to be dereferenced).  Only
+    // one signal is available at a time -- creating a new signal will deactivate the CSlider signal.
+    // The signal may be restored with signal.RestoreSignal() or deactivated with signal KillSignal().
+    //
+    CSliderSignal signal;
 };
 }; // namespace Sage
 #endif _CDavSlider_H_

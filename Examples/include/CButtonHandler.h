@@ -54,7 +54,7 @@ public:
 	virtual MsgStatus OnChar(char cChar)						{ return MsgStatus::Ok; }
 	virtual MsgStatus OnMouseMove(int iMouseX,int iMouseY)		{ return MsgStatus::Ok; }
 
-	WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
+	virtual WinMsgStatus OnWinMessage(unsigned int uiMessage,WPARAM wParam,LPARAM lParam,unsigned int & uiReturnCode) { return WinMsgStatus::Ok; }
 	void SetControlID(int iControlID);
 	void SetButton(CButton & cButton);
 	void SetControlName(const char * sControlName); 
