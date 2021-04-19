@@ -1,6 +1,31 @@
 // This file copyright(c) 2021 Rob Nelson, All Rights Reserved.    E-mail rob@projectsagebox.com for more information.
 //
 
+// Mem and MemA classes work as a low-level std::vector aimed at more efficient CPU-usage 
+// and flexibility. 
+//
+// MemA is used to align memory on a 128-byte boundary for using SSE, and other instructions that require alignment.
+// MemA alignment is 128 bytes regardless of the data type, allowing arrays of unsigned char, int, etc to be alligned
+// on a 128-byte boundary more easily. 
+
+// While exceptions and boundary safety are provided with [] usage (i.e. MyMemory[iIndex]), the Mem and MemA classes
+// are meant to be used as containers, with the main usage as pointers directly to memory.
+//
+// for example,
+//
+//      Mem<int> MyMemObj(iLengthNeeded);
+//      int * MyMemPtr = MyMemObj;  // also expressed as auto MyMemPtr = &Mem[0];
+//
+// This code creates the memory container in MyMemObj, but then assigns the memory to an int * pointer for much more effcient use than
+// using Mem or std::vector can natively provide. 
+//
+// As with std::vector any memory allocated is de-allocated on exit. 
+//
+// Mem and MemA are only for data types, not classes or structures with destructors. 
+// You can use Sage::Obj class for this (which constructs one object only, but deletes it automatically for you), or vector to use an array of class objects. 
+//
+
+
 // --------------------------------------------------------------------------------------------------------------
 // PRELIMINARY VERSION.  This file has been brought into the Sagebox project from the original sources and has 
 // not yet been commented for Sagebox, or properly formatted (I used tabs and am converting to spaces).
@@ -16,6 +41,8 @@
 #include <malloc.h>
 #include "Sage.h"
 #include "ErrCtl.h"
+#include "CString.h"
+#include <stdexcept>
 
 //#pragma once
 #if !defined(_CMemClass_H_)
@@ -23,7 +50,11 @@
 
 namespace Sage
 {
-
+    class MemTools
+    {
+    public:
+        static CString ShowExceptMsg(const char * sTitle, const char * sMsg,const char * sFile,unsigned int sLine);
+    };
 template <class _t>
 	class Mem
 	{
@@ -41,7 +72,17 @@ template <class _t>
         }
 		return *this;
 	}
-
+		Mem(const Mem &p2)
+		{
+			if (&p2 == this)
+			{
+				int gg = 1;
+			}
+			memcpy(this,&p2,sizeof(*this));
+			Mem * pMem = (Mem *) &p2;
+			pMem->pMem = nullptr;
+			pMem->iSize = 0;
+		}
 	public:
 
 		int iSize = 0;
@@ -131,17 +172,25 @@ template <class _t>
 		{
 			if (pMem) std::memset(pMem,ucValue,iSize*sizeof(_t));
 		}
-		Mem(const Mem &p2)
-		{
-			if (&p2 == this)
-			{
-				int gg = 1;
-			}
-			memcpy(this,&p2,sizeof(*this));
-			Mem * pMem = (Mem *) &p2;
-			pMem->pMem = nullptr;
-			pMem->iSize = 0;
-		}
+        /// <summary>
+        /// Fill memory with a specified value corresponding to the Mem type (i.e. int, double, etc. 
+        /// This differs from ClearMem() which fills the memory explictitly with zeros or the unsigned char value specified
+        /// (which is faster than using Fill).
+        /// <para></para>&#160;&#160;&#160;
+        /// Fill() fills the entire array with the same value (or copy of object if a class type)
+        /// <para></para>&#160;&#160;&#160;
+        /// Fill can use any type, including classes and will copy the value of the parameter.  In the case of classes, this 
+        /// may invoke a copy-constructor.
+        /// </summary>
+        /// <param name="t"> = Value of Mem-type to fill</param>
+        void Fill(const _t & t)
+        {
+            if (pMem)
+            {
+                _t * pTemp = pMem;
+                for (int i=0;i<iSize;i++) *pTemp++ = t;
+            }
+        }
 
         // SetMaxBlock() -- Keep Memory sized to a certain block size past the current size. 
         //
@@ -357,7 +406,32 @@ template <class _t>
 			if (iSize) pMem = (_t *) std::malloc(iSize*sizeof(_t));
 			return (_t *) pMem;
 		}
-		_t & operator [](int i) { return pMem ? *(pMem + i) : MemNull;  }
+		///__forceinline _t & operator [](int i) { return pMem ? *(pMem + i) : MemNull;  }
+#if defined(NOBOUNDS)
+            __forceinline _t & operator [](int i) { return pMem[i]; }
+#elif defined(NOMEMEXCEPT)
+
+		 __forceinline _t & operator [](int i) 
+         { 
+             if (!pMem) return MemNull;
+             if ((i < 0) | (i >= iSize)) i = 0;
+             return pMem[i];  
+         }
+#else
+		 __forceinline _t & operator [](int i) 
+         { 
+             if ((!pMem) | (i < 0) | (i >= iSize))
+             {
+                 auto cs = MemTools::ShowExceptMsg("Mem Object Error",
+                        CString() << "Mem::[] Value out of range.\n\nValue = " << i << "\nMax Size = " << iSize,__FILE__,__LINE__);
+                throw std::exception(cs.str()); 
+             }
+             return pMem[i];  
+         }
+#endif
+
+
+		 __forceinline _t & operator ()(int i) { return pMem[i];  }
 		bool copyFrom(Mem & p2)
 		{
 			if (pMem) free(pMem); 
@@ -441,7 +515,7 @@ template <class _t>
 		MemA(int iSize)
 		{
 			this->iSize = iSize;
-			if (iSize) pMem = (_t *) _aligned_malloc(iSize*sizeof(_t),16);;
+			if (iSize) pMem = (_t *) _aligned_malloc(iSize*sizeof(_t),128);;
 		}
 		MemA()
 		{
@@ -477,6 +551,25 @@ template <class _t>
 			if (pMem) std::memset(pMem,ucValue,iSize*sizeof(_t));
 		}
 
+        /// <summary>
+        /// Fill memory with a specified value corresponding to the Mem type (i.e. int, double, etc. 
+        /// This differs from ClearMem() which fills the memory explictitly with zeros or the unsigned char value specified
+        /// (which is faster than using Fill).
+        /// <para></para>&#160;&#160;&#160;
+        /// Fill() fills the entire array with the same value (or copy of object if a class type)
+        /// <para></para>&#160;&#160;&#160;
+        /// Fill can use any type, including classes and will copy the value of the parameter.  In the case of classes, this 
+        /// may invoke a copy-constructor.
+        /// </summary>
+        /// <param name="t"> = Value of Mem-type to fill</param>
+        void Fill(const _t & t)
+        {
+            if (pMem)
+            {
+                _t * pTemp = pMem;
+                for (int i=0;i<iSize;i++) *pTemp++ = t;
+            }
+        }
 		MemA(const MemA &p2)
 		{
 			if (&p2 == this)
@@ -502,7 +595,7 @@ template <class _t>
 		{
 			if (iMemSize > iSize) 
 			{
-				pMem = (_t *) _aligned_realloc(pMem,iMemSize*sizeof(_t),16); 
+				pMem = (_t *) _aligned_realloc(pMem,iMemSize*sizeof(_t),128); 
 				iSize = iMemSize;
 			}
 			if (!pMem) iSize = 0;
@@ -518,16 +611,38 @@ template <class _t>
 		{
 			if (pMem) _aligned_free(pMem);
 			this->iSize = iSize;
-			if (iSize) pMem = (_t *) _aligned_malloc(iSize*sizeof(_t),16);
+			if (iSize) pMem = (_t *) _aligned_malloc(iSize*sizeof(_t),128);
 			return (_t *) pMem;
 		}
-		_t & operator [](int i) { return pMem ? pMem[i] : MemNull; }
+//		__forceinline_t & operator [](int i) { return pMem ? pMem[i] : MemNull; }
+#if defined(NOBOUNDS)
+            __forceinline _t & operator [](int i) { return pMem[i]; }
+#elif defined(NOMEMEXCEPT)
+
+		 __forceinline _t & operator [](int i) 
+         { 
+             if (!pMem) return MemNull;
+             if ((i < 0) | (i >= iSize)) i = 0;
+             return pMem[i];  
+         }
+#else
+		 __forceinline _t & operator [](int i) 
+         { 
+             if ((!pMem) | (i < 0) | (i >= iSize))
+             {
+                 auto cs = MemTools::ShowExceptMsg("MemA Object Error",
+                        CString() << "MemA::[] Value out of range.\n\nValue = " << i << "\nMax Size = " << iSize,__FILE__,__LINE__);
+                throw std::exception(cs.str()); 
+             }
+             return pMem[i];  
+         }
+#endif
 		bool copyFrom(MemA & p2)
 		{
 			if (pMem) _aligned_free(pMem); 
 			iSize = 0;
 			if (p2.isEmpty()) return true;
-			pMem = (_t *) _aligned_malloc(p2.iSize*sizeof(_t),16); 
+			pMem = (_t *) _aligned_malloc(p2.iSize*sizeof(_t),128); 
 			if (!pMem) return false;
 			memcpy(pMem,p2.pMem,p2.iSize*sizeof(_t));
 			iSize = p2.iSize;

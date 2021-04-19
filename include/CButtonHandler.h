@@ -31,7 +31,7 @@ public:
 						// m_bPostProcess = TRUE for the top-level call and FALSE for the bottom level call (which only occurs when CallAgain is returned on the first call)
 						// If CallAgain is returned on the second, post-process call, it is seen as "Ok"
 	};
-private:
+protected:
 	friend CEControlAction_t;		// Allow direct access for faster processing
 	CPasWindow * m_cWinCore = nullptr;
 	int m_iControlID;
@@ -47,7 +47,7 @@ private:
 	CButton * m_cButton;
 	virtual void HandlerTimeOut() { };			// This is just for debugging to see if there is ever a timeout.  Used for testing.
 public:
-	virtual void Init(void * pClassInfo)					{ } // Set info to your class type, i.e. MyClassPtr = (MyClass *) pClassInfo, or MyClassRef = & (MyCLass *) pClassInfo
+	virtual void Init(void * pClassInfo)					{  m_pClassInfo = pClassInfo; } // Set info to your class type, i.e. MyClassPtr = (MyClass *) pClassInfo, or MyClassRef = & (MyCLass *) pClassInfo
 	virtual MsgStatus OnPressed()								{ return MsgStatus::Ok; }	// Continue as normal
 	virtual MsgStatus OnUnPressed()								{ return MsgStatus::Ok; }
 	virtual MsgStatus OnDoubleClick()							{ return MsgStatus::Ok; }

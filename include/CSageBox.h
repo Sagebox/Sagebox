@@ -35,6 +35,7 @@
 #include "StyleManifest.h"
 #include "CQuickControls.h"
 #include "CComplex.h"
+#include "CQuickDialog.h"
 
 // -------------------
 // Main CSageBox Class
@@ -107,19 +108,44 @@ static constexpr RECT       EmptyRect {};
 static constexpr SizeRect   EmptySizeRect{};
 
 class CSageBox;
-
+class CProcessWindow;
+class CHandleWindowMsg;
 using CSagebox = CSageBox;          // Allow CSagebox to be used, as well, since I keep putting CSagebox cSagebox in videos. 
+class CConsoleIO;
+struct WinConio; 
 
 class CSageBox
 {
+    friend CHandleWindowMsg;
+    friend WinConio;
 public:
+
+
 	CWindow * m_cWin = nullptr;
+    
+    // Process Window Start Mode
+    //
+    //   Default,        // Shows title bar in upper-right corner that expands when mouseover
+    //   Debug,          // Shows full window including debug output window
+    //   Hidden,         // Hidden until debug is output first time, mouse is held in upper-right corner, or user turns it on through sysmenu
+    //
+    enum class ProcessWinStartMode
+    {
+        Default,        // Shows title bar in upper-right corner that expands when mouseover
+        Debug,          // Shows full window including debug output window
+        Hidden,         // Hidden until debug is output first time, mouse is held in upper-right corner, or user turns it on through sysmenu
+
+    };
+
+
 
 private:
 	void Postamble(CWindow & cWin);
 	void Preamble(CWindow & cWin,bool bHidden = false);
 	void CreateDefaultWindow();
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
+    static void CreateProcessAccelerator();       // Creates ^C accelerator
+
     HANDLE m_hWinThread = nullptr;
     CDevControls * m_cDevControls   = nullptr;          // Not created until first used. 
     bool m_bConsoleHidden           = true;             // true if the Console Window was hidden
@@ -128,8 +154,44 @@ private:
                                                         // restored on program exit.  Otherwise, a hidden console window is restored
                                                         // When the program ends.
 
+    // Process-Wide singleton
+
+    static CProcessWindow * m_cProcessWindow;           // Process Watch Window & low-level debug.  One per process. 
+    static bool             m_bProcessWinActive;
+    static bool             m_bAcceptCtrlCBreak;        // When true, ^C offers to terminate the process. 
+
 	int m_iConsoleWinNum = 0;		// Used for positioning windows when ConsoleWin() is called
     CPasWindow * m_cWinCore = nullptr;
+    void Init(const char * sAppName);
+public:
+
+    /// <summary>
+    /// Console Output Functions
+    /// <para></para>&#160;&#160;&#160;
+    /// conio provides a set of useful functions for console output that allow for different text colors, font sizes, background colors, and so-forth.
+    /// <para></para>
+    /// You can use conio.printf() or conio.write() with "{}" markers to specify colors.
+    /// <para></para>&#160;&#160;&#160;For example, printf("This is {red}red{/} and this is {b}blue") prints "red in red" and "blue" in blue.
+    /// <para></para>Note the use of {b} as a shortcut for blue.  Colors can be "r" for "Red" and so-forth, and "db" for "darkblue", etc. Use  conio.GetColorNames() for a full list.
+    /// <para></para>&#160;&#160;&#160;
+    /// Background colors can also be set with "bg=r", or the entire line with "lbg=blue", for example.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> "u" for underline, and "rev" as quick way to reverse text. Combine types, such as conio.printf("This {bg=blue}{y}word{/}{/} is written in a blue background with yellow text color")
+    /// </summary>
+    static WinConio conio; 
+
+    // Public values to be removed from the release version at some later date (kSagePrivPublic)
+
+kSagePrivPublic:
+
+    // Some external variables used in initialization where the Sagebox object has not been created yet
+    // or is not in the scope of a low-level processing setting up a configuration
+
+    static WORD m_wC; 
+    static const char * m_sC; 
+    static const char * m_sT; 
+    static bool _bIsSagebox; 
+
 public:
 	// The main SageBox Class
 	//
@@ -146,6 +208,8 @@ public:
 	// and memory created by any part of SageBox
 	//
 	CSageBox(const char * sAppName = nullptr);
+	CSageBox(const char * sAppName,SageboxInit & stInit);
+	CSageBox(SageboxInit & stInit);
 	~CSageBox();
     void SetWinThread(HANDLE hThread);
 
@@ -155,6 +219,13 @@ public:
 	// There isn't any other difference
 	//
 	CWindow & ConsoleWin(int iX,int iY,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    
+    // Quick Console Window functions (same as NewWindow, just smaller)
+	//
+	// This creates quick small window (around 800x600), where NewWindow creates a much larger window. 
+	// There isn't any other difference
+	//
+	CWindow & ConsoleWin(int iX,int iY,const cwfOpt & cwOpt);
 
 	// Quick Console Window functions (same as NewWindow, just smaller)
 	//
@@ -549,7 +620,7 @@ public:
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
 	int RegisterWidget(int & iRegistryID);
-
+#if 0
     // This is used to register a widget with SageBox.
     // The primary use for this is for the widget to register with Sagebox when called by Sagebox.
     // 
@@ -593,6 +664,48 @@ public:
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
 	CDialog & NewDialog(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+#endif
+    /// <summary>
+    /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+    /// <para></para>
+    /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+    /// <para></para>&#160;&#160;&#160;
+    /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+    /// that can then be querired for input.
+    /// <para></para>
+    /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+    /// <para></para>
+    /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+    /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+    /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+    /// --> Use CDialog::Close() to close the dialog box.
+    /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+    /// </summary>
+    /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+    /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+    /// <returns></returns>
+    CQuickDialog & QuickDialog(const char * sHeader = nullptr,const cwfOpt & cwOpt = CWindow::cwNoOpt);
+
+    /// <summary>
+    /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+    /// <para></para>
+    /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+    /// <para></para>&#160;&#160;&#160;
+    /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+    /// that can then be querired for input.
+    /// <para></para>
+    /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+    /// <para></para>
+    /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+    /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+    /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+    /// --> Use CDialog::Close() to close the dialog box.
+    /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+    /// </summary>
+    /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+    /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+    /// <returns></returns>
+    CQuickDialog & QuickDialog(const cwfOpt & cwOpt);
 
 	// dialog functions. See documentation by pressing "dialog." for function list, or see CWindow for documentation
 	//
@@ -658,7 +771,7 @@ public:
     //
     // Example: WinMessageBox("This is the message","This is the title",MB_OK | MB_ICONINFO)
     //
-	int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
+	int WinMessageBox(const char * sMessage,const char * sTitle = nullptr,unsigned int dwFlags = MB_OK);
 
     // Sets the Program/Application name.  This can also be set when initiating Sagebox, i.e. CSageBox("My Application"); 
     //
@@ -948,10 +1061,10 @@ public:
 
 	// Dialog Info/Question Windows
 
-	void InfoDialog(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
-	bool YesNoDialog(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
-	Sage::DialogResult YesNoCancelDialog(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
-	bool OkCancelDialog(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	void InfoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	bool YesNoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	Sage::DialogResult YesNoCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	bool OkCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
 	// Please Wait Window Functions
 
@@ -1348,10 +1461,19 @@ public:
 	//
     CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
-    // AddEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
+    // DevEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
+    // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
+    //
     CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    
+    // DevInputBox() -- Add an InputBox to the default Dev control Window.  The sInputBoxName, while optional, will provide a
+	// label to the left of the Input Box.  The default width is 150 pixels or so, but can be changed with normal InputBox options
+	//
+    // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
+    //
+     CEditBox & DevInputBox(const char * sInputBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return DevEditBox(sInputBoxName,cwOpt); } // $$moveme
   
 	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
 	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
@@ -1446,6 +1568,18 @@ public:
     // Exit Button returns 0. 
     //
     int ExitButton(const char * sText = nullptr); 
+
+    // WaitforClose() -- Displays a message box notifying the user the program has ended.
+    // Since Sagebox has no window, WaitforClose() calls ExitButton() and returns the code given. 
+    //
+    // WaitforClose() in included for parity with CWindow::WaitforClose() (which simply waits for the close with no button, since it has a window)
+    //
+    // See ExitButton(), which allows a personalized message. 
+    //
+    // ReturnCode is returned from WaitforClose() to allow an easy return from main() as return WaitforClose(); 
+    // If WaitforClose() fails for any reason, it returns -1
+    //
+    int WaitforClose(int iReturnCode = 0);
 
    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
     // CBitmap.
@@ -1655,6 +1789,223 @@ public:
     //
     CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr);
 
+    /// <summary>
+    /// Disables ^C from exiting the program when pressed in input boxes. 
+     /// <para></para>&#160;&#160;&#160;
+   /// By default, ^C will exit the program when the user presses it when in an input loop.
+    /// For SageBox Quick C++ applications, pressing ^C any time will exit the program by default.  In Sagebox,
+    /// calling EnableControlCExit() must be called. 
+    /// <para></para>&#160;&#160;&#160;
+    /// When this is disabled, the ^C will no longer have any effect, but the program can still be terminated via the Process Window (when active)
+    /// or the System Menu. 
+    /// </summary>
+    /// <param name="bDisable">Disables Control^C exit when true.  Enables Control ^C exit when false</param>
+    /// <returns></returns>
+    bool DisableControlCExit(bool bDisable = true);
+
+     /// <summary>
+    /// Enables pressing ^C to exit from the program  when pressed in input boxes or when the program is running.
+    /// <para></para>&#160;&#160;&#160;
+    /// By default, ^C will exit the program when the user presses it when in an input loop.
+    /// For SageBox Quick C++ applications, pressing ^C any time will exit the program by default.  In Sagebox,
+    /// calling EnableControlCExit() must be called. 
+    /// <para></para>&#160;&#160;&#160;
+    /// When this is disabled, the ^C will no longer have any effect, but the program can still be terminated via the Process Window (when active)
+    /// or the System Menu. 
+    /// </summary>
+    /// <param name="bEnable">Enables Exit by ^C when true; Disables when false</param>
+    /// <returns></returns>
+    bool EnableControlCExit(bool bEnable = true);
+
+   /// <summary>
+    /// Returns true when ^C will exit the program when pressed
+    /// </summary>
+    /// <returns></returns>
+    bool isControlCExitDisabled(); 
+
+
+    /// <summary>
+    /// Returns a string with version information for the Sagebox library, as well as current
+    /// platform (i.e. 32 bits or 64 bits). 
+    /// </summary>
+    /// <returns>String with current library version and run-time platform</returns>
+    static CString GetVersionInfo();
+
+    /// <summary>
+    /// returns TRUE of running 64-bit windows, false if 32-it windows. 
+    /// </summary>
+    /// <returns></returns>
+    static bool is64BitWindows();
+
+    static bool CreateProcessWindow(ProcessWinStartMode eStartMode = ProcessWinStartMode::Default);
+    static bool WriteProcessWindow(const char * sText); 
+    static bool ShowProcessWindow(bool bShow,bool bShowDebug);
+    static bool ProcessWindowVisible();
+    static bool ProcessWindowKillTimer(bool bKillTimer);
+    static bool ProcessWindowShowLineNumbers(bool bShowLineNumbers);
+
+    // Debug class -- directly replicated from CWindow::WinDebug with a couple exceptions, such as starting the 
+    // ^C accelerator.   Otherwise, it passes through the main hidden window in Sagebox
+
+
+
+    // ---------------
+    // Debug Functions
+    // ---------------
+    //
+    // Provides debug output functions. 
+    //
+    // Note: This section is currently still under construction and is expected to grow over time.,
+    //       Currently, it offers debug functions mostly through the Process Window, a widow that is disconected from
+    //       Sagebox and any windows in Sagebox for the purpose of more low-level debugging.
+    //
+    // In the future, a more robust debug window more integral to Sagebox will also be provided.
+    //
+    // Debugging is meant to be as low-level as possible. 
+    //
+    // Important note:  Do not change this independently.  Except for unique items, CWindow::WinDebug must remain in parallel here. 
+    //                  (they will probably be merged at some point)
+    //
+    // See items unique to CSagebox version (this one) at the bottom. 
+    //
+    struct WinDebug
+    {
+        friend CSagebox;
+    private:
+        CWindow         * m_cWin = nullptr;     // Main CSagebox Window (which is always hidden)
+    public:
+        WinDebug & operator << (const char * x)       ;
+        WinDebug & operator << (char x)               ;
+        WinDebug & operator << (std::string & cs)     ;
+        WinDebug & operator << (CString & cs)         ;
+        WinDebug & operator << (int x)                ;
+        WinDebug & operator << (unsigned int x)       ;
+        WinDebug & operator << (float x)              ;
+        WinDebug & operator << (double x)             ;
+                                                    ;
+        // Process Control Window initialization types. 
+        // Determines how to open Process Control Window when it is initialized with Init()
+        //
+        enum class InitType
+        {
+            Hidden,                 // Initially Hidden.  Use the System Menu on any main window or move move to upper-right desktop
+            Visible,                // Shows as Title Bar only in upper-right of desktop.  Mouse mouse to title bar to enlarge
+            Debug,                  // Brings up the Process Control Window as visible with the Debug Window.
+            DebugLineNumbers,       // Brings up the Process Control Window as visible with the Debug Window with Line Numbers showing
+        };
+
+        // Init() -- Initialize the process control window.
+        //
+        // Init() initializes the process control window and initially brings it up as hidden (by default), unless overridden. 
+        //
+        // Note: when the Process Control Window is hidden, you can use the System Menu in any main window to bring it up, or 
+        // move the mouse to the uper-right-hand corner of the window for more than .25 seconds (which toggles the Process Control Window display)
+        //
+        // Init() may be called with one of the following options
+        //
+        //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
+        //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
+        //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
+        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
+        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see WinDebug:ShowLineNumbers())
+        //
+        // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
+        // and display the Process Control Window and its debug window. 
+        //
+        // returns TRUE if Process Window is active. 
+        //
+        bool Init(bool bVisible = false);
+        
+        // Init() -- Initialize the process control window. 
+        //
+        // Init() initializes the process control window and initially brings it up as hidden (by default), unless overridden. 
+        //
+        // Note: when the Process Control Window is hidden, you can use the System Menu in any main window to bring it up, or 
+        // move the mouse to the uper-right-hand corner of the window for more than .25 seconds (which toggles the Process Control Window display)
+        //
+        // Init() may be called with one of the following options
+        //
+        //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
+        //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
+        //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
+        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
+        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see WinDebug:ShowLineNumbers())
+        //
+        // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
+        // and display the Process Control Window and its debug window. 
+        //
+        // returns TRUE if Process Window is active. 
+        //
+        bool Init(InitType eInitType);
+        
+        
+        // Show() -- Show or Hide the Process Control Window
+        //
+        bool Show(bool bShow = true); 
+
+        // Hide() -- Hide or Show the Process Control Window
+        //
+        bool Hide(bool bHide = true);
+
+        // printf() -- print out to the debug window, just as in std::printf()
+        //
+        bool printf(const char * Format,...);
+// __Sandbox__Except__ deprecated (for now)
+//#ifdef __Sandbox__Except__
+        // printf() -- print out to the debug window, just as in std::printf()
+        //
+        bool __printf(const char * Format,...);
+//#endif
+        // Write() -- Write out to the debug window.  Can be quicker than using printf()
+        //
+        bool Write(const char * sText);
+
+        // KillTimer() -- Kills the 250ms timer that looks at mouse movement.  
+        //
+        // KillTimer() removes the timer in the Process Window.  It is activated every 250ms to look for mousemovements to 
+        // show or hide the Process Control Window when the mouse is moved to the upper-right-hand corner of the desktop. 
+        //
+        // The timer doesn't impact program execution time, but for those programs that do not want a timer for one simple purpose
+        // can turn it off. 
+        //
+        // Use KillTimer(false) to turn the timer back on.
+        //
+        bool KillTimer(bool bKillTimer = true);
+
+        // ShowLineNumbers() -- Shows line numbers in the debug display.
+        //
+        // The Debug window defaults to ShowLineNumbers off.  You can use 
+        // Init(CWindow::WinDebug::InitType::DebugLineNumbers) to initialize the window with line numbers on.
+        //
+        // Use ShowLineNumbers(true) turn turn line numbers on
+        // Use ShowLineNumbers(false) to turn line numbers off.
+        //
+        bool ShowLineNumbers(bool bShowLineNumbers = true);
+
+        // --------------------------------------------------
+        // CSagebox::WinDebug unique items (may be called by CWindow)
+        // --------------------------------------------------
+
+        // SetControlCBreak() -- Allow ^C to terminate the process. 
+        //
+        // When set to TRUE, using Control-C will bring up a message box and allow the user to terminate the process. 
+        // This is a useful debugging tool to allow terminating the process if the process caught in a loop or may be otherwise
+        // unresponsive.  Also use debug.Init() to activate the Process Window for more control, even if the window is not visible. 
+        //
+        // For Console Applications, you can just press control-C in the console-window. 
+        //
+        // Note: debug.Init() activates ^C, but debug.Write(), when it instantiates the Proess Control Window will not turn it on. 
+        // use debug.Init() or SetControlCBreak() to ensure use of ^C to break the program execution.
+        //
+       bool SetControlCBreak(bool bActive); 
+
+     };
+
+    WinDebug debug; 
 };
 
 }; // namespace Sage;

@@ -1,0 +1,35 @@
+------------------------------
+Quick Description of Templates
+------------------------------
+
+The Main Template to use is "Console Mode (and Windows)" (the first one describe below)
+
+
+--> Console Mode (and Windows)
+
+Creates a standard C++ Console Mode (or Windows C++) starting at main().  The template adds code to create
+the CSagbox object and subsquent window. It then adds code to print out Hello World and a circle on the Sagebox Window. 
+
+This template has a "Windows" project setting, turning the program into a Pure Windows program.  It links
+with WinMain.lib to transfer control from WinMain() to main(). 
+
+This allows the program to switch back-and-forth between a Console Mode program and Windows program with
+no code changes.
+
+--> Windows
+
+This is a Windows version of the Sagebox template starting at WinMain().  It prints "Hello World"
+messages to the window and draws a circle. 
+
+It also adds an ExitButton() at the end, since it is a Windows program with no console mode.
+
+
+--> Experimental - Sagebox Quick C++ Console mode (and Windows)
+
+This is a version of the Console mode (and Windows) template above, but using the Sagebox Quick C++
+layer, which creates a static CSagebox object and global window, along with other structures.
+
+This also turns on a number of settings for easier programming.  It can be a way to create quick programs
+and prototypes with some extra tools set automatically. 
+
+Read the "readme.rtf" file in the directory for more information.

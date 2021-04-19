@@ -220,7 +220,7 @@ public:
 
 	// SetCheck() -- Set the check status of the checkbox.  When TRUE, the checkbox is set to checked. When FALSE, the checkbox is set to UnChecked
 	//
-	bool SetCheck(bool bCheckStatus);
+	bool SetCheck(bool bCheckStatus = true);
 
 	// Show() -- Show the button.  If the button is hidden, Show() will cause it to display.  You may also specify Show(false) to hide it from the Window display.
 	//
@@ -440,13 +440,14 @@ public:
     // SendCloseMessage() sends a WM_CLOSE message to the parent window (or the window specified). 
     // If no window is specified, the Button's parent window is chosen by default.
     //
-    // Use SendCloseMessage(false) to turn off the window close message.
+    // Use SendCloseMessage(false) to turn off the window close message. 
     // For programmatic/logic uses, use SendCloseMessage(bSendCloseMsg,cWin) to specify on/off and a window in the case bSendCloseMsg == true
+    // --> Example SendCloseMessage(bWindowCloseable) will only set the window to close on button press when bWindowCloseable is TRUE.
     //
-    // In the case of a Quick Controls DevWindow, SendCloseMessage() may be used -- the window closure will affect the Dev Window's owner and
-    // not the Dev Window itself.
+    // In the case of a Quick Controls DevWindow Button, SendCloseMessage() may be used without specifying the Dev Window parent.
+    // The window closure will affect the Dev Window's owner and not the Dev Window itself.
     //
-    // The button's reference is returns so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
+    // The button's reference is returned so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
     // as a quick way to create the button and assign it as a window-closing button in one line.
     //
     CButton & SendCloseMessage(CWindow * cWin = nullptr);
@@ -456,16 +457,19 @@ public:
     // SendCloseMessage() sends a WM_CLOSE message to the parent window (or the window specified). 
     // If no window is specified, the Button's parent window is chosen by default.
     //
-    // Use SendCloseMessage(false) to turn off the window close message.
+    // Use SendCloseMessage(false) to turn off the window close message. 
     // For programmatic/logic uses, use SendCloseMessage(bSendCloseMsg,cWin) to specify on/off and a window in the case bSendCloseMsg == true
+    // --> Example SendCloseMessage(bWindowCloseable) will only set the window to close on button press when bWindowCloseable is TRUE.
     //
-    // In the case of a Quick Controls DevWindow, SendCloseMessage() may be used -- the window closure will affect the Dev Window's owner and
-    // not the Dev Window itself.
+    // In the case of a Quick Controls DevWindow Button, SendCloseMessage() may be used without specifying the Dev Window parent.
+    // The window closure will affect the Dev Window's owner and not the Dev Window itself.
     //
-    // The button's reference is returns so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
+    // The button's reference is returned so that the button may be assigned after usage, i.e. MyButton = NewButton().SendCloseMessage(),
     // as a quick way to create the button and assign it as a window-closing button in one line.
     //
     CButton & SendCloseMessage(bool bSendCloseMsg,CWindow * cWin = nullptr);
+
+    bool SetValidateGroup(const char * sGroup);
 
 };
 }; // namespace Sage

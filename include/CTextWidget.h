@@ -15,6 +15,7 @@
 #if !defined(_CTextWidget_H_)
 #define _CTextWidget_H_
 #include "CDavinci.h"
+#include "CWindow.h"
 
 namespace Sage
 {
@@ -183,8 +184,8 @@ public:
 	//
 	// Right now, the control type is needed.
 
-	int GetID() { return m_cWin->GetID(); }
-	const char * GetName() { return m_cWin->GetName(); }
+	int GetID();
+	const char * GetName();
 
     // Overloads to allow things like MyTextWidget << "output string"
 

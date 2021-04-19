@@ -1,0 +1,76 @@
+---------------------------------------
+Creating or Adding Sagebox to a Project
+---------------------------------------
+
+Sagebox projects are standard C++ Console Mode or Windows projects, either 32-bits (Win32) or 64 -bits (x64). 
+
+--> Requirements
+
+    The only requirements for compiling Sagebox are the following:
+
+        1. #include "CSagebox.h"
+        2. The library Sagebox.lib
+
+
+--> Adding Sagebox to an Existing  Project
+
+    All Sagebox projects are just basic applications, either Console Mode or Windows.  Sagebox is simply a library that
+    is used and can be added to any existing C++ project, Console or Windows.
+
+    There are only two lines needed to add Sagebox to an existing project, either Windows or Console Mode
+
+        1. Include "CSagebox.h"
+    
+           such as "#include "c:\Sagebox\include\CSagebox.h".  All of the other include files should be included automatically.
+
+        2. Include the library Sagebox.lib into the project or source code. 
+
+           The library Sagebox.lib must be included from the Sagebox lib\x32 or lib\x64 library, depending on whether your
+           project is Win32 or x64.  See the project templates that include the processor extension appropriate to the project 
+           etting using macros. 
+
+           You can include the library in your project, or use the following #pragma in your source code. For example, if the 
+           Sagebox root directory is at "c:\sagebox\git", the following is all you need to add Sagebox to your code:
+
+               #include "c:\sagebox\git\include\CSagebox.h"
+               #pragma comment(lib,"c:\\sagebox\\git\\lib\\x32\\Sagebox.lib")
+
+           The #pragma is not needed if the library is added to the project configuration (i.e. link configuration).  
+           
+        Note: "lib\x64" is used for 64-bit applications.
+           
+        Once either of these steps is completed, Sagebox is ready to go.  
+           
+        note: Quickcpp.lib and CQuickCpp.h are used inplace of Sagebox.lib and CSagebox.h, respectively, when using 
+        the "Quick C++" project (see the Experimental directory in the Visual Studio Project Templates directory)
+
+
+------------------------------------
+Creating a New Project Using Sagebox
+------------------------------------
+
+--> Using Project Templates
+
+    The directory "Visual Studio Project Templates" has project templates that can be loaded into Microsoft Visual Studio.
+
+    The .zip files can be put into the Template directory that will then come up when you start a new project. 
+    
+    Otherwise, you can load one of the template projects and then export it to a filename of your choosing; then you can 
+    load it as a project template. 
+
+
+--> Creating a New Project with Console Mode or Windows 
+
+    Since all Sagebox projects are just basic applications, either Console Mode or Windows, you can create a standard/empty C++
+    project with Micrsoft Visual Studio, and then add Sagebox easily. 
+
+    Create either a Win32/Win64 Console Mode or Windows project, and then follow the instructions above regarding adding Sagebox
+    to an existing project. 
+
+    Note: you can add the library WinMain.lib to create a Windows program that will call main() instead of WinMain() -- this
+    allows easy switching between Console App and Windows App with no code changes. 
+
+    See the project template "Console Mode (and Windows)"  in the "Visual Studio Projects Templates" directory for more 
+    information.
+
+

@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3D Mandelbrot (Basic)", "3D Mandelbrot (Basic).vcxproj", "{3F4A7BE1-439C-46F9-8BE3-9564257584F1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug|x64.ActiveCfg = Debug|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug|x64.Build.0 = Debug|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug|x86.ActiveCfg = Debug|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Debug|x86.Build.0 = Debug|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{3F4A7BE1-439C-46F9-8BE3-9564257584F1}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2018E3E6-0AA2-4E48-8A68-5EFEC81DAAC7}
+	EndGlobalSection
+EndGlobal

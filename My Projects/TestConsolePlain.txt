@@ -1,0 +1,14 @@
+
+------------------------------
+About TestConsolePlain project 
+------------------------------
+
+The TestConsolePlain project is an example of adding Sagebox to an existing project. 
+
+The project here was created with the standard Microsoft Visual C++ Console Mode project, and shows
+how to add Sagebox to any Console Mode or Windows project by adding two lines of code to your source code.
+
+See the main.cpp file in the project for more details. 
+
+
+

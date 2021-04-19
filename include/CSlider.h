@@ -141,6 +141,7 @@ public:
 
 	HWND	GetWindowHandle();
 	bool	RecalculateWindow();
+	bool	UpdateBg();
 	bool	Redraw();
 	bool	ClearFlags();
 	bool	SetLocation(int iX,int iY);

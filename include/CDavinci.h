@@ -83,6 +83,7 @@ private:
 	CUserWindow	* m_cWin = nullptr;
 	const char * m_sDefaultWindowName = "Davinci Status Window";	// $$ change to constexpr
 	CPasWindow * m_cWinCore = nullptr;		// Main engine and interface for Win32/Windows functions used by Davinci Windows and Controls 
+    HINSTANCE   m_hInstance = nullptr;
 	bool AddControlStyle(Sage::stGraphicBitmap_t & stBitmap); 
 	bool AddControlStyle(Sage::stGraphicButton_t & stButton); 
 	bool AddControlStyle(Sage::stComponentBitmap_t & stButton); 
@@ -110,6 +111,7 @@ public:
 	DialogStruct * GetDefaultDialog();
 	CControlStyles::stControlStyles_t * GetControlStyle(Sage::ControlStyles,char * sName);
 	CPasWindow * GetWinCore();
+
 public:
 	// $$ Legacy functionality.  These are left in Davinci for now, for use with the private window Davinci creates for itself, but is also used
 	//    as a status window.  This will eventually change to a CWindow * m_cStatusWin that can then be used as a DavWindow object.
@@ -156,16 +158,16 @@ public:
 
 	
 	int RegisterWidget(int & iRegistryID);
-	CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrPath,bool * bSuccess = nullptr);
-	CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+	static CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrPath,bool * bSuccess = nullptr);
+	static CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
 	HWND GetConsoleWindow() { return m_hConsoleWindow; }
+    HINSTANCE GetInstance();
 };
 
 
 #define QUICK_FUNCTIONS
 
-
-
+   
 struct DavBitmap_t
 {
 friend CWindow;

@@ -40,7 +40,8 @@
 //
 namespace Sage
 {
-
+class CListBox;
+using CListbox = CListBox;
 class CListBox : public CListBoxHandler
 {
 kAdvPublic:		// Public or --Adanced define
@@ -81,7 +82,7 @@ public:
 	CPasWindow			* m_cWinCore	;		// Pointer to Core internal functions
     CEControlAction_t	* m_stControl	;		// A Copy of the internal control for easy-access
 	int					  m_iCopyCount	;		// Just some debug/statistic keeping.  A value of 0 suggests we're the original 
-												// object, but it is not used internally. 
+	HWND                  m_hWnd    = nullptr;
 
 	void Init(int iControl,CWindow * cDavWindow,CPasWindow * cWinCore);		// Initialize the class/object
 
@@ -241,10 +242,24 @@ public:
 	// Returns TRUE of this is a valid listbox.  FALSE if this is an empty listbox (i.e. bad listbox) or it has been deleted from the window.
 	//
 	bool isValid();
+
+    /// <summary>
+    /// Returns Windows handle to Listbox window. 
+    /// </summary>
+    HWND GetWindowHandle();
+
+    /// <summary>
+    /// Invalidates listbox window and forces a redraw.
+    /// </summary>
+    /// <param name="bErase">when TRUE, erases background first. May be useful for Non-client area, but can also cause a flicker.</param>
+    /// <returns></returns>
+    bool Invalidate(bool bErase = false); 
 	
 	bool SetMessageHandler(CListBoxHandler * cListBoxHandler,void * pClassInfo = nullptr);
 	bool SetSelection(int iSelection);
 	bool AddItem(const char * sItem);
+    bool AddItems(const char * * sItems); 
+    bool AddItems(int iNumItems,const char * * sItems); 
 
 	bool ItemSelected(int & iItem,bool bPeek = true);
 	bool ItemSelected(bool bPeek = true);

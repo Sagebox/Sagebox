@@ -47,7 +47,7 @@ public:
 						// m_bPostProcess = TRUE for the top-level call and FALSE for the bottom level call (which only occurs when CallAgain is returned on the first call)
 						// If CallAgain is returned on the second, post-process call, it is seen as "Ok"
 	};
-private:
+protected:
 	friend CEControlAction_t;		// Allow direct access for faster processing
 	CPasWindow * m_cWinCore = nullptr;
 	int m_iControlID;

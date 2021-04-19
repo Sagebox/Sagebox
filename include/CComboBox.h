@@ -41,6 +41,8 @@
 namespace Sage
 {
 
+class CComboBox;
+using CCombobox = CComboBox;
 class CComboBox : public CComboBoxHandler
 {
 kAdvPublic:		// Public or --Adanced define
@@ -82,7 +84,7 @@ public:
     CEControlAction_t	* m_stControl	;		// A Copy of the internal control for easy-access
 	int					  m_iCopyCount	;		// Just some debug/statistic keeping.  A value of 0 suggests we're the original 
 												// object, but it is not used internally. 
-
+    HWND                  m_hWnd = nullptr;
 	void Init(int iControl,CWindow * cDavWindow,CPasWindow * cWinCore);		// Initialize the class/object
 
 public:
@@ -246,6 +248,18 @@ public:
 	//
 	bool isValid();
 	
+    /// <summary>
+    /// Returns Windows handle to Listbox window. 
+    /// </summary>
+    HWND GetWindowHandle();
+
+    /// <summary>
+    /// Invalidates listbox window and forces a redraw.
+    /// </summary>
+    /// <param name="bErase">when TRUE, erases background first. May be useful for Non-client area, but can also cause a flicker.</param>
+    /// <returns></returns>
+    bool Invalidate(bool bErase = false); 
+
 	bool SetMessageHandler(CComboBoxHandler * cMessageHandler,void * pClassInfo = nullptr);
 	bool SetSelection(int iSelection);
 	bool AddItem(const char * sItem);

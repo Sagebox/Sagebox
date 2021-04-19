@@ -23,10 +23,10 @@ namespace Sage
 {
 class cwfEvent
 {
-	char sOpt[100];
-	char * spOpt;
-	int iLength;
-	int ipLength;
+    char sOpt[100];
+    char * spOpt{};
+	int iLength = 0;
+	int ipLength = 0;;
 private:
 	void AddOptString(const char * sOptString);
 public:
@@ -72,7 +72,7 @@ public:
 };
 
 
-namespace event
+namespace OptEvent
 {
 	static cwfEvent ShowEvents		() { return cwfEvent().ShowEvents		();	};
 	static cwfEvent ShowErrors		() { return cwfEvent().ShowErrors		();	};

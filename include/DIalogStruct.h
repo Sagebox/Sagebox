@@ -194,12 +194,12 @@ public:
 			stLabelText.Delete();
 		}
 };
-	int m_iNumItems;
-	int m_iNumButtons;	// Used, since buttons are only used at the bottom (as opposed to checkboxes, etc.)
-						// with specific types: Cancel, Ok, Yes, No, and a few others. 
-						// Different Wording can be used, such as CancelButton = "Abort", but the basic types are the above, 
-						// and all button presses will/should close the window. 
-	int m_iNumEditBoxes;
+	int m_iNumItems     = 0;
+	int m_iNumButtons   = 0;	    // Used, since buttons are only used at the bottom (as opposed to checkboxes, etc.)
+						            // with specific types: Cancel, Ok, Yes, No, and a few others. 
+						            // Different Wording can be used, such as CancelButton = "Abort", but the basic types are the above, 
+						            // and all button presses will/should close the window. 
+	int m_iNumEditBoxes = 0 ;
 	struct Items_t
 	{
 			
@@ -257,13 +257,13 @@ public:
 	Sage::RGBColor_t	  m_rgbTitle;
 
 	int					  m_iControl = 0;
-	CWindow			* m_cWin		= nullptr;
-	CWindow			* m_cParentWin	= nullptr;
-	CPasWindow			* m_cWinCore	= nullptr;
-	HDC					  m_hDC			= nullptr;
-	bool				  m_bModal		= false;
-	bool				  m_bClosing	= false;
-	bool				  m_bCenterWindow = false;
+	CWindow			    * m_cWin		    = nullptr;
+	CWindow			    * m_cParentWin	    = nullptr;
+	CPasWindow			* m_cWinCore	    = nullptr;
+	HDC					  m_hDC			    = nullptr;
+	bool				  m_bModal		    = false;
+	bool				  m_bClosing	    = false;
+	bool				  m_bCenterWindow   = false;
 public:
 	void Init();
 	ButtonType GetButtonPress();

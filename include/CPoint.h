@@ -18,6 +18,9 @@
 
 // CPoint.cpp -- work in progress
 
+#pragma warning(push)
+#pragma warning(disable : 26495)
+
 namespace Sage
 {
 
@@ -295,7 +298,7 @@ struct CfPoint
 		x = (double) p.x;
 		y = (double) p.y;
 	}
-    CfPoint & operator =(CfPoint && p2)
+    CfPoint & operator =(CfPoint && p2) noexcept
     {
         x = p2.x;
         y = p2.y;
@@ -310,4 +313,7 @@ struct CfPoint
 	operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
 };
 }; // namespace Sage
+
+#pragma warning(pop)
+
 #endif // _CSagePoint_H_

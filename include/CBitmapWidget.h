@@ -15,10 +15,11 @@
 #if !defined(_CBitmapWidget_H_)
 #define _CBitmapWidget_H_
 #include "CDavinci.h"
+#include "CWindow.h"
 
 namespace Sage
 {
-
+    class CWindow;
 class CBitmapWidget : private CWindow
 {
 	SageControlDelete

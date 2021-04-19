@@ -17,6 +17,8 @@
 #define _CRawBitmap_H_
 #include "Sage.h"
 
+#pragma warning(push)
+#pragma warning(disable : 26451)    // Mute Microsoft "warning" about overflow (which, imo, is far too broad)
 namespace Sage
 {
 
@@ -451,7 +453,7 @@ public:
 	// the size of memory allocation or there are other inconsitencies, FALSE is returned
 	// as the bitmap is not valid, even if it exists in memory
 	//
-	bool isValid()
+	bool isValid() const
 	{
 		return (this != nullptr && stBitmap.stMem != nullptr && !stBitmap.isInvalid()); 
 	}
@@ -460,4 +462,5 @@ public:
 
 };
 }; // namesapace Sage
+#pragma warning(pop)
 #endif //_CRawBitmap_H_

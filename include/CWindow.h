@@ -41,8 +41,14 @@
 #include "CWindowHandler.h"
 #include "CStyleDefaults.h"
 #include "Cpaswindow.h"
+
+
 #include <vector>
 
+namespace Sandbox
+{
+    class CQuickCpp;
+};
 
 namespace Sage
 {
@@ -60,6 +66,9 @@ namespace Sage
     class CDevControls;
     struct CEWindow_t;
     typedef int ConsoleOp_t;        // Experimental
+    class CQuickDialog;
+
+    using CInputBox = CEditBox;
 
     // Structure used when using the OpenFile/SaveFile functions
     // $$ PI
@@ -96,6 +105,8 @@ namespace Sage
 
 class CWindow : public CWindowHandler
 {
+    friend Sandbox::CQuickCpp;
+    friend CQuickDialog;
 public:
     struct WinOpt;
 
@@ -108,6 +119,17 @@ public:
         SnapWarnRed,        // Place it and turn it red.
         NoAction,           // Do nothing. 
     };
+
+    //inline static cwfOpt      cwNoOpt;          // Empty cwfOpt() that can be used as a default rather than specifying cwOpt() in the
+    //                                            // function prototype.  Most (if not all ) uses of cwfOpt & cwOpt = cwfOpt() are deprecated
+    //                                            // and are to be replaced with cwfOpt & cwOpt = cwNoOpt;
+    //
+
+    static cwfOpt      cwNoOpt;                 // $$ moved from static to keep more compatibility with C++11 (inline is C++17) for the first few release, to
+                                                //    allow better compatibility with existing projects.  Will probably be restored once C++17 (or C++20) becomes
+                                                //    a requirement.
+
+    LONG                m_dwKnownStyle;         // Last known Window style.  Used for SetFullScreen(false) restoration
 
    // This private section should disappear altogether in an upcoming update
 private:
@@ -133,9 +155,13 @@ private:
     bool m_bDevWindow               = false;                                // When true, this is a Quick Controls Dev Window, which has a different status for various things.
     bool m_bNoExitMsg               = false;                                // When true, the Exit Button will not be displayed on the bottom of the window for Sandbox Mode Applications (i.e. QuickSandbox, etc.)
     bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
+    bool m_bShowInitial             = false;                                // Internal use, subject to change
+    bool m_bShowInitialized         = false;                                // Internal use, subject to change
+
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     CDevControls * m_cDevControls = nullptr;    // Not created until first used. 
     void _vprintf(const char * Format,va_list va_args);                                 // Used internally
+    void _vprintf(const cwfOpt & cwOpt,const char * Format,va_list va_args);                                 // Used internally
 
     // Bitmap Message Handle for BitmapWindow() returned windows
     // The main component is that pressing the 'X' button on the window
@@ -146,7 +172,7 @@ private:
     //
     class CBitmapWindowHandler : public CWindowHandler
     {
-        CWindow * cWin;
+        CWindow * cWin = nullptr;
 
         // Set the main/parent window
         //
@@ -184,14 +210,15 @@ private:
     // $$ Under Development $$ -- These are placeholders and to be removed (deprecated).
     // They are here to keep them out of the public declarations
 
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const wchar_t * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const wchar_t * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const char * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
-   
+    bool CreateButtonGroup(const char * sGroupName,int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const wchar_t * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(const char * sGroupName,int iGroupID,int iNumButtons,int iX,int iY,const wchar_t * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(const char * sGroupName,int iGroupID,int iNumButtons,int iX,int iY,int iWidth,int iHeight,const char * * sButtonNames,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(const char * sGroupName,int iGroupID,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+    stControlLabel_t CalcControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bDraw,const cwfOpt & cwOpt = cwfOpt());
+    
 
 // kAdvPublic:
-// This is defalted to private to disallow CWindow class/object copying and deleting.
+// This is defaulted to private to disallow CWindow class/object copying and deleting.
 //
 // ** CWindow is a managed object **
 //
@@ -206,11 +233,18 @@ kAdvPublic:
     { 
         ::operator delete(ptr); 
     };
-    // Copy Constructore
+    // Copy Constructor
     CWindow(const CWindow &p2) 
     {
         FailBox("CWindow::CopyConstructor","In Copy Constructor")   // In debug mode, lets us know if it is ever used
     };
+
+    // Internal public values (removed from public interface) (TBD)
+    //
+public:
+    // _SetShowInitial() -- Internal Use only.  
+    //
+    void _SetCheckShowInitial(bool bShowInitial = true); 
 
 public:
     void AttachDeleter(void * pObject,void (*fDeleter)(void *));    // Attach an object to the window to be deleted when the window is destoyed
@@ -350,6 +384,7 @@ private:
     CButton & NewButton(CButton * cUserButton,ButtonType eButtonType,int ix,int iy,int iWidth,int iHeight,const char * sText,const cwfOpt & cwfOpt = cwfOpt());
     CButton & NewButton(CButton * cUserButton,ButtonType eButtonType,int ix,int iy,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwfOpt = cwfOpt());
     int GetOptInt(const char * sFind,bool & bSet);
+    int GetOptInt(const char * sFind);  // An oversight for not making bool & bSet a pointer.
     bool GetOptInt(const char * sFind,int & iValue);
     bool GetOptColor(const char * sFind,DWORD & dwColor);
     bool GetOptColor(const char * sFind,RGBColor_t & rgbColor);
@@ -361,7 +396,7 @@ private:
     POINT GetNewAutoWindowLoc();
     const char * GetInput(const char * sControls = nullptr,const char * sDefaultText = nullptr); 
     bool TranslateButtonStyle(SageString200 & stStyle,char * sStyle,char * sDefaultStyle,CStyleDefaults::ControlType eControlStyle,bool bStrict = false);
-    bool AutoUpdate(Sage::UpdateDirty upDateDirty);
+    bool _AutoUpdate(Sage::UpdateDirty upDateDirty);
     SIZE CreateGenericButtonGroup(bool bRadioButton,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
 
 protected:
@@ -422,6 +457,10 @@ public:
 
         // GetOptInt() -- Find an integer value in a string, i.e. "Offset=1234"
         //
+        int                 GetOptInt(const char * sFind);
+
+        // GetOptInt() -- Find an integer value in a string, i.e. "Offset=1234"
+        //
         bool                GetOptInt(const char * sFind,int & iValue);
 
         // Get a color in the string.  This can take two forms, typically generated by cwfOpt
@@ -473,7 +512,7 @@ public:
     // Returns true if an event has occurred.  This can be used when GetEvent() isn't appropriate (such as in a loop that takes a lot of time)
     // When GetEvent() is called, the Event Pending Status is cleared back to false
     //
-    __forceinline bool EventReady() { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(); }
+    __forceinline bool EventReady() { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(); }                                     // $QC
 
     // ClearEvent() -- Clear a specific pending event (whether it is pending or not).  This can be called before GetEvent() to clear the 
     // Event Queue of any specific event. For example, ClearEvent(SageEvent::MouseMove) or ClearEvent(SageEvent::WindowResize). 
@@ -483,24 +522,24 @@ public:
     //
     // Use ClearEvents() to clear all pending events. 
     //
-    __forceinline bool ClearEvent(SageEvent eEvent) { return (!this || !m_cUserWin) ? false : m_cUserWin->ClearEvent(eEvent); }
+    __forceinline bool ClearEvent(SageEvent eEvent) { return (!this || !m_cUserWin) ? false : m_cUserWin->ClearEvent(eEvent); }                 // $QC
     
     // CLearEvents() -- Clear all pending events.  This can be used to clear any incoming events prior to calling GetEvent(). 
     // This can be useful when a setup, initialization, or other code has caused an unwanted event prior to the GetEvent() loop.
     //
-    __forceinline bool ClearEvents() { return ClearEvent(SageEvent::All); }
+    __forceinline bool ClearEvents() { return ClearEvent(SageEvent::All); }                                                                     // $QC
 
     // SetMessageHandler() -- Set the message handler for the window.  This overrides the default message handler.
     // This allows events such as OnMouseMove(), OnButton() press, as well as all other Windows Messages to be 
     // acted upon as received by windows. 
     //
-    bool SetMessageHandler(CWindowHandler * cHandler,void * pClassInfo = nullptr);
+    bool SetMessageHandler(CWindowHandler * cHandler,void * pClassInfo = nullptr);                                                              // $QC       
 
     // SetMessageHandler() -- Set the message handler for the window.  This overrides the default message handler.
     // This allows events such as OnMouseMove(), OnButton() press, as well as all other Windows Messages to be 
     // acted upon as received by windows. 
     //
-    bool SetMessageHandler(CWindowHandler & cHandler,void * pClassInfo = nullptr);
+    bool SetMessageHandler(CWindowHandler & cHandler,void * pClassInfo = nullptr);                                                              // $QC
 
     // in -- used as C++ cin, but with more options.
     // use MyWindow.in or just in when in the class the same way as C++.
@@ -560,7 +599,7 @@ public:
 
     CWindow();                        // Constructor.  Should only be used by CDavinci or CWindow.
 
-    int GetControlID();                 // Return internal control ID - $$ move to private
+    int GetControlID();                 // Return internal control ID - $$ move to private                                      
     
     // WinMessageBox() -- Bring up a standard Windows Message Box. 
     //
@@ -570,7 +609,240 @@ public:
     //
     // Example: WinMessageBox("This is the message","This is the title",MB_OK | MB_ICONINFO)
     //
-    int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
+    int WinMessageBox(const char * sMessage,const char * sTitle = nullptr,unsigned int dwFlags = MB_OK);                                                          // $QC
+
+    /// <summary>
+    /// Gets an integer from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for integer
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetInteger() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="iInteger"> = (optional) value to be filled when GetInteger() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    int GetInteger(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());              // $QC
+
+    /// <summary>
+    /// Gets an integer from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for integer
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetInteger() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="iInteger"> = (optional) value to be filled when GetInteger() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    int GetInteger(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());                      // $QC
+
+    /// <summary>
+    /// Gets an integer from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for integer
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetInteger() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="iInteger"> = (optional) value to be filled when GetInteger() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    bool GetInteger(const char * sTitle,int & iInteger,const cwfOpt & cwOptions = cwfOpt());                // $QC
+
+    /// <summary>
+    /// Gets an integer from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for integer
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetInteger() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="iInteger"> = (optional) value to be filled when GetInteger() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    bool GetInteger(int & iInteger,const cwfOpt & cwOptions = cwfOpt());                                    // $QC
+
+    /// <summary>
+    /// Gets an integer from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for integer
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetInteger() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="iInteger"> = (optional) value to be filled when GetInteger() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    int GetInteger(const cwfOpt & cwOptions);                                                               // $QC
+
+    /// <summary>
+    /// Gets a floating point value from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for floating point value
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetFloat() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="fFloat"> = (optional) value to be filled when GetFloat() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    double GetFloat(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());             // $QC
+
+    /// <summary>
+    /// Gets a floating point value from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for floating point value
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetFloat() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="fFloat"> = (optional) value to be filled when GetFloat() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    double GetFloat(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());                     // $QC
+
+    /// <summary>
+    /// Gets a floating point value from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for floating point value
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetFloat() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="fFloat"> = (optional) value to be filled when GetFloat() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    bool GetFloat(const char * sTitle,double & fFloat,const cwfOpt & cwOptions = cwfOpt());                 // $QC
+
+    /// <summary>
+    /// Gets a floating point value from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for floating point value
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetFloat() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="fFloat"> = (optional) value to be filled when GetFloat() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    bool GetFloat(double & fFloat,const cwfOpt & cwOptions = cwfOpt());                                     // $QC
+
+     /// <summary>
+    /// Gets a floating point value from a dialog box.
+    /// <para></para>
+    /// Options Supported:
+    /// <para></para>
+    /// --> Range() - Set range for floating point value
+    /// <para></para>
+    /// --> Modal() - Make dialog box modal (disables parent window)
+    /// <para></para>
+    /// --> NoClose() - Does not provide a cancel button or allow closing the dialog box or empty lines (default is to allow return on blank lines and cancel)
+    /// <para></para>
+    /// Note: All parameters are optional.  You can use GetFloat() by itself.
+    /// <para></para>
+    /// Note: 0 is returned of the main window is closed (use Modal() to prevent parent window close)
+    /// </summary>
+    /// <param name="sTitle"> = (optional) Title of the Window</param>
+    /// <param name="bCancelled"> = (optional) TRUE if user canceled operation or entered blank line</param>
+    /// <param name="fFloat"> = (optional) value to be filled when GetFloat() returns a bool (value is only filled if dialog box not canceled)</param>
+    /// <param name="cwOptions">options such as opt::Range(), opt::Modal(), etc.</param>
+    /// <returns>Integer entered or TURE/FALSE (for canceled, or number entered), depending on format.  See function prototypes.</returns>
+    double GetFloat(const cwfOpt & cwOptions);                                                              // $QC
+	
+    // Dialog Info/Question Windows
+
+    // Documentation TBD
+	void InfoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());                                       // $QC
+    // Documentation TBD
+	bool YesNoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());                                      // $QC
+    // Documentation TBD
+	Sage::DialogResult YesNoCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());                  // $QC
+    // Documentation TBD
+	bool OkCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());                                   // $QC
+
+
 
     // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
     // printf() can be very useful to quickly print text without using streaming notation,
@@ -588,7 +860,26 @@ public:
     //
     // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
     //
+    void printf(const cwfOpt & cwOpt,const char * Format,...);
+
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
     void printf(int iX,int iY,const char * Format,...);
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
+    void printf(int iX,int iY,const cwfOpt & cwOpt,const char * Format,...);
     
     // Write() -- Write text to the window in a simplified manner. 
     // 
@@ -602,7 +893,8 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(const char * sText,const char * sOptions = nullptr);            
+    void Write(const char * sText,const char * sOptions = nullptr);     // $QCC
+
     // Write() -- Write text to the window in a simplified manner. 
     // 
     // Write() writes simple text to the window.  This is faster than printf() and other methods and can be used
@@ -615,7 +907,7 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(const char * sText,const cwfOpt & cwOptions);
+    void Write(const char * sText,const cwfOpt & cwOptions);                                                                                                    // $QCC
 
     // Write() -- Write text to the window in a simplified manner. 
     // 
@@ -643,7 +935,7 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(int iX,int iY,const char * sText,const cwfOpt & cwOptions);
+    void Write(int iX,int iY,const char * sText,const cwfOpt & cwOptions);                                                                                      // $QCC
     
     // Write() -- Write text to the window in a simplified manner. 
     // 
@@ -657,37 +949,44 @@ public:
     //
     // The window will automatically scroll if scrolling is turned on.  The window will also scroll if it is designated as a text window (TBD)
     //
-    void Write(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());
+    void Write(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());                                                                              // $QCC
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(const char * sText = nullptr,const char * sOptions = nullptr);        
+    void Writeln(const char * sText = nullptr,const char * sOptions = nullptr);                                                                                 // $QCC 
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(const char * sText,const cwfOpt & cwOptions);                        
+    void Writeln(const char * sText,const cwfOpt & cwOptions);                                                                                                  // $QCC     
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(const cwfOpt & cwOptions);                        
+    void Writeln(const cwfOpt & cwOptions);                                                                                                                     // $QCC  
 
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
     void Writeln(int iX,int iY,const char * sText = nullptr,const char * sOptions = nullptr);               // $$ To be removed  
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(int iX,int iY,const char * sText,const cwfOpt & cwOptions);               
+    void Writeln(int iX,int iY,const char * sText,const cwfOpt & cwOptions);                                                                                    // $QCC               
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
 
-    void Writeln(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());
+    void Writeln(POINT pLoc,const char * sText,const cwfOpt & cwOptions = cwfOpt());                                                                            // $QCC
 
     // Writeln() -- Same as Write() but adds a '\n' at the end of the line for convenience
-    void Writeln(int iX,int iY,const cwfOpt & cwOptions);                        
+    void Writeln(int iX,int iY,const cwfOpt & cwOptions);                                                                                                       // $QCC
 
     // Put a character on the window just as putchar() in regular 'C'.
     // This is useful for Ansii-text and emulation
     // note: This can be useful for terminal emulation when a non-proportional font (i.e. a terminal font)
     //       is used, i.e. "Courier New,14", etc.
     //
-    int putchar(char cChar);
+    int putchar(char cChar);                                                                                                                                    // $QCC $QCNS
+                                                                                                                                                                
+    // Put a character on the window just as putchar() in regular 'C'.
+    // This is useful for Ansii-text and emulation
+    // note: This can be useful for terminal emulation when a non-proportional font (i.e. a terminal font)
+    //       is used, i.e. "Courier New,14", etc.
+    //
+    int __putchar(char cChar);                                                                                                                                    // $QCC $QCNS
 
     // SetTabPos() -- Set the X position for Write/out/putchar/etc output to the character nth character position.
     // For example. SetTabPos(40) puts the output position (i.e. cursor) at charatcer position 40, based on the average character width.
@@ -697,7 +996,7 @@ public:
     //
     // This is included as a function from Basic() that is used in a number of programs
     //
-    bool SetTabPos(int iPos);
+    bool SetTabPos(int iPos);                                                                                                                                   // $QC
 
     // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
     // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -708,7 +1007,7 @@ public:
     // bAllowScroll allows the clip region to scroll based on writing text to the screen with '\n' newlines.
     // Default is to not allow the clipping region to scroll.
     //
-    bool ClipWindow(int iX,int iY,int iWidth,int iHeight,bool bAllowScroll = false);
+    bool ClipWindow(int iX,int iY,int iWidth,int iHeight,bool bAllowScroll = false);                                                                            // $QC
 
     // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
     // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -719,7 +1018,7 @@ public:
     // bAllowScroll allows the clip region to scroll based on writing text to the screen with '\n' newlines.
     // Default is to not allow the clipping region to scroll.
     //
-    bool ClipWindow(POINT pPoint,SIZE szSize,bool bAllowsScroll = false);
+    bool ClipWindow(POINT pPoint,SIZE szSize,bool bAllowsScroll = false);                                                                                       // $QC
 
     // ClipWindow() -- Clips the window in the given rectangle, restricting output and drawing to that region.
     // This can be used to restrict write areas, Cls(), Drawing, etc. 
@@ -727,11 +1026,11 @@ public:
     // allow such drawing and output in place of creating a child window to perform the same task.
     // Use  ResetClipWindow() or ClipWindow() (with no paramaters) to remove the clipping region
     //
-    bool ClipWindow();
+    bool ClipWindow();                                                                                                                                          // $QC
 
     // ResetClipWindow() -- Resets any clipping region active for the current window.
     //
-    bool ResetClipWindow();
+    bool ResetClipWindow();                                                                                                                                     // $QC
 
     // SetAutoScroll() -- By default, the window will autoscroll when a '\n' is received and the current font will exceed the current output position.
     // Sometimes this is not desired behavior and can be shut off with SetAutoScroll()
@@ -744,12 +1043,12 @@ public:
     // Enabled        -- Scroll the window when needed
     // Auto           -- Expirmental and probably doesn't work at the moment.
     //
-    bool SetAutoScroll(WindowScroll scroll);
+    bool SetAutoScroll(WindowScroll scroll);                                                                                                                    // $QC
     
     // GetAutoScroll() -- Get the current scroll status
     // This can be used when the window doesn't seem to be scrolling to determine if the AutoScroll setting may be the issue.
     //
-    WindowScroll GetAutoScroll();
+    WindowScroll GetAutoScroll();                                                                                                                               // $QC
     
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -773,7 +1072,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(DWORD iColor1=-1,DWORD iColor2 = -1);   
+    void Cls(DWORD iColor1=-1,DWORD iColor2 = -1);                                                                                                              // $QCC          
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -797,7 +1096,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(RGBColor_t rgbColor);    
+    void Cls(RGBColor_t rgbColor);                                                                                                                              // $QCC    
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -821,7 +1120,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(const char * sColor1,const char * sColor2=nullptr);    
+    void Cls(const char * sColor1,const char * sColor2=nullptr);                                                                                                // $QCC    
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -845,7 +1144,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(const char * sColor1,RGBColor_t rgbColor);   
+    void Cls(const char * sColor1,RGBColor_t rgbColor);                                                                                                         // $QCC
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -869,7 +1168,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(RGBColor_t rgbColor,const char * sColor2);    
+    void Cls(RGBColor_t rgbColor,const char * sColor2);                                                                                                         // $QCC   
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -893,7 +1192,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    bool Cls(CBitmap & cBitmap);
+    bool Cls(CBitmap & cBitmap);                                                                                                                                // $QCC
 
     // Cls() -- Clear the window with a specified color or with a color gradient
     //
@@ -917,7 +1216,7 @@ public:
     //
     // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
     //
-    void Cls(RGBColor_t rgbColor,RGBColor_t rgbColor2);    
+    void Cls(RGBColor_t rgbColor,RGBColor_t rgbColor2);                                                                                                         // $QCC    
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -930,7 +1229,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(int iColor1=-1,int iColor2 = -1); 
+    void ClsCanvas(int iColor1=-1,int iColor2 = -1);                                                                                                            // $QCC
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -943,7 +1242,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(RGBColor_t rgbColor);    
+    void ClsCanvas(RGBColor_t rgbColor);                                                                                                                        // $QCC
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -956,7 +1255,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(const char * sColor1,const char * sColor2=nullptr);    
+    void ClsCanvas(const char * sColor1,const char * sColor2=nullptr);                                                                                          // $QCC 
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -969,7 +1268,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(const char * sColor1,RGBColor_t rgbColor);    
+    void ClsCanvas(const char * sColor1,RGBColor_t rgbColor);                                                                                                   // $QCC
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -982,7 +1281,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(RGBColor_t rgbColor,const char * sColor2);    
+    void ClsCanvas(RGBColor_t rgbColor,const char * sColor2);                                                                                                   // $QCC
 
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
@@ -995,7 +1294,7 @@ public:
     // ClsCanvas() has the same parameters as Cls()
     // See Cls() for usage information
     //
-    void ClsCanvas(RGBColor_t rgbColor,RGBColor_t rgbColor2);    
+    void ClsCanvas(RGBColor_t rgbColor,RGBColor_t rgbColor2);                                                                                                   // $QCC
 
 
     // Update() -- Update the window, showing any new changes
@@ -1010,11 +1309,11 @@ public:
     // When the window is not buffered, Update() is not required, and the window is painted directly.  However, this means the application must have a WM_PAINT callback or
     // override of the Paint() function in CWindow(), as it is now the application's responsibility to know what to paint on every call. 
     //
-    void Update(int iUpdateMS=0);
+    void Update(int iUpdateMS=0);                                                                                                                           // $QC
 
     // ForceUpdate() -- This is deprecated, but may be used in the future when more update/painting options are implemented
     //
-    bool ForceUpdate(bool bIfDirty = false);
+    bool __ForceUpdate(bool bIfDirty = false);
 
     // UpdateReady() -- Returns true of <iUpdateMS> has occurred since the last update.
     //
@@ -1028,7 +1327,7 @@ public:
     // Use UpdateReady() to use the default 10ms -- which has been determined to be the best value overall, as most updates 
     // will occur between 10-20ms, allowing 50-100 frames per second, but probably on the lower side.
     //
-    bool UpdateReady(int iUpdateMS = 10);
+    bool UpdateReady(int iUpdateMS = 10);                                                                                                                   // $QC
 
     // SetWindowDraw() -- When TRUE, this allows the window or control (either in a popup or embedded in a window) to be moved around by dragging the control
     //
@@ -1040,7 +1339,7 @@ public:
     // In some cases, this may require a right-click or control-key simultaneously -- this is up to the control, and usually occurs in controls where normal mouse-clicking is
     // part of the control, so an alternate method is required.
     //
-    bool SetWindowDrag(bool bGrab = true);
+    bool SetWindowDrag(bool bGrab = true);                                                                                                                  // $QC
 
     // SetWindowSize() -- Set the size of the window.
     // 
@@ -1051,7 +1350,7 @@ public:
     // When false, this calculates the window (when it is a popup or has a frame) to be the size of the entire window, 
     // making the canvas size smaller.
     //
-    bool SetWindowSize(SIZE szSize,bool bInnerSize = false);
+    bool SetWindowSize(SIZE szSize,bool bInnerSize = false);                                                                                                // $QC
 
     // SetWindowSize() -- Set the size of the window.
     // 
@@ -1062,36 +1361,36 @@ public:
     // When false, this calculates the window (when it is a popup or has a frame) to be the size of the entire window, 
     // making the canvas size smaller.
     //
-    bool SetWindowSize(int iWidth,int iHeight,bool bInnerSize = false);
+    bool SetWindowSize(int iWidth,int iHeight,bool bInnerSize = false);                                                                                     // $QC
 
     // GetCanvasSize() -- Get the size of the Window Canvas. 
     // 
     // The Window Canvas is the bitmap that is shown in the window and may be larger than the window (but may never be smaller). 
     // This allows the Window to be resized dynamically, or to use a larger bitmap and move it around in the window, such as for scrolling.
     //
-    SIZE GetCanvasSize(); 
+    SIZE GetCanvasSize();                                                                                                                                   // $QC
 
     // Set CanvasSize() -- Set the Canvas size of the window
     // This value must be greater than the displayed window canvas or it is ignored.
     //
     // This sets the Canvas size of the window (i.e. the drawable space), which can exceed the size of the window.
     //
-    bool SetCanvasSize(SIZE szMaxSize,bool bAllowResizing = true);
-    bool SetCanvasSize(SIZE szMinSize,SIZE szSize,bool bAllowResizing = true);
+    bool SetCanvasSize(SIZE szMaxSize,bool bAllowResizing = true);                                                                                          // $QC
+    bool SetCanvasSize(SIZE szMinSize,SIZE szSize,bool bAllowResizing = true);                                                                              // $QC
  
     // Set CanvasSize() -- Set the Canvas size of the window
     // This value must be greater than the displayed window canvas or it is ignored.
     //
     // This sets the Canvas size of the window (i.e. the drawable space), which can exceed the size of the window.
     //
-    bool SetCanvasSize(int iWidth,int iHeight,bool bAllowResizing = true);
-    bool AllowResizing(bool bAllowResizing = true);
+    bool SetCanvasSize(int iWidth,int iHeight,bool bAllowResizing = true);                                                                                  // $QC
+    bool AllowResizing(bool bAllowResizing = true);                                                                                                         // $QC
     // GetClientSize() -- Get the current client area size (i.e. writeable/drawable part of the window)
     // This value may be larger than the visible window.
     //
     // GetWindowSize(), for example, returns the visible canvas area.
     //
-    bool GetClientSize(SIZE & Size);
+    bool GetClientSize(SIZE & Size);                                                                                                                        // $QC
 
     // UpdateRegion() - Update a region of the window
     //
@@ -1105,7 +1404,7 @@ public:
     // Note: When using iUpdateMS() a last Update() or UpdateRegion() without iUpdateMS will be required to ensure the last known 
     // draw of that region is updated to the screen
     //
-    bool UpdateRegion(RECT & rRegion,int iUpdateMS = 0);
+    bool UpdateRegion(RECT & rRegion,int iUpdateMS = 0);                                                                                                    // $QC
 
     // UpdateRegion() - Update a region of the window
     //
@@ -1119,7 +1418,7 @@ public:
     // Note: When using iUpdateMS() a last Update() or UpdateRegion() without iUpdateMS will be required to ensure the last known 
     // draw of that region is updated to the screen
     //
-    bool UpdateRegion(int iX,int iY,int iWidth,int iHeight,int iUpdateMS = 0);
+    bool UpdateRegion(int iX,int iY,int iWidth,int iHeight,int iUpdateMS = 0);                                                                              // $QC
  
     // UpdateRegion() - Update a region of the window
     //
@@ -1133,7 +1432,7 @@ public:
     // Note: When using iUpdateMS() a last Update() or UpdateRegion() without iUpdateMS will be required to ensure the last known 
     // draw of that region is updated to the screen
     //
-    bool UpdateRegion(int iX,int iY,RawBitmap_t stBitmap,int iUpdateMS = 0);
+    bool UpdateRegion(int iX,int iY,RawBitmap_t stBitmap,int iUpdateMS = 0);                                                                                // $QC
 
     // GetTextSize() -- Get the text size of the text using the current font.
     //
@@ -1141,7 +1440,7 @@ public:
     // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
     // will center the text in the X plane.
     //
-    SIZE GetTextSize(const wchar_t * sText);
+    SIZE GetTextSize(const wchar_t * sText);                                                                                                                // $QC
   
     // GetTextSize() -- Get the text size of the text using the current font.
     //
@@ -1149,7 +1448,7 @@ public:
     // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
     // will center the text in the X plane.
     //
-    SIZE GetTextSize(HFONT hFont,const wchar_t * sText);
+    SIZE GetTextSize(HFONT hFont,const wchar_t * sText);                                                                                                    // $QC
 
     // GetTextSize() -- Get the text size of the text using the current font.
     //
@@ -1157,7 +1456,7 @@ public:
     // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
     // will center the text in the X plane.
     //
-    bool GetTextSize(const char * sText,SIZE & Size);
+    bool GetTextSize(const char * sText,SIZE & Size);                                                                                                       // $QC
 
     // GetTextSize() -- Get the text size of the text using the current font.
     //
@@ -1165,14 +1464,16 @@ public:
     // For example, using auto szSize = GetTextSize("This is some Text"), and then Write((szDesktopSize.cx-szSize.cx)/2,100,MyText)) 
     // will center the text in the X plane.
     //
-    SIZE GetTextSize(const char * sText);
-    SIZE GetTextSize(HFONT hFont,const char * sText);
-    bool GetTextSize(HFONT hFont,const char * sText,SIZE & Size);
+    SIZE GetTextSize(const char * sText);                                                                                                                  // $QC
+    SIZE GetTextSize(HFONT hFont,const char * sText);                                                                                                      // $QC
+    bool GetTextSize(HFONT hFont,const char * sText,SIZE & Size);                                                                                          // $QC
+    SIZE GetTextSize(const char * sFont,const char * sText);                                                                                               // $QC
+    bool GetTextSize(const char * sFont,const char * sText,SIZE & Size);                                                                                   // $QC
 
     // AddWindowShadow() -- Adds a shadow to the window.  This can be useful for popup-windows or
     // child windows embedded in the current window.
     //
-    bool AddWindowShadow();
+    bool AddWindowShadow();                                                                                                                                 // $QC
 
     // Recangle() -- Put out a filled or outlined rectangle to the window.
     //
@@ -1195,7 +1496,7 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iColor2 = -1);
+    bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iColor2 = -1);                                                                   // $QCC
 
     // Recangle() -- Put out a filled or outlined rectangle to the window.
     //
@@ -1218,7 +1519,7 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(POINT pLoc,SIZE szSize,int iWidth,int iHeight,int iColor,int iColor2 = -1);
+    bool DrawRectangle(POINT pLoc,SIZE szSize,int iWidth,int iHeight,int iColor,int iColor2 = -1);                                                                   // $QCC
 
     // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1228,7 +1529,7 @@ public:
     //
     // See DrawRectangle() and SetPenSize() for more information
     //
-    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);        
+    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC    
 
     // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1238,7 +1539,7 @@ public:
     //
     // See DrawRectangle() and SetPenSize() for more information
     //
-    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iPenSize = 0);        
+    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iPenSize = 0);  // $QCC      
 
     // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1248,7 +1549,7 @@ public:
     //
     // See DrawRectangle() and SetPenSize() for more information
     //
-    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
 
     // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1258,11 +1559,11 @@ public:
     //
     // See DrawRectangle() and SetPenSize() for more information
     //
-    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,int iColor,int iPenSize = 0);
+    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,int iColor,int iPenSize = 0);  // $QCC
 
-    bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
-    bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
-    bool DrawGradient(RECT rGradientRect,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);
+    bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
+    bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
+    bool DrawGradient(RECT rGradientRect,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
 
     // Recangle() -- Put out a filled or outlined rectangle to the window.
     //
@@ -1285,7 +1586,7 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor  = Rgb::Default,RGBColor_t rgbColor2 = Rgb::Undefined);        
+    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor  = Rgb::Default,RGBColor_t rgbColor2 = Rgb::Undefined);       // $QCC   
     
     // Recangle() -- Put out a filled or outlined rectangle to the window.
     //
@@ -1308,12 +1609,12 @@ public:
     //
     // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
     //
-    bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Undefined,RGBColor_t rgbColor2 = Rgb::Undefined);
+    bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Undefined,RGBColor_t rgbColor2 = Rgb::Undefined);  // $QCC
 
 
     // Ractangle2() -- Used for testing 
     //
-    bool Rectangle2(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        
+    bool Rectangle2(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        // $QCC  
 
     // Draw a Triangle on the screen using the three points
     // The third point will connect directly to the first point.
@@ -1324,7 +1625,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawTriangle(POINT v1,POINT v2,POINT v3,int iColor1,int iColor2 = -1);
+    bool DrawTriangle(POINT v1,POINT v2,POINT v3,int iColor1,int iColor2 = -1);  // $QCC
 
     // Draw a Quadrangle on the screen using the three points
     // The fourth point will connect directly to the first point.
@@ -1335,7 +1636,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-   bool DrawQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,int iColor1,int iColor2 = -1);
+   bool DrawQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,int iColor1,int iColor2 = -1);  // $QCC
     
     // Draw a Polygon on the screen using an array of POINT * values.
     // The last point will connect directly to the first point.
@@ -1346,7 +1647,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawPolygon(POINT * pPoints,int iVertices,int iColor1,int iColor2 = -1);
+    bool DrawPolygon(POINT * pPoints,int iVertices,int iColor1,int iColor2 = -1);  // $QCC
 
     // Draw a Circle on the Window
     //
@@ -1356,7 +1657,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawCircle(int iX,int iY,int iRadius,int iColor1,int iColor2 = -1);
+    bool DrawCircle(int iX,int iY,int iRadius,int iColor1,int iColor2 = -1);        // $QCC
  
     // Draw a Circle on the Window
     //
@@ -1366,7 +1667,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawCircle(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);
+    bool DrawCircle(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);        // $QCC
 
     // Draw a Circle on the Window
     //
@@ -1376,7 +1677,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawCircle(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);
+    bool DrawCircle(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);        // $QCC
 
     // Draw a Circle on the Window
     //
@@ -1386,7 +1687,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawCircle(POINT pLoc,int iRadius,int iColor1,int iColor2 = -1);
+    bool DrawCircle(POINT pLoc,int iRadius,int iColor1,int iColor2 = -1);        // $QCC
 
     // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1396,7 +1697,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenCircle(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0);
+    bool DrawOpenCircle(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0);      // $QCC
 
     // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1406,7 +1707,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenCircle(int iX,int iY,int iRadius,int iColor,int iPenSize = 0);
+    bool DrawOpenCircle(int iX,int iY,int iRadius,int iColor,int iPenSize = 0);     // $QCC
     
     // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1416,7 +1717,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenCircle(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0 );
+    bool DrawOpenCircle(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0 );        // $QCC
     
     // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1426,7 +1727,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenCircle(POINT pLoc,int iRadius,int iColor,int iPenSize =0 );
+    bool DrawOpenCircle(POINT pLoc,int iRadius,int iColor,int iPenSize =0 );        // $QCC
 
     // Draw an Ellipse on the Window
     //
@@ -1436,7 +1737,7 @@ public:
     //
     // The Pen Size can be changed with SetPenSize()
     //
-    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);
+    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);  // $QCC
  
     // Draw a ellipse on the Window
     //
@@ -1446,7 +1747,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);
+    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);  // $QCC
 
     // Draw a ellipse on the Window
     //
@@ -1456,7 +1757,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-    bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);
+    bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);  // $QCC
 
     // Draw a ellipse on the Window
     //
@@ -1466,7 +1767,7 @@ public:
     //
     // The Pen Thickness can be changed with SetPenThickness()
     //
-   bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);
+   bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);  // $QCC
 
     // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1476,7 +1777,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
     
     // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1486,7 +1787,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);
+    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);  // $QCC
 
     // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1496,7 +1797,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);
+    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
 
     // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
     // is not drawn, only the border). 
@@ -1506,7 +1807,7 @@ public:
     //
     // See DrawCircle() and SetPenSize() for more information
     //
-    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);
+    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);  // $QCC
 
     // Set the  color for new lines, circles, rectangles,e tc. using SetPenColor() (or MoveTo()) and then DrawLine() (or LineTo())
     // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
@@ -1520,7 +1821,7 @@ public:
     // note: This function is in progress and does not work with all drawing routines yet.  For some drawing routines, you may
     // need to specify a color.
     //
-    bool SetPenColor(int iColor);
+    bool SetPenColor(int iColor);  // $QC
 
     // Set the  color for new lines, circles, rectangles,e tc. using SetPenColor() (or MoveTo()) and then DrawLine() (or LineTo())
     // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
@@ -1534,7 +1835,7 @@ public:
     // note: This function is in progress and does not work with all drawing routines yet.  For some drawing routines, you may
     // need to specify a color.
     //
-    bool SetPenColor(const char * sColor);
+    bool SetPenColor(const char * sColor);  // $QC
 
     // Set the DrawLine color for new lines using SetLinePos() (or MoveTo()) and then DrawLine() (or LineTo())
     // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
@@ -1542,7 +1843,7 @@ public:
     //
     // note: This does not work with DrawLine().  When using DrawLine(), the color must be specifieed.
     //
-    bool SetPenColor(RGBColor_t rgbColor);
+    bool SetPenColor(RGBColor_t rgbColor);  // $QC
 
     // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
     // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
@@ -1556,7 +1857,7 @@ public:
     // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
     // MoveTo() is exactly the same function as SetLinePos(), just with a different name
     //
-    bool SetLinePos(int iX,int iY,int iColor);
+    bool SetLinePos(int iX,int iY,int iColor);  // $QC
 
     // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
     // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
@@ -1570,7 +1871,7 @@ public:
     // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
     // MoveTo() is exactly the same function as SetLinePos(), just with a different name
     //
-    bool SetLinePos(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);
+    bool SetLinePos(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
 
     // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
     // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
@@ -1584,7 +1885,7 @@ public:
     // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
     // MoveTo() is exactly the same function as SetLinePos(), just with a different name
     //
-    bool SetLinePos(POINT pLoc,int iColor);
+    bool SetLinePos(POINT pLoc,int iColor);  // $QC
 
     // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
     // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
@@ -1598,7 +1899,7 @@ public:
     // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
     // MoveTo() is exactly the same function as SetLinePos(), just with a different name
     //
-    bool SetLinePos(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool SetLinePos(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
 
     // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
     //
@@ -1612,7 +1913,7 @@ public:
     //
     // A color may also be specified to LineTo()
     //
-    bool MoveTo(int iX,int iY,int iColor);
+    bool MoveTo(int iX,int iY,int iColor);  // $QC
 
     // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
     //
@@ -1626,7 +1927,7 @@ public:
     //
     // A color may also be specified to LineTo()
     //
-    bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);
+    bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
 
     // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
     //
@@ -1640,7 +1941,7 @@ public:
     //
     // A color may also be specified to LineTo()
     //
-    bool MoveTo(POINT pLoc,int iColor);
+    bool MoveTo(POINT pLoc,int iColor);  // $QC
 
     // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
     //
@@ -1654,7 +1955,7 @@ public:
     //
     // A color may also be specified to LineTo()
     //
-    bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
 
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1666,7 +1967,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool LineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+    bool LineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);   // $QCC
 
     // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1678,7 +1979,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool LineTo(int iX,int iY,int iColor); 
+    bool LineTo(int iX,int iY,int iColor);  // $QCC
 
     // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1690,7 +1991,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool LineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool LineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
 
     // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1702,7 +2003,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool LineTo(POINT pLoc,int iColor);
+    bool LineTo(POINT pLoc,int iColor); // $QCC
 
     // LineToEx() -- Draw a Line to the current Point or Set the current point.
     // LineToEx() is the same as DrawLineTo()
@@ -1716,7 +2017,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool LineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+    bool LineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
 
     // LineToEx() -- Draw a Line to the current Point or Set the current point.
     // LineToEx() is the same as DrawLineTo()
@@ -1730,7 +2031,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool LineToEx(bool bFirstPoint,int iX,int iY,int iColor); 
+    bool LineToEx(bool bFirstPoint,int iX,int iY,int iColor);  // $QCC
 
     // LineToEx() -- Draw a Line to the current Point or Set the current point.
     // LineToEx() is the same as DrawLineTo()
@@ -1744,7 +2045,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool LineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool LineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
 
     // LineToEx() -- Draw a Line to the current Point or Set the current point.
     // LineToEx() is the same as DrawLineTo()
@@ -1758,7 +2059,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool LineToEx(bool bFirstPoint,POINT pLoc,int iColor);
+    bool LineToEx(bool bFirstPoint,POINT pLoc,int iColor); // $QCC
 
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1770,7 +2071,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool DrawLineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+    bool DrawLineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
 
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1782,7 +2083,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool DrawLineTo(int iX,int iY,int iColor); 
+    bool DrawLineTo(int iX,int iY,int iColor);  // $QCC
 
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1794,7 +2095,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool DrawLineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool DrawLineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
 
     // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
     // a previous DrawLine() or SetLinePos(). 
@@ -1806,7 +2107,7 @@ public:
     // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
     // and other Draw functions
     //
-    bool DrawLineTo(POINT pLoc,int iColor =-1);
+    bool DrawLineTo(POINT pLoc,int iColor =-1); // $QCC
 
     // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
     // DrawLineToEx() is the same as LineToEx()
@@ -1820,7 +2121,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined); 
+    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
 
     // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
     // DrawLineToEx() is the same as LineToEx()
@@ -1834,7 +2135,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,int iColor); 
+    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,int iColor);  // $QCC
 
     // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
     // DrawLineToEx() is the same as LineToEx()
@@ -1848,7 +2149,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);
+    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
 
     // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
     // DrawLineToEx() is the same as LineToEx()
@@ -1862,7 +2163,7 @@ public:
     //
     // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
     //
-    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,int iColor);
+    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,int iColor); // $QCC
 
 
     // Draw a line in the window.  
@@ -1874,7 +2175,7 @@ public:
     // If the color is omitted, the current line color is used.
     // The line color can be set or changed with SetLineColor() or SetLinePos()
     //
-    bool DrawLine(int ix1,int iy1,int ix2,int iy2,int iColor);
+    bool DrawLine(int ix1,int iy1,int ix2,int iy2,int iColor); // $QCC
  
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1885,7 +2186,7 @@ public:
     // If the color is omitted, the current line color is used.
     // The line color can be set or changed with SetLineColor() or SetLinePos()
     //
-    bool DrawLine(POINT p1,POINT p2,int iColor);
+    bool DrawLine(POINT p1,POINT p2,int iColor); // $QCC
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1896,7 +2197,7 @@ public:
     // If the color is omitted, the current line color is used.
     // The line color can be set or changed with SetLineColor() or SetLinePos()
     //
-    bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default);
+    bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default); // $QCC
 
 
     // Draw a line in the window.  
@@ -1908,7 +2209,7 @@ public:
     // If the color is omitted, the current line color is used.
     // The line color can be set or changed with SetLineColor() or SetLinePos()
     //
-    bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default);
+    bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default); // $QCC
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1916,7 +2217,7 @@ public:
     // The color can be RGB() or RGBColor_t
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
-    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,int iColor);
+    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,int iColor);      // $QCC
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1924,7 +2225,7 @@ public:
     // The color can be RGB() or RGBColor_t
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
-    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default);
+    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default);       // $QCC
     
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1932,7 +2233,7 @@ public:
     // The color can be RGB() or RGBColor_t
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
-    bool DrawLine2(POINT p1,SIZE szDist,int iColor);
+    bool DrawLine2(POINT p1,SIZE szDist,int iColor);         // $QCC
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -1940,7 +2241,7 @@ public:
     // The color can be RGB() or RGBColor_t
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
-    bool DrawLine2(POINT p1,SIZE szDist,RGBColor_t rgbColor = Rgb::Default);
+    bool DrawLine2(POINT p1,SIZE szDist,RGBColor_t rgbColor = Rgb::Default);         // $QCC
 
     // SetPenThickness -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
     //
@@ -1950,11 +2251,11 @@ public:
     // SetPenThickness() returns the new thickness of the pen -- this useful to ensure the value does not 
     // go below the minimum of 1.
     //
-    int SetPenThickness(int iThickness);
+    int SetPenThickness(int iThickness); // $QC
 
     // GetPenThickness() -- Returns the size (i.e. thickness) of the current pen)
     //
-    int GetPenThickness();
+    int GetPenThickness(); // $QC
 
     // SetPenSize -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
     //
@@ -1964,25 +2265,11 @@ public:
     // SetPenThickness() returns the new thickness of the pen -- this useful to ensure the value does not 
     // go below the minimum of 1.
     //
-    int SetPenSize(int iThickness);
+    int SetPenSize(int iThickness); // $QC
 
     // GetPenSize() -- Returns the size (i.e. thickness) of the current pen)
     //
-    int GetPenSize();
-
-   // DrawPixel() draw a pixel on the screen. 
-    //
-    // This sets a pixel on the screen and can be useful in prototyping and general drawing.
-    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
-    // is very slow! 
-    //
-    // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
-    // and then call DrawBitmap() to display multiple pixels at a time.
-    //
-    bool DrawPixel(int iX,int iY,DWORD dwColor);
- 
-    bool DrawPixel(POINT pPoint,DWORD dwColor)          { return DrawPixel(pPoint.x,pPoint.y,dwColor); }
-    bool DrawPixel(POINT pPoint,RGBColor_t rgbColor)    { return DrawPixel(pPoint.x,pPoint.y,rgbColor); }
+    int GetPenSize(); // $QC
 
     // DrawPixel() draw a pixel on the screen. 
     //
@@ -1993,7 +2280,40 @@ public:
     // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
     // and then call DrawBitmap() to display multiple pixels at a time.
     //
-    bool DrawPixel(int iX,int iY,RGBColor_t rgbColor);               // $$ Form outdated -- rgbColor converts automatically to DWORD
+    bool DrawPixel(int iX,int iY,DWORD dwColor);        // $QCC
+ 
+    // DrawPixel() draw a pixel on the screen. 
+    //
+    // This sets a pixel on the screen and can be useful in prototyping and general drawing.
+    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
+    // is very slow! 
+    //
+    // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
+    // and then call DrawBitmap() to display multiple pixels at a time.
+    //
+    bool DrawPixel(POINT pPoint,DWORD dwColor);          // $QCC
+    
+    // DrawPixel() draw a pixel on the screen. 
+    //
+    // This sets a pixel on the screen and can be useful in prototyping and general drawing.
+    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
+    // is very slow! 
+    //
+    // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
+    // and then call DrawBitmap() to display multiple pixels at a time.
+    //
+    bool DrawPixel(POINT pPoint,RGBColor_t rgbColor);    // $QCC
+
+    // DrawPixel() draw a pixel on the screen. 
+    //
+    // This sets a pixel on the screen and can be useful in prototyping and general drawing.
+    // However, note that DrawPixel() used when drawing an entire array (i.e. a bitmap or an image)
+    // is very slow! 
+    //
+    // For images, bitmaps, collections, etc. it is much faster to build a bitmap in memory
+    // and then call DrawBitmap() to display multiple pixels at a time.
+    //
+    bool DrawPixel(int iX,int iY,RGBColor_t rgbColor);            // $QCC
  
                                                                      // DrawPixel() draw a piel on the screen. 
     // Show() -- Show the window (i.e. make it visible)
@@ -2003,7 +2323,7 @@ public:
     // Show() and Show(true) will show a hidden window
     // Show(false) will Hide() the window
     //
-    bool Show(bool bShow = true);
+    bool Show(bool bShow = true);   // $QCS
 
     // Hide() -- Hide the window (i.e. remove it from the screen without closing it or destroying it)
     //
@@ -2012,7 +2332,7 @@ public:
     // Hide() and Hide(true) will hide the window
     // Hide(false) will Show() the window
     //
-    bool Hide(bool bHide = true);
+    bool Hide(bool bHide = true);   // $QCS
 
     // Create a New Slider Control
     //
@@ -2043,7 +2363,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const wchar_t * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const wchar_t * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt());   // $QC
 
     // Create a New Slider Control
     //
@@ -2074,7 +2394,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const char * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const char * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a New Slider Control
     //
@@ -2105,7 +2425,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(CSlider * cSlider,int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a New Slider Control
     //
@@ -2136,7 +2456,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(int iX,int iY,int iSize,const char * sLabel,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(int iX,int iY,int iSize,const char * sLabel,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a New Slider Control
     //
@@ -2167,7 +2487,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(int iX,int iY,int iSize,const wchar_t * sLabel,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(int iX,int iY,int iSize,const wchar_t * sLabel,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a New Slider Control
     //
@@ -2197,7 +2517,7 @@ public:
     // ---> Title()          -- Set the title/label (same as using sLabel when calling NewSlider)
     // ---> Label()          -- Same as Title()
     //
-    CSlider &  NewSlider(int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt());
+    CSlider &  NewSlider(int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
 
     // QuickButton() -- Put up a quick button and information line. 
@@ -2212,7 +2532,7 @@ public:
     // 
     // Multiple lines may be entered with '\n', and long lines are automatically broken into multiple lines
     //
-    void QuickButton(const char * sText = nullptr,const char * sTitleBar = nullptr);
+    void QuickButton(const char * sText = nullptr,const char * sTitleBar = nullptr); // $QCC
 
 
     // ---------------------
@@ -2228,10 +2548,10 @@ public:
         friend CWindow;
     private:
 
-        CWindow * m_cWin                ;
-        CPasWindow * m_cWinCore            ;
+        CWindow * m_cWin                    = nullptr;
+        CPasWindow * m_cWinCore             = nullptr;
         void InitDialog(DialogStruct & stDialog,const char * sTitle,const char * sOptions,DialogStruct::TitleIconType eDefault);
-        bool    m_bYesNoCancel;            // For YesNoCancel to call YesNo() and get cancel status
+        bool    m_bYesNoCancel = false;            // For YesNoCancel to call YesNo() and get cancel status
         bool  * m_bPleaseWaitSignal = nullptr; 
         CButtonHandler * m_cPleaseWaitButtonHandler = nullptr;
     public:
@@ -2257,25 +2577,27 @@ public:
         //
         // Example: WinMessageBox("This is the message","This is the title",MB_OK | MB_ICONINFO)
         //
-        int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
+        int WinMessageBox(const char * sMessage,const char * sTitle = nullptr,unsigned int dwFlags = MB_OK);
         int GetInteger(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         int GetInteger(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
         bool GetInteger(const char * sTitle,int & iInteger,const cwfOpt & cwOptions = cwfOpt());
         bool GetInteger(int & iInteger,const cwfOpt & cwOptions = cwfOpt());
+        int GetInteger(const cwfOpt & cwOptions);
 
         double GetFloat(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         double GetFloat(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
         bool GetFloat(const char * sTitle,double & fFloat,const cwfOpt & cwOptions = cwfOpt());
         bool GetFloat(double & fFloat,const cwfOpt & cwOptions = cwfOpt());
+        double GetFloat(const cwfOpt & cwOptions);
 
         CString GetString(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
         CString GetString(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
-        void Info(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
-        bool YesNo(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+        void InfoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+        bool YesNoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
-        DialogResult YesNoCancel(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
-        bool OkCancel(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+        DialogResult YesNoCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+        bool OkCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
         bool SetPleaseWaitSignal(bool * bSignal); 
         void RemovePleaseWaitSignal();
@@ -2389,7 +2711,7 @@ public:
         // --> These two lines show the progress bar full with the label "finished" within the progress bar.  The second line then changes the "Cancel" button to "Ok" and waits for the user to press it.
         //
         void SetPleaseWaitProgress(int iPercent,char * sMessage = nullptr);
-
+#if 0
         // NewDialog() -- Create a new dialog window. 
         // This returns with a CDialog class that allows you to build a dialog window.
         // A dialog window is the same as a normal window, and you can retrieve the window
@@ -2449,6 +2771,48 @@ public:
         // Dialogs can be used as regular popupwindows or placed within an existing window.
         //
         CDialog & NewDialog(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+#endif
+        /// <summary>
+        /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+        /// <para></para>
+        /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+        /// that can then be querired for input.
+        /// <para></para>
+        /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+        /// <para></para>
+        /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+        /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+        /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+        /// --> Use CDialog::Close() to close the dialog box.
+        /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+        /// </summary>
+        /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+        /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+        /// <returns></returns>
+        CQuickDialog & QuickDialog(const char * sHeader = nullptr,const cwfOpt & cwOpt = CWindow::cwNoOpt);
+
+        /// <summary>
+        /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+        /// <para></para>
+        /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+        /// that can then be querired for input.
+        /// <para></para>
+        /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+        /// <para></para>
+        /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+        /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+        /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+        /// --> Use CDialog::Close() to close the dialog box.
+        /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+        /// </summary>
+        /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+        /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+        /// <returns></returns>
+        CQuickDialog & QuickDialog(const cwfOpt & cwOpt);
     };
 
     WinDialog dialog;
@@ -2554,6 +2918,31 @@ public:
         //
         int GetPressed(int iRadioGroup,bool bRemove = false);
 #endif
+
+        /// <summary>
+        /// returns TRUE of the checkbox number is checked (i.e. 0,1,2, depending on position in the group).  returns FALSE if the checkbox is not checked.
+        /// <para></para>&#160;&#160;&#160;
+        /// This function is useful for checkboxes only.  For Radio Buttons, use GetChecked() to get the value of the filled radio button.
+        /// &#160;&#160;&#160;
+        /// This returns the checked status only.  To determine if a specific checkbox button was pressed, is isPressed() with the checkbox ID.
+        /// </summary>
+        /// <param name="sGroupID"> = Name of chexkbox group (can also be a number)</param>
+        /// <param name="iCheckboxID"> = Position of Checkbox in group (in order it was added, starting with 0,1,2, etc.)</param>
+        /// <returns>TRUE if checkbox ID is checked. Returns FALSE if it is not checked.</returns>
+        bool isChecked(const char * sGroupID,int iCheckboxID);
+
+         /// <summary>
+        /// returns TRUE of the checkbox number is checked (i.e. 0,1,2, depending on position in the group).  returns FALSE if the checkbox is not checked.
+        /// <para></para>&#160;&#160;&#160;
+        /// This function is useful for checkboxes only.  For Radio Buttons, use GetChecked() to get the value of the filled radio button.
+        /// &#160;&#160;&#160;
+        /// This returns the checked status only.  To determine if a specific checkbox button was pressed, is isPressed() with the checkbox ID.
+        /// </summary>
+        /// <param name="sGroupID"> = Name of chexkbox group (can also be a number)</param>
+        /// <param name="iCheckboxID"> = Position of Checkbox in group (in order it was added, starting with 0,1,2, etc.)</param>
+        /// <returns>TRUE if checkbox ID is checked. Returns FALSE if it is not checked.</returns>
+        bool isChecked(int isGroupID,int iCheckboxID);
+
         // GetChecked() -- returns the button ID of a checked Radio Button
         // This only works for RadioButtons.
         //
@@ -2603,6 +2992,7 @@ public:
        SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
        SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
        CButton * GetButton(int iGroupID, int iPosition);
+       CButton * GetButton(const char * sButton, int iPosition);
        bool Enable(int iGroupID,bool bEnable);
        bool Disable(int iGroupID,bool bDisable);
 
@@ -2630,7 +3020,7 @@ public:
     // BkMode::Opaque         -- When text is written to the window, this will write the text in the foreground color and fill in the background with the
     //                           background color overwriting any text or graphics behind the new text.
     //
-    BkMode GetWinBkMode(); 
+    BkMode GetWinBkMode(); // $QC
 
     // SetWinBkMode() -- Set the text background mode.
     // BkMode returns eeither BkMode::Transparent or BkMode::Opaque
@@ -2641,7 +3031,7 @@ public:
     // BkMode::Opaque         -- When text is written to the window, this will write the text in the foreground color and fill in the background with the
     //                           background color overwriting any text or graphics behind the new text.
     //
-    bool SetWinBkMode(BkMode eBkMode); 
+    bool SetWinBkMode(BkMode eBkMode);  // $QC
   
     // Set Background/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2654,7 +3044,7 @@ public:
     // ---> SetBgColor(dwRGBValue);     // Set the background color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetBgClor(RGB(255,0,0)l     // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //   
-    bool SetBgColor(const char * sColor);
+    bool SetBgColor(const char * sColor); // $QC
 
     // Set Background/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2667,7 +3057,7 @@ public:
     // ---> SetBgColor(dwRGBValue);     // Set the background color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetBgClor(RGB(255,0,0)l     // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //   
-    bool SetBgColor(DWORD dwColor);
+    bool SetBgColor(DWORD dwColor); // $QC
 
     // Set Background/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2680,7 +3070,7 @@ public:
     // ---> SetBgColor(dwRGBValue);     // Set the background color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetBgClor(RGB(255,0,0)l     // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //   
-    bool SetBgColor(RGBColor_t rgbColor);
+    bool SetBgColor(RGBColor_t rgbColor); // $QC
 
     // Set Foreground/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2693,7 +3083,7 @@ public:
     // ---> SetFgColor(dwRGBValue);    // Set the foreground color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetFgClor(RGB(255,0,0)l    // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //
-    bool SetFgColor(const char * sColor);
+    bool SetFgColor(const char * sColor); // $QC
 
     // Set Foreground/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2706,7 +3096,7 @@ public:
     // ---> SetFgColor(dwRGBValue);    // Set the foreground color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetFgClor(RGB(255,0,0)l    // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //
-    bool SetFgColor(DWORD dwColor);
+    bool SetFgColor(DWORD dwColor); // $QC
 
     // Set Foreground/Text color for text output routines such as Write(), out, printf, putchar, etc.
     //
@@ -2719,7 +3109,7 @@ public:
     // ---> SetFgColor(dwRGBValue);    // Set the foreground color with a Windows RGB type color, defined by an int or DWORD value, or the macro RGB()
     // ---> SetFgClor(RGB(255,0,0)l    // This is the same as the previous example, but using the Windows RGB macro to create a DWORD based RGB value
     //
-    bool SetFgColor(RGBColor_t rgbColor);
+    bool SetFgColor(RGBColor_t rgbColor); // $QC
 
     // -------------------------
     // event functions
@@ -2897,6 +3287,42 @@ public:
         //
         bool MouseButtonDown();
 
+        /// <summary>
+        /// If a key has been pressed, KeyPressed() eturns the key (or TRUE with "cKey") filled with the character code for the key pressed.
+        /// <para></para>
+        /// If a key has not been pressed, Keypressed() returns false without setting "cKey" (or 0 in the case of returning a Key)
+        /// <para></para>&#160;&#160;&#160;
+        /// Examples:
+        /// <para></para>&#160;&#160;&#160;
+        ///     char cKey = win.KeyPressed(); // returns 0 if no key pressed or key code
+        ///     bool bPressed = win.KeyPressed(cKey);   // returns true if pressed and fills ckey (otherwise cKey is not changed)
+        /// <para></para>
+        /// This is an event. Therefore, a second call to KeyPressed() will return false until another key is entered (unless "peek" is
+        /// set to Peek::Yes
+        /// </summary>
+        /// <param name="cKey">= (optional) char value to fill)</param>
+        /// <param name="peek">= (optional) When Peek:Yes is used, the status for keypress is not changed (will still return as true)</param>
+        /// <returns>BOOLEAN (true/false) if cKey included in paramaters; otherwise returns key info (or 0 for no key pressed)</returns>
+        bool KeyPressed(char & cKey,Peek peek = Peek::No);
+
+        /// <summary>
+        /// If a key has been pressed, KeyPressed() eturns the key (or TRUE with "cKey") filled with the character code for the key pressed.
+        /// <para></para>
+        /// If a key has not been pressed, Keypressed() returns false without setting "cKey" (or 0 in the case of returning a Key)
+        /// <para></para>&#160;&#160;&#160;
+        /// Examples:
+        /// <para></para>&#160;&#160;&#160;
+        ///     char cKey = win.KeyPressed(); // returns 0 if no key pressed or key code
+        ///     bool bPressed = win.KeyPressed(cKey);   // returns true if pressed and fills ckey (otherwise cKey is not changed)
+        /// <para></para>
+        /// This is an event. Therefore, a second call to KeyPressed() will return false until another key is entered (unless "peek" is
+        /// set to Peek::Yes
+        /// </summary>
+        /// <param name="cKey">= (optional) char value to fill)</param>
+        /// <param name="peek">= (optional) When Peek:Yes is used, the status for keypress is not changed (will still return as true)</param>
+        /// <returns>BOOLEAN (true/false) if cKey included in paramaters; otherwise returns key info (or 0 for no key pressed)</returns>
+        char KeyPressed(Peek peek = Peek::No); 
+
         // Returns true if the Right Mouse Button is currently pressed.  
         // This is not a mouse event and returns the real-time status of the mouse.
         //
@@ -2936,6 +3362,19 @@ public:
         //
         POINT     GetMouseClickPos();     
 
+
+        /// <summary>
+        /// Simulates a press on a button when the user closes the window. 
+        /// <para></para>
+        /// When the users closes the window, a button press is simulated for the button, causing a SageEvent or return from GetEvent().  The button then may be queried for its 
+        /// pressed status. 
+        /// <para></para>&#160;&#160;&#160;
+        /// If a signal is attached to the button, the boolean value that serves as the signal is set to true.
+        /// </summary>
+        /// <param name="cButton">Button to press when the window is closed by the user</param>
+        /// <returns></returns>
+        bool PressButtonOnClose(CButton & cButton);
+
         // CloseButtonPressed() -- Returns true of the close buttton was pressed.
         //
         // This is an event and is one-time read function -- i.e. it will return false after subsequent
@@ -2948,7 +3387,7 @@ public:
         //
         // Since this is an event, it can be used to reset the WindowClosing() flag by using ResetWindowClosing()
         //
-        bool      CloseButtonPressed(Peek peek = Peek::No);
+        bool CloseButtonPressed(Peek peek = Peek::No);
 
         // WaitforEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
         //
@@ -2996,6 +3435,59 @@ public:
         // only events are returned and it is not caught in a spining loop. 
         //
         bool GetEvent(WaitEvent * eStatus = nullptr);
+
+        /// <summary>
+        /// Waits for a mouse click in the window.  This is used a simple way to hold up program execution until the user
+        /// clicks the mouse.
+        /// <para></para>&#160;&#160;&#160;
+        /// The window is set as the foreground and active window when this function is called.
+        /// --> Note: This function will return if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforClick(const char * sMsg = nullptr);
+
+        /// <summary>
+        /// Waits for a keypress from the user and returns the key pressed. This is used as a quick way to pause program execution
+        /// until the user presses any key. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        char WaitforKeyPress(const char * sMsg = nullptr); 
+
+        /// <summary>
+        /// Waits for a Carriage Return press from the user. This is used as a quick way to pause program execution
+        /// until the user presses the carriage return. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforKey() to wait for any key
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforCRPress(const char * sMsg = nullptr); 
+
+       /// <summary>
+        /// Waits for a keypress or mouse click from the user. This is used as a quick way to pause program execution
+        /// until the user presses any key. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforClickOrKey(const char * sMsg = nullptr); 
 
         // WaitforCLose() -- Wait for the window to close.  
         // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
@@ -3149,11 +3641,12 @@ public:
 
         friend CWindow;
     private:
-        CWindow * m_cWin;
+        CWindow * m_cWin = nullptr;
         CPoint m_pTermXY = {};
         CPoint m_pTermPos = {};
     public:
         int putchar(char cChar);
+        int __putchar(char cChar);
         void InitTerm(int iX,int iY,int iCharWidth,int iNumLines,int iFontSize,const cwfOpt & cwOpt = cwfOpt());
         void InitTerm(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
         void InitTerm(int iX,int iY,int iFontSize,const cwfOpt & cwOpt = cwfOpt());
@@ -3177,8 +3670,9 @@ public:
     private:
         CWindow * m_cWin                ;
     public:
-        [[nodiscard]] RawBitmap_t CreateBitmap(int iWidth,int iHeight = 1);
-        [[nodiscard]] RawBitmap_t ReadBitmap(const char * sPath,bool * bSucceeded = nullptr);
+        CBitmap CreateBitmap(int iWidth,int iHeight = 1);
+        CBitmap ReadBitmap(const char * sPath,bool * bSucceeded = nullptr);
+        bool WriteBitmap(const char * sFile,CBitmap & cBitmap); 
 
         // Send Contents of Bitmap to the clipboard
         //
@@ -3193,6 +3687,172 @@ public:
     };
 
     WinBitmap bitmap;
+
+    /// <summary>
+    /// Console Output Functions
+    /// <para></para>&#160;&#160;&#160;
+    /// conio provides a set of useful functions for console output that allow for different text colors, font sizes, background colors, and so-forth.
+    /// <para></para>
+    /// You can use conio.printf() or conio.write() with "{}" markers to specify colors.
+    /// <para></para>&#160;&#160;&#160;For example, printf("This is {red}red{/} and this is {b}blue") prints "red in red" and "blue" in blue.
+    /// <para></para>Note the use of {b} as a shortcut for blue.  Colors can be "r" for "Red" and so-forth, and "db" for "darkblue", etc. Use  conio.GetColorNames() for a full list.
+    /// <para></para>&#160;&#160;&#160;
+    /// Background colors can also be set with "bg=r", or the entire line with "lbg=blue", for example.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> "u" for underline, and "rev" as quick way to reverse text. Combine types, such as conio.printf("This {bg=blue}{y}word{/}{/} is written in a blue background with yellow text color")
+    /// </summary>
+    WinConio conio; 
+
+    // ---------------
+    // Debug Functions
+    // ---------------
+    //
+    // Provides debug output functions. 
+    //
+    // Note: This section is currently still under construction and is expected to grow over time.,
+    //       Currently, it offers debug functions mostly through the Process Window, a widow that is disconected from
+    //       Sagebox and any windows in Sagebox for the purpose of more low-level debugging.
+    //
+    // In the future, a more robust debug window more integral to Sagebox will also be provided.
+    //
+    // Debugging is meant to be as low-level as possible. 
+    //
+    // Important Note: As this changes, so does WinDebug in CSagebox.  They are separate but parallel, except for the CSagebox exceptions at the BOTTOM
+    // of the class interface. 
+    //
+    struct WinDebug
+    {
+        friend CWindow;
+    private:
+        CWindow         * m_cWin = nullptr;
+    public:
+        WinDebug & operator << (const char * x)        ;
+        WinDebug & operator << (char x)                ;
+        WinDebug & operator << (std::string & cs)      ;
+        WinDebug & operator << (CString & cs)          ;
+        WinDebug & operator << (int x)                 ;
+        WinDebug & operator << (unsigned int x)        ;
+        WinDebug & operator << (float x)               ;
+        WinDebug & operator << (double x)              ;
+
+        // Process Control Window initialization types. 
+        // Determines how to open Process Control Window when it is initialized with Init()
+        //
+        enum class InitType
+        {
+            Hidden,                 // Initially Hidden.  Use the System Menu on any main window or move move to upper-right desktop
+            Visible,                // Shows as Title Bar only in upper-right of desktop.  Mouse mouse to title bar to enlarge
+            Debug,                  // Brings up the Process Control Window as visible with the Debug Window.
+            DebugLineNumbers,       // Brings up the Process Control Window as visible with the Debug Window with Line Numbers showing
+        };
+
+        // Init() -- Initialize the process control window.
+        //
+        // Init() initializes the process control window and initially brings it up as hidden (by default), unless overridden. 
+        //
+        // Note: when the Process Control Window is hidden, you can use the System Menu in any main window to bring it up, or 
+        // move the mouse to the uper-right-hand corner of the window for more than .25 seconds (which toggles the Process Control Window display)
+        //
+        // Init() may be called with one of the following options
+        //
+        //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
+        //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
+        //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
+        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
+        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see WinDebug:ShowLineNumbers())
+        //
+        // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
+        // and display the Process Control Window and its debug window. 
+        //
+        // returns TRUE if Process Window is active. 
+        //
+        bool Init(bool bVisible = false);
+        
+        // Init() -- Initialize the process control window. 
+        //
+        // Init() initializes the process control window and initially brings it up as hidden (by default), unless overridden. 
+        //
+        // Note: when the Process Control Window is hidden, you can use the System Menu in any main window to bring it up, or 
+        // move the mouse to the uper-right-hand corner of the window for more than .25 seconds (which toggles the Process Control Window display)
+        //
+        // Init() may be called with one of the following options
+        //
+        //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
+        //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
+        //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
+        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
+        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see WinDebug:ShowLineNumbers())
+        //
+        // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
+        // and display the Process Control Window and its debug window. 
+        //
+        // returns TRUE if Process Window is active. 
+        //
+        bool Init(InitType eInitType);
+        
+        
+        // Show() -- Show or Hide the Process Control Window
+        //
+        bool Show(bool bShow = true); 
+
+        // Hide() -- Hide or Show the Process Control Window
+        //
+        bool Hide(bool bHide = true);
+
+        // printf() -- print out to the debug window, just as in std::printf()
+        //
+        bool printf(const char * Format,...);
+// __Sandbox__Except__ deprecated (for now)
+//#ifdef __Sandbox__Except__
+        // printf() -- print out to the debug window, just as in std::printf()
+        //
+        bool __printf(const char * Format,...);
+//#endif
+        // Write() -- Write out to the debug window.  Can be quicker than using printf()
+        //
+        bool Write(const char * sText);
+
+        // KillTimer() -- Kills the 250ms timer that looks at mouse movement.  
+        //
+        // KillTimer() removes the timer in the Process Window.  It is activated every 250ms to look for mousemovements to 
+        // show or hide the Process Control Window when the mouse is moved to the upper-right-hand corner of the desktop. 
+        //
+        // The timer doesn't impact program execution time, but for those programs that do not want a timer for one simple purpose
+        // can turn it off. 
+        //
+        // Use KillTimer(false) to turn the timer back on.
+        //
+        bool KillTimer(bool bKillTimer = true);
+
+        // ShowLineNumbers() -- Shows line numbers in the debug display.
+        //
+        // The Debug window defaults to ShowLineNumbers off.  You can use 
+        // Init(CWindow::WinDebug::InitType::DebugLineNumbers) to initialize the window with line numbers on.
+        //
+        // Use ShowLineNumbers(true) turn turn line numbers on
+        // Use ShowLineNumbers(false) to turn line numbers off.
+        //
+        bool ShowLineNumbers(bool bShowLineNumbers = true);
+
+        // SetControlCBreak() -- Allow ^C to terminate the process. 
+        //
+        // When set to TRUE, using Control-C will bring up a message box and allow the user to terminate the process. 
+        // This is a useful debugging tool to allow terminating the process if the process caught in a loop or may be otherwise
+        // unresponsive.  Also use debug.Init() to activate the Process Window for more control, even if the window is not visible. 
+        //
+        // For Console Applications, you can just press control-C in the console-window. 
+        //
+        // Note: debug.Init() activates ^C, but debug.Write(), when it instantiates the Proess Control Window will not turn it on. 
+        // use debug.Init() or SetControlCBreak() to ensure use of ^C to break the program execution.
+        //
+        bool SetControlCBreak(bool bActive);
+    };
+
+    WinDebug debug;
 
     // -----------------
     // Console Functions
@@ -3233,7 +3893,7 @@ public:
         //
         // Pressing ESC will clear the text entry, remaining in the edit box for more input.  When there is a default set of text, the text will revert to the original default.
         //
-        // GetString() will return immediately of WindowClosing() is true, allowing multiple console input functions in the code, as they will all fall through so you may
+        // GetString() will return immediately of WindowClosing() is true, allowing multiple console input funcoctions in the code, as they will all fall through so you may
         // handle WindowClosing() without handling multiple Console Input functions
         //
         // --> sDefaut -- the sDefault parameter sets the default text for the text input, and will set the input caret at the end of the line.
@@ -3320,8 +3980,9 @@ public:
         //
         // See GetString() for option usage.
         //
-        void getline(CString & cString,const cwfOpt & cwOpt = cwfOpt());
-  
+        CString getline(CString & cString,const cwfOpt & cwOpt = cwfOpt());
+        CString __getline(CString & cString,const cwfOpt & cwOpt = cwfOpt());
+ 
         // Duplication of C++ console-mode getline()
         //
         // This is the same as GetString() except that the sring input is specified in the function call.
@@ -3331,7 +3992,47 @@ public:
         //
         // See GetString() for option usage.
         //
-        void getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt());
+        CString getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt());
+
+        // Duplication of C++ console-mode getline()
+        //
+        // This is the same as GetString() except that the sring input is specified in the function call.
+        // This is to duplicate the C++ getline() function.
+        //
+        // CString and std::string are supported.
+        //
+        // See GetString() for option usage.
+        //
+        CString __getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt());
+        
+        // Duplication of C++ console-mode getline()
+        //
+        // This is the same as GetString() except that the sring input is specified in the function call.
+        // This is to duplicate the C++ getline() function.
+        //
+        // CString and std::string are supported.
+        //
+        // See GetString() for option usage.
+        //
+        CString getline(const cwfOpt & cwOpt = cwfOpt());
+        CString __getline(const cwfOpt & cwOpt = cwfOpt());
+
+        // Duplication of C++ console-mode getline()
+        //
+        // This is the same as GetString() except that the sring input is specified in the function call.
+        // This is to duplicate the C++ getline() function.
+        //
+        // CString and std::string are supported.
+        //
+        // See GetString() for option usage.
+        //
+        int getline(char * sString,int iMaxLen);
+        int __getline(char * sString,int iMaxLen);
+
+        int scanf(const char *format, ...);
+        int __scanf(const char *format, ...);
+        char getchar();
+        char __getchar();
 
         // GetInteger() -- Creates an Edit Box at the current console cursor (X,Y) point and waits for the user to enter an integer
         //
@@ -3389,7 +4090,7 @@ public:
         //
         int GetInteger(const cwfOpt & cwOpt);
 
-        // EditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
+        // NewEditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
         // execution waiting for the input.
         //
         // Multiple edit boxes may be placed on the screen, and a button may be assigned to a group of edit boxes for validation.
@@ -3437,14 +4138,15 @@ public:
         //
         // Examples:
         //
-        // auto & MyEditbox = MyWindow.console.EditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
-        // auto & MyEditBox = MyWindow.console.EditBox("Enter Some Text: ",Width(200));
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",FloatsOnly());
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
+        // auto & MyEditbox = MyWindow.console.NewEditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
+        // auto & MyEditBox = MyWindow.console.NewEditBox("Enter Some Text: ",Width(200));
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",FloatsOnly());
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
         //
-        CEditBox & EditBox(const cwfOpt & cwOptions = cwfOpt());                                            
+        CEditBox & NewEditBox(const cwfOpt & cwOptions = cwfOpt());                                            
+        CInputBox & NewInputBox(const cwfOpt & cwOptions = cwfOpt()) { return NewEditBox(cwOptions); } // $$moveme
 
-        // EditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
+        // NewEditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
         // execution waiting for the input.
         //
         // Multiple edit boxes may be placed on the screen, and a button may be assigned to a group of edit boxes for validation.
@@ -3492,14 +4194,15 @@ public:
         //
         // Examples:
         //
-        // auto & MyEditbox = MyWindow.console.EditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
-        // auto & MyEditBox = MyWindow.console.EditBox("Enter Some Text: ",Width(200));
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",FloatsOnly());
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
+        // auto & MyEditbox = MyWindow.console.NewEditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
+        // auto & MyEditBox = MyWindow.console.NewEditBox("Enter Some Text: ",Width(200));
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",FloatsOnly());
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
         //
-        CEditBox & EditBox(const char * sLabel,const cwfOpt & cwOptions = cwfOpt());                            
+        CEditBox & NewEditBox(const char * sLabel,const cwfOpt & cwOptions = cwfOpt());                            
+        CInputBox & NewInputBox(const char * sLabel,const cwfOpt & cwOptions = cwfOpt()) { return NewEditBox(sLabel,cwOptions); } // $$moveme                          
 
-        // EditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
+        // NewEditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
         // execution waiting for the input.
         //
         // Multiple edit boxes may be placed on the screen, and a button may be assigned to a group of edit boxes for validation.
@@ -3547,14 +4250,15 @@ public:
         //
         // Examples:
         //
-        // auto & MyEditbox = MyWindow.console.EditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
-        // auto & MyEditBox = MyWindow.console.EditBox("Enter Some Text: ",Width(200));
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",FloatsOnly());
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
+        // auto & MyEditbox = MyWindow.console.NewEditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
+        // auto & MyEditBox = MyWindow.console.NewEditBox("Enter Some Text: ",Width(200));
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",FloatsOnly());
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
         //
-        CEditBox & EditBox(CEditBox * pObject,const cwfOpt & cwOptions = cwfOpt());        
+        CEditBox & NewEditBox(CEditBox * pObject,const cwfOpt & cwOptions = cwfOpt());        
+        CInputBox & NewInputBox(CInputBox * pObject,const cwfOpt & cwOptions = cwfOpt()) { return NewEditBox(pObject,cwOptions); } // $$moveme     
 
-        // EditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
+        // NewEditBox() -- Set an edit box to get information.  This is returns a control object and does not stop
         // execution waiting for the input.
         //
         // Multiple edit boxes may be placed on the screen, and a button may be assigned to a group of edit boxes for validation.
@@ -3602,12 +4306,13 @@ public:
         //
         // Examples:
         //
-        // auto & MyEditbox = MyWindow.console.EditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
-        // auto & MyEditBox = MyWindow.console.EditBox("Enter Some Text: ",Width(200));
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",FloatsOnly());
-        // auto & MyEditbox = MyWindow.console.EditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
+        // auto & MyEditbox = MyWindow.console.NewEditBox() -- Creates a small edit box.  Use Width() or CharWidth() to creae a wider box
+        // auto & MyEditBox = MyWindow.console.NewEditBox("Enter Some Text: ",Width(200));
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",FloatsOnly());
+        // auto & MyEditbox = MyWindow.console.NewEditBox("Enter a number: ",Range(-10.0,10.0)); (also sets FloatsOnly setting)
         //
-        CEditBox & EditBox(CEditBox * pObject,char * sLabel,const cwfOpt & cwOptions = cwfOpt());        
+        CEditBox & NewEditBox(CEditBox * pObject,char * sLabel,const cwfOpt & cwOptions = cwfOpt());        
+        CInputBox & NewInputBox(CInputBox * pObject,char * sLabel,const cwfOpt & cwOptions = cwfOpt()) { return NewEditBox(pObject,sLabel,cwOptions); }    //$$moveme      
 
         // InputButton() -- Put a quick button at the current write location (or specified X,Y location). 
         // With no parameters, Input Button puts a quick button with the text "Continue" and waits for input at the current write location.
@@ -4043,7 +4748,20 @@ public:
         // SetFont("TestFont");             -- Set the Font named "TestFont"
         // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
         //
-        HFONT SetFont(HFONT hFont);    
+        HFONT SetFont(HFONT hFont);   
+
+        // Set the Font for the window.
+        // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
+        //
+        // Bold and italic are created for all fonts. 
+        //
+        // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
+        // SetFont("Arial,20")              -- Sets the font to Arial,20
+        // MyFont = SetFont("Arial,20","TestFont")  -- Set the font to Arial,20 and name it TestFont.  Store it in MyFont
+        // SetFont("TestFont");             -- Set the Font named "TestFont"
+        // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
+        //
+        HFONT SetFont(int iFontSize);    
 
         // Set the Font for the window.
         // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
@@ -4183,7 +4901,7 @@ public:
         //
         // Example: WinMessageBox("This is the message","This is the title",MB_OK | MB_ICONINFO)
         //
-        int WinMessageBox(const char * sMessage,const char * sTitle,unsigned int dwFlags);
+        int WinMessageBox(const char * sMessage,const char * sTitle = nullptr,unsigned int dwFlags = MB_OK);
     
         // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
         // printf() can be very useful to quickly print text without using streaming notation,
@@ -4201,7 +4919,25 @@ public:
         //
         // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
         //
+        void printf(const cwfOpt & cwOpt,const char * Format,...);
+
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
         void printf(int iX,int iY,const char * Format,...);
+ 
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void printf(int iX,int iY,const cwfOpt & cwOpt,const char * Format,...);
 
         // Write() -- Write text to the window in a simplified manner. 
         // 
@@ -4336,7 +5072,7 @@ public:
         //
         // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
         //
-        void Cls(int iColor1=-1,int iColor2 = -1);    
+        void Cls(int iColor1=-1,int iColor2 = -1);
 
         // Cls() -- Clear the window with a specified color or with a color gradient
         //
@@ -4360,7 +5096,7 @@ public:
         //
         // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
         //
-        void Cls(RGBColor_t rgbColor);    
+        void Cls(RGBColor_t rgbColor);
 
         // Cls() -- Clear the window with a specified color or with a color gradient
         //
@@ -4384,7 +5120,7 @@ public:
         //
         // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
         //
-        void Cls(RGBColor_t rgbColor,RGBColor_t rgbColor2);    
+        void Cls(RGBColor_t rgbColor,RGBColor_t rgbColor2);
 
         // Cls() -- Clear the window with a specified color or with a color gradient
         //
@@ -4408,7 +5144,7 @@ public:
         //
         // note: When Davinci is used as a DLL, MSIMG32.DLL must be located in the system, otherwise the first color us used as a simple flat-color Cls();
         //
-        void Cls(const char * sColor1,const char * sColor2=nullptr);    
+        void Cls(const char * sColor1,const char * sColor2=nullptr);
 
         // Cls() -- Clear the window with a specified color or with a color gradient
         //
@@ -4458,7 +5194,6 @@ public:
         //
         void Cls(RGBColor_t rgbColor,const char * sColor2);
 
-
         // Update() -- Update the window, showing any new changes
         //
         // Update() repaints the window with any changes made to the window since the last update or Windows PAINT (activated automatically for various reasons, such as moving the window, or 
@@ -4505,6 +5240,102 @@ public:
         // Use SetIndent()  (without arguments to reset it). 
         //
         void SetIndent(int iIndent = 0);
+// __Sandbox__Except__ deprecated (for now)
+//
+//#ifdef __Sandbox__Except__
+   
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void __printf(const char * Format,...);
+
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void __printf(const cwfOpt & cwOpt,const char * Format,...);
+
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void __printf(int iX,int iY,const char * Format,...);
+ 
+        // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+        // printf() can be very useful to quickly print text without using streaming notation,
+        //
+        // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+        //
+        // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+        //
+        void __printf(int iX,int iY,const cwfOpt & cwOpt,const char * Format,...);
+
+        /// <summary>
+        /// Waits for a mouse click in the window.  This is used a simple way to hold up program execution until the user
+        /// clicks the mouse.
+        /// <para></para>&#160;&#160;&#160;
+        /// The window is set as the foreground and active window when this function is called.
+        /// --> Note: This function will return if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforClick(const char * sMsg = nullptr);
+
+        /// <summary>
+        /// Waits for a keypress from the user and returns the key pressed. This is used as a quick way to pause program execution
+        /// until the user presses any key. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        char WaitforKeyPress(const char * sMsg = nullptr); 
+
+        /// <summary>
+        /// Waits for a Carriage Return press from the user. This is used as a quick way to pause program execution
+        /// until the user presses the carriage return. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforKey() to wait for any key
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforCRPress(const char * sMsg = nullptr); 
+
+        /// <summary>
+        /// Waits for a keypress or mouse click from the user. This is used as a quick way to pause program execution
+        /// until the user presses any key. 
+        /// <para></para>&#160;&#160;&#160;
+        /// The current window is set as the foreground window when this function is called.
+        /// <para></para>
+        /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+        /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+        /// --> Note: This function will return with 0 if the user closes the window.
+        /// </summary>
+        /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+        /// <returns></returns>
+        bool WaitforClickOrKey(const char * sMsg = nullptr); 
+
+//#endif
+
+
     };
 
     // console-based functions -- These function work on the main window similarly to C/C++ console functions, 
@@ -4526,7 +5357,7 @@ public:
     // If the button does not exist (i.e. the ID is incorrect or Name misspelled), an empty button
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CButton & button(const char * sButtonName);
+    CButton & button(const char * sButtonName); // $QC
 
     // Return a Button & for a button with a Name or an ID. 
     //
@@ -4542,7 +5373,7 @@ public:
     // If the button does not exist (i.e. the ID is incorrect or Name misspelled), an empty button
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CButton & button(int iButtonID);
+    CButton & button(int iButtonID); // $QC
 
     // Return an EditBox & for an EditBox with a Name or an ID. 
     //
@@ -4558,7 +5389,8 @@ public:
     // If the editbox does not exist (i.e. the ID is incorrect or Name misspelled), an empty editbox
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CEditBox & editbox(const char * sEditboxName);
+    CEditBox & editbox(const char * sEditboxName); // $QC
+    CInputBox & inputbox(const char * sInputboxName) { return editbox(sInputboxName); }              // $QC //$$moveme
 
     // Return an EditBox & for an EditBox with a Name or an ID. 
     //
@@ -4574,7 +5406,8 @@ public:
     // If the editbox does not exist (i.e. the ID is incorrect or Name misspelled), an empty editbox
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CEditBox & editbox(int iEditboxID);
+    CEditBox & editbox(int iEditboxID); // $QC
+    CInputBox & inputbox(int iInputBoxID) { return editbox(iInputBoxID); }; // $QC
     
     // Return a Slider & for a Slider with a Name or an ID. 
     //
@@ -4590,7 +5423,7 @@ public:
     // If the slider does not exist (i.e. the ID is incorrect or Name misspelled), an empty slider
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CSlider & slider(const char * sSliderName);
+    CSlider & slider(const char * sSliderName); // $QC
 
     // Return a Slider & for a Slider with a Name or an ID. 
     //
@@ -4606,7 +5439,7 @@ public:
     // If the slider does not exist (i.e. the ID is incorrect or Name misspelled), an empty slider
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CSlider & slider(int iSliderID);
+    CSlider & slider(int iSliderID); // $QC
     
     // Return a ListBox & for a ListBox with a Name or an ID. 
     //
@@ -4622,7 +5455,7 @@ public:
     // If the listbox does not exist (i.e. the ID is incorrect or Name misspelled), an empty listbox
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CListBox & listbox(const char * sListBoxName);
+    CListBox & listbox(const char * sListBoxName); // $QC
 
     // Return a ListBox & for a ListBox with a Name or an ID. 
     //
@@ -4638,10 +5471,10 @@ public:
     // If the listbox does not exist (i.e. the ID is incorrect or Name misspelled), an empty listbox
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CListBox & listbox(int iListBoxID);
+    CListBox & listbox(int iListBoxID); // $QC
 
-    CComboBox & combobox(int iComboBoxID);
-    CComboBox & combobox(const char * sComboBoxName);
+    CComboBox & combobox(int iComboBoxID); // $QC
+    CComboBox & combobox(const char * sComboBoxName); // $QC
   // Return a CWindow & for a Window with a Name or an ID. 
     //
     // For example, for this Window: NewWindow(10,20,800,600,"MyWindow,ID(1))
@@ -4656,7 +5489,7 @@ public:
     // If the button does not exist (i.e. the ID is incorrect or Name misspelled), an empty button
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CWindow & window(const char * sWindowName);
+    CWindow & window(const char * sWindowName); // $QC
 
     // Return a CWindow & for a Window with a Name or an ID. 
     //
@@ -4672,17 +5505,17 @@ public:
     // If the button does not exist (i.e. the ID is incorrect or Name misspelled), an empty button
     // is return and all functions will passively fail (i.e. they won't crash but won't do anything).
     //
-    CWindow & window(int iWindowID);
+    CWindow & window(int iWindowID); // $QC
 
     // Returns the default Windows window colors.  SageBox has its own defaults for colors, and this
     // returns the colors Windows sets windows to by default.
     //
-    bool GetWindowColors(DWORD & dwFgColor,DWORD & dwBgColor);
+    bool GetWindowColors(DWORD & dwFgColor,DWORD & dwBgColor); // $QC
 
     // Returns the default Windows window colors.  SageBox has its own defaults for colors, and this
     // returns the colors Windows sets windows to by default.
     //
-    bool GetWindowColors(RGBColor_t & rgbFgColor,RGBColor_t & rgbBgColor);
+    bool GetWindowColors(RGBColor_t & rgbFgColor,RGBColor_t & rgbBgColor); // $QC
 
     // Get the size of the desktop (i.e. monitor). 
     // This returns the current monitor size (i.e. 1920x1080).  This can help in centering and otherwize
@@ -4690,7 +5523,7 @@ public:
     //
     // Currently, this returns the active desktop and will be updated to work with systems with multiple monitors in a future update.
     //
-    SIZE GetDesktopSize();
+    SIZE GetDesktopSize(); // $QC
 
     // Display a Bitmap on the window.
     // 
@@ -4707,7 +5540,24 @@ public:
     // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
     // a false return. 
     //
-    bool DisplayBitmap(int iX,int iY,RawBitmap32_t & stBitmap);    
+    bool DisplayBitmap(int iX,int iY,RawBitmap32_t & stBitmap);     // $QCC
+
+    // Display a Bitmap on the window.
+    // 
+    // ** Note: ** -- this displayed aligned bitmaps, where each row must be divisible by 4, in which 
+    // case some rows must be padded. 
+    //
+    // DisplayBitmap() shows a bitmap on the window at the specified (iX,iY) coordinates on the screen.
+    // Raw data can be used, in which case the width, height, and memory pointer must also be supplied.
+    // RawBitmap_t and CBitmap can also be used, in which case only the iX, and iY parameters are necessary.
+    //
+    // Note: Negate the height to display the bitmap upside-down.  In the case of RawBitmap_t or CBitmap, put
+    // a '-' sign in front of the bitmap structure.  DisplayBitmapR() can also be used.
+    //
+    // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
+    // a false return. 
+    //
+    bool DisplayBitmap(POINT pLoc,RawBitmap32_t & stBitmap);     // $QCC
  
     // Display a Bitmap on the window.
     // 
@@ -4724,7 +5574,7 @@ public:
     // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
     // a false return. 
     //
-    bool DisplayBitmap(RawBitmap32_t & stBitmap);    
+    bool DisplayBitmap(RawBitmap32_t & stBitmap);     // $QCC
 
     // Display a Bitmap on the window.
     // 
@@ -4741,7 +5591,7 @@ public:
     // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
     // a false return. 
     //
-    bool DisplayBitmap(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);    
+    bool DisplayBitmap(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);     // $QCC
 
     // Display a Bitmap on the window.
     // 
@@ -4758,7 +5608,24 @@ public:
     // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
     // a false return. 
     //
-    bool DisplayBitmap(int iX,int iY,RawBitmap_t & stBitmap);    
+    bool DisplayBitmap(POINT pLoc,int iWidth,int iHeight,unsigned char * sMemory);     // $QCC
+
+    // Display a Bitmap on the window.
+    // 
+    // ** Note: ** -- this displayed aligned bitmaps, where each row must be divisible by 4, in which 
+    // case some rows must be padded. 
+    //
+    // DisplayBitmap() shows a bitmap on the window at the specified (iX,iY) coordinates on the screen.
+    // Raw data can be used, in which case the width, height, and memory pointer must also be supplied.
+    // RawBitmap_t and CBitmap can also be used, in which case only the iX, and iY parameters are necessary.
+    //
+    // Note: Negate the height to display the bitmap upside-down.  In the case of RawBitmap_t or CBitmap, put
+    // a '-' sign in front of the bitmap structure.  DisplayBitmapR() can also be used.
+    //
+    // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
+    // a false return. 
+    //
+    bool DisplayBitmap(int iX,int iY,RawBitmap_t & stBitmap);     // $QCC
  
     // Display a Bitmap on the window.
     // 
@@ -4775,7 +5642,7 @@ public:
     // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
     // a false return. 
     //
-    bool DisplayBitmap(RawBitmap_t & stBitmap);    
+    bool DisplayBitmap(RawBitmap_t & stBitmap);     // $QCC
 
     // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
     // Windows behavior is to correct this.
@@ -4786,7 +5653,7 @@ public:
     //
     // See DisplayBitmap() for more details on this function.
     //
-    bool DisplayBitmapR(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);    
+    bool DisplayBitmapR(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);     // $QCC
 
     // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
     // Windows behavior is to correct this.
@@ -4797,7 +5664,18 @@ public:
     //
     // See DisplayBitmap() for more details on this function.
     //
-    bool DisplayBitmapR(int iX,int iY,RawBitmap_t & stBitmap);    
+    bool DisplayBitmapR(POINT pLoc,int iWidth,int iHeight,unsigned char * sMemory);     // $QCC
+
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(int iX,int iY,RawBitmap_t & stBitmap);     // $QCC
     
     // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
     // Windows behavior is to correct this.
@@ -4808,7 +5686,18 @@ public:
     //
     // See DisplayBitmap() for more details on this function.
     //
-    bool DisplayBitmapR(RawBitmap_t & stBitmap);    
+    bool DisplayBitmapR(POINT pLoc,RawBitmap_t & stBitmap);     // $QCC
+    
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(RawBitmap_t & stBitmap);     // $QCC
 
     //Display a 32-bit bitmap. 
     //
@@ -4819,7 +5708,7 @@ public:
     //
     // See DisplayBitmap() for more information
     //
-    bool DisplayBitmap32(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);    
+    bool DisplayBitmap32(int iX,int iY,int iWidth,int iHeight,unsigned char * sMemory);    // $QCC
 
     //Display a 32-bit bitmap. 
     //
@@ -4830,7 +5719,29 @@ public:
     //
     // See DisplayBitmap() for more information
     //
-    bool DisplayBitmap32(int iX,int iY,RawBitmap32_t & stBitmap);    
+    bool DisplayBitmap32(POINT pLoc,int iWidth,int iHeight,unsigned char * sMemory);     // $QCC
+
+    //Display a 32-bit bitmap. 
+    //
+    // This function is the same as DisplayBitmap(), except that it displays a 32-bit bitmap. 
+    //
+    // iX,iY must be specified for the location of the displayed bitmap.
+    // For raw data, Width,Height, and memory pointer must also be displayed.
+    //
+    // See DisplayBitmap() for more information
+    //
+    bool DisplayBitmap32(int iX,int iY,RawBitmap32_t & stBitmap);     // $QCC
+    
+    //Display a 32-bit bitmap. 
+    //
+    // This function is the same as DisplayBitmap(), except that it displays a 32-bit bitmap. 
+    //
+    // iX,iY must be specified for the location of the displayed bitmap.
+    // For raw data, Width,Height, and memory pointer must also be displayed.
+    //
+    // See DisplayBitmap() for more information
+    //
+    bool DisplayBitmap32(POINT pLoc,RawBitmap32_t & stBitmap);     // $QCC
  
     //Display a 32-bit bitmap. 
     //
@@ -4841,15 +5752,22 @@ public:
     //
     // See DisplayBitmap() for more information
     //
-    bool DisplayBitmap32(RawBitmap32_t & stBitmap);    
+    bool DisplayBitmap32(RawBitmap32_t & stBitmap);     // $QCC
  
     // Blend a bitmap with a pre-defined mask
     //
-    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap);
+    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap); // $QCC
+    // Blend a bitmap with a pre-defined mask
+    //
+    bool BlendBitmap(POINT pLoc,RawBitmap_t & stBitmap); // $QCC
 
     // Blend a bitmap with a pre-defined mask
     //
-    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap,RawBitmap_t & stMask);
+    bool BlendBitmap(int iX,int iY,RawBitmap_t & stBitmap,RawBitmap_t & stMask); // $QCC
+
+    // Blend a bitmap with a pre-defined mask
+    //
+    bool BlendBitmap(POINT pLoc,RawBitmap_t & stBitmap,RawBitmap_t & stMask); // $QCC
 
     // StretchBitmap() -- Display a stretched bitmap to the window.  
     //
@@ -4860,36 +5778,22 @@ public:
     // will fail.  When specifyin a CBitmap or RawBitmap_t as the source, szSourceBitmap does not need to be filled.
     // szSourceBitmap only needs to be filled when sending raw bitmap data and the source size differs from the source bitmap size.
     //
-    bool StretchBitmap(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0});
-    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest); 
-    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource);
+    bool StretchBitmap(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0}); // $QCC
+    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmap(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
 
-    bool StretchBitmapR(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0});
-    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest); 
-    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource);
+    bool StretchBitmapR(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0}); // $QCC
+    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
 
-    bool DisplayBitmapEx(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap);
-    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,SIZE szSize); 
-    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize);
+    bool DisplayBitmapEx(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap); // $QCC
+    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,SIZE szSize);  // $QCC
+    bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize); // $QCC
 
-    bool DisplayBitmapExR(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap);
-    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,SIZE szSize); 
-    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize);
+    bool DisplayBitmapExR(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap); // $QCC
+    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,SIZE szSize);  // $QCC
+    bool DisplayBitmapExR(CBitmap & cBitmap,POINT pDest,POINT pSrc, SIZE szSize); // $QCC
 
-
-    // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
-    //
-    // This allows a font to be set and the status saved, so that the original font can be restored.
-    //
-    // For example:
-    //
-    // PushFont("arial,20");    -- push current font and set new font to Arial, 20
-    // <<multiple output functions>>
-    // PopFont() -- Pop the font to the original font.
-    //
-    // PushFont can be used for up to 32 Fonts on the stack at a time
-    //
-    HFONT PushFont(const char * sFont);
 
     // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
     //
@@ -4903,12 +5807,26 @@ public:
     //
     // PushFont can be used for up to 32 Fonts on the stack at a time
     //
-    HFONT PushFont(HFONT hFont = nullptr);
+    HFONT PushFont(const char * sFont); // $QC
+
+    // PushFont() -- Set and Push a font on the stack, allowing PopFont() to restore the font.
+    //
+    // This allows a font to be set and the status saved, so that the original font can be restored.
+    //
+    // For example:
+    //
+    // PushFont("arial,20");    -- push current font and set new font to Arial, 20
+    // <<multiple output functions>>
+    // PopFont() -- Pop the font to the original font.
+    //
+    // PushFont can be used for up to 32 Fonts on the stack at a time
+    //
+    HFONT PushFont(HFONT hFont = nullptr); // $QC
 
     // PopFont() -- Pop a pushed font and restore the font to the active window font.
     // See PushFont() for more details.
     //
-    HFONT PopFont(int iNumPop = 0); 
+    HFONT PopFont(int iNumPop = 0);  // $QC
 
     // PushColor() -- Push the current Background and Foreground colors for later retrieval.
     // This can also be used to simultaneously set colors.
@@ -4924,7 +5842,7 @@ public:
     //
     // PushColor can be used for up to 32 colors on the stack at a time
     //
-    bool PushColor(DWORD dwFgColor,DWORD dwBgColor = -1);
+    bool PushColor(DWORD dwFgColor,DWORD dwBgColor = -1); // $QC
 
     // PushColor() -- Push the current Background and Foreground colors for later retrieval.
     // This can also be used to simultaneously set colors.
@@ -4940,7 +5858,7 @@ public:
     //
     // PushColor can be used for up to 32 colors on the stack at a time
     //
-    bool PushColor(RGBColor_t rgbFgColor = { -1,-1, -1},RGBColor_t rgbBgColor = {-1,-1,-1});
+    bool PushColor(RGBColor_t rgbFgColor = { -1,-1, -1},RGBColor_t rgbBgColor = {-1,-1,-1}); // $QC
 
     // PushBgColor() -- Push the current Background color for later retrieval.
     // This can also be used to simultaneously set the background color.
@@ -4949,7 +5867,7 @@ public:
     //
     // See PushColors() for more information.
     //
-    bool PushBgColor(DWORD dwFgColor = -1);
+    bool PushBgColor(DWORD dwFgColor = -1); // $QC
 
     // PushBgColor() -- Push the current Background color for later retrieval.
     // This can also be used to simultaneously set the background color.
@@ -4958,34 +5876,34 @@ public:
     //
     // See PushColors() for more information.
     //
-    bool PushBgColor(RGBColor_t rgbColor = {-1,-1,-1});
+    bool PushBgColor(RGBColor_t rgbColor = {-1,-1,-1}); // $QC
 
     // Pop a color or colors pushed on to the PushColor Stack. 
     // See PushColor() for more informtion.
     //
-    bool PopColor(int iNumPop = 1);
+    bool PopColor(int iNumPop = 1); // $QC
 
     // GetDefaultBgColor() -- return default Background color for windows created by SageBox
     //
-    RGBColor_t GetDefaultBgColor();
+    RGBColor_t GetDefaultBgColor(); // $QC
 
     // GetDefaultBgColor() -- return default Foreground color for windows created by SageBox
     //
-    RGBColor_t GetDefaultFgColor();
+    RGBColor_t GetDefaultFgColor(); // $QC
  
     // Return the Current Font. 
     // This returns a Windows HFONT which can be used in all Font functions
     //
-    HFONT GetCurrentFont();
+    HFONT GetCurrentFont(); // $QC
 
     // Set the Font to the Default Font for the Window.
     //
-    HFONT SetDefaultFont();
+    HFONT SetDefaultFont(); // $QC
 
     // Get the Default Font for the window.
     // This only returns the font but does not set it.
     //
-    HFONT GetDefaultFont();
+    HFONT GetDefaultFont(); // $QC
 
     // Set the Font for the window.
     // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
@@ -4998,7 +5916,7 @@ public:
     // SetFont("TestFont");             -- Set the Font named "TestFont"
     // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
     //
-    HFONT SetFont(HFONT hFont);    
+    HFONT SetFont(HFONT hFont);    // $QC
 
     // Set the Font for the window.
     // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
@@ -5011,7 +5929,20 @@ public:
     // SetFont("TestFont");             -- Set the Font named "TestFont"
     // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
     //
-    HFONT SetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
+    HFONT SetFont(int iFontSize);    // $QC
+
+    // Set the Font for the window.
+    // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
+    //
+    // Bold and italic are created for all fonts. 
+    //
+    // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
+    // SetFont("Arial,20")              -- Sets the font to Arial,20
+    // MyFont = SetFont("Arial,20","TestFont")  -- Set the font to Arial,20 and name it TestFont.  Store it in MyFont
+    // SetFont("TestFont");             -- Set the Font named "TestFont"
+    // SetFont(MyFont)                  -- Sets the font to the HFONT MyFont Value
+    //
+    HFONT SetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);       // $QC
 
     // GetFont() -- Get a font created through SageBox.
     //
@@ -5019,7 +5950,7 @@ public:
     //
     // The Font returned is an HFONT which can be used with all font functions
     //
-    HFONT SetFont(WCHAR * wsFont,WCHAR * wsNewFontName = nullptr,unsigned char * ucStatus = nullptr);
+    HFONT SetFont(WCHAR * wsFont,WCHAR * wsNewFontName = nullptr,unsigned char * ucStatus = nullptr);       // $QC
 
     // GetFont() -- Get a font created through SageBox.
     //
@@ -5027,7 +5958,7 @@ public:
     //
     // The Font returned is an HFONT which can be used with all font functions
     //
-    HFONT GetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
+    HFONT GetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);     // $QC
 
     // Create the Font for the window -- this works the same as SetFont(), creating the font but not setting it in the window.
     // Use SetFont to set the returned font or to Create-and-Set a font simultaneously.
@@ -5042,7 +5973,7 @@ public:
     // CreateNewFont("TestFont");                       -- Create the Font named "TestFont"
     // CreateNewFont(MyFont)                            -- Create the font to the HFONT MyFont Value
     //
-    HFONT CreateNewFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
+    HFONT CreateNewFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);     // $QC
 
     // Create the Font for the window (Same as CreateNewFont) -- this works the same as SetFont(), creating the font 
     // but not setting it in the window. Use SetFont to set the returned font or to Create-and-Set a font simultaneously.
@@ -5057,25 +5988,60 @@ public:
     // AddFont("TestFont");                       -- Create the Font named "TestFont"
     // AddFont(MyFont)                            -- Create the font to the HFONT MyFont Value
     //
-    __forceinline HFONT AddFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr)
-                                                                            { return CreateNewFont(sFont,sNewFontName,ucStatus); }
+    __forceinline HFONT AddFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr) { return CreateNewFont(sFont,sNewFontName,ucStatus); }   // $QC
     // Returns true of the middle mouse button mouse was double clicked.
     // *** This function is still in development and may not work.
     // This is tied to the status of the window an whether or not it will accept double-clicks.
     //
-    bool MouseDoubleClicked();
+    bool MouseDoubleClicked(); // $QCC
 
     // Returns true if the Left Mouse Button is currently pressed.  
     // This is not a mouse event and returns the real-time status of the mouse.
     //
-    bool MouseButtonDown();
+    bool MouseButtonDown(); // $QCC
+
+    /// <summary>
+    /// If a key has been pressed, KeyPressed() eturns the key (or TRUE with "cKey") filled with the character code for the key pressed.
+    /// <para></para>
+    /// If a key has not been pressed, Keypressed() returns false without setting "cKey" (or 0 in the case of returning a Key)
+    /// <para></para>&#160;&#160;&#160;
+    /// Examples:
+    /// <para></para>&#160;&#160;&#160;
+    ///     char cKey = win.KeyPressed(); // returns 0 if no key pressed or key code
+    ///     bool bPressed = win.KeyPressed(cKey);   // returns true if pressed and fills ckey (otherwise cKey is not changed)
+    /// <para></para>
+    /// This is an event. Therefore, a second call to KeyPressed() will return false until another key is entered (unless "peek" is
+    /// set to Peek::Yes
+    /// </summary>
+    /// <param name="cKey">= (optional) char value to fill)</param>
+    /// <param name="peek">= (optional) When Peek:Yes is used, the status for keypress is not changed (will still return as true)</param>
+    /// <returns>BOOLEAN (true/false) if cKey included in paramaters; otherwise returns key info (or 0 for no key pressed)</returns>
+    bool KeyPressed(char & cKey,Peek peek = Peek::No);  // $QCC
+
+    /// <summary>
+    /// If a key has been pressed, KeyPressed() eturns the key (or TRUE with "cKey") filled with the character code for the key pressed.
+    /// <para></para>
+    /// If a key has not been pressed, Keypressed() returns false without setting "cKey" (or 0 in the case of returning a Key)
+    /// <para></para>&#160;&#160;&#160;
+    /// Examples:
+    /// <para></para>&#160;&#160;&#160;
+    ///     char cKey = win.KeyPressed(); // returns 0 if no key pressed or key code
+    ///     bool bPressed = win.KeyPressed(cKey);   // returns true if pressed and fills ckey (otherwise cKey is not changed)
+    /// <para></para>
+    /// This is an event. Therefore, a second call to KeyPressed() will return false until another key is entered (unless "peek" is
+    /// set to Peek::Yes
+    /// </summary>
+    /// <param name="cKey">= (optional) char value to fill)</param>
+    /// <param name="peek">= (optional) When Peek:Yes is used, the status for keypress is not changed (will still return as true)</param>
+    /// <returns>BOOLEAN (true/false) if cKey included in paramaters; otherwise returns key info (or 0 for no key pressed)</returns>
+    char KeyPressed(Peek peek = Peek::No); // $QCC
 
     // Returns true if the Right Mouse Button is currently pressed.  
     // This is not a mouse event and returns the real-time status of the mouse.
     //
-    bool MouseRButtonDown();
-    bool MouseRButtonClicked(POINT & pPoint,Peek peek = Peek::No);
-    bool MouseRButtonClicked(Peek peek = Peek::No);
+    bool MouseRButtonDown(); // $QCC
+    bool MouseRButtonClicked(POINT & pPoint,Peek peek = Peek::No); // $QCC
+    bool MouseRButtonClicked(Peek peek = Peek::No); // $QCC
 
     // Returns true if the mouse was moved
     // This is an event and is a one-time only read so that the status is reset 
@@ -5089,7 +6055,7 @@ public:
     // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
     // You can also use GetMousePos() to retrieve the current mouse cooordinates.
     //
-    bool MouseMoved(Peek peek = Peek::No);
+    bool MouseMoved(Peek peek = Peek::No); // $QCC
 
     // Returns true if the mouse was moved
     // This is an event and is a one-time only read so that the status is reset 
@@ -5103,7 +6069,7 @@ public:
     // Include a POINT (i.e. MouseMoved(MyPoint)) to get the mouse-movvement cooordinates.
     // You can also use GetMousePos() to retrieve the current mouse cooordinates.
     //
-    bool MouseMoved(POINT & pPoint,Peek peek = Peek::No);
+    bool MouseMoved(POINT & pPoint,Peek peek = Peek::No); // $QCC
 
 
     // ButtonPressed() -- returns the ID of a button that has an active "press" status.
@@ -5117,7 +6083,7 @@ public:
     // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
     // which case it is untouched.
     //
-    int ButtonPressed(Peek peek = Peek::No);
+    int ButtonPressed(Peek peek = Peek::No); // $QCC
 
     // ButtonPressed() -- returns the ID of a button that has an active "press" status.
     // When a button is pressed, the individual Button.Pressed() function can be called to determine the press event.
@@ -5130,7 +6096,7 @@ public:
     // When a button is returned, the "pressed" status of that button is set to false to prepare for the next event, unless bPeek is set to true, in
     // which case it is untouched.
     //
-    bool ButtonPressed(int & iButtonID,Peek peek = Peek::No);
+    bool ButtonPressed(int & iButtonID,Peek peek = Peek::No); // $QCC
 
     // MouseClicked() -- returns true if the Left Mouse Button was clicked.
     //
@@ -5145,7 +6111,7 @@ public:
     // Include a POINT (i.e. MouseClicked(MyPoint)) to get the mouse-click coodrinates.
     // You can also use GetMouseClickPos() to retrieve the last mouse-click coordinates.
     //
-    bool MouseClicked(Peek peek = Peek::No);
+    bool MouseClicked(Peek peek = Peek::No); // $QCC
 
    // MouseClicked() -- returns true if the Left Mouse Button was clicked.
     //
@@ -5160,26 +6126,26 @@ public:
     // Include a POINT (i.e. MouseClicked(MyPoint)) to get the mouse-click coodrinates.
     // You can also use GetMouseClickPos() to retrieve the last mouse-click coordinates.
     //
-    bool MouseClicked(POINT & pMouse,Peek peek = Peek::No);
+    bool MouseClicked(POINT & pMouse,Peek peek = Peek::No); // $QCC
     
-    bool MouseDragEvent(Peek peek = Peek::No);
-    bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No);
+    bool MouseDragEvent(Peek peek = Peek::No); // $QCC
+    bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No); // $QCC
 
-    bool MouseDragEnded(Peek peek = Peek::No);
-    bool MouseDragEnded(POINT & pMouse,Peek peek = Peek::No);
+    bool MouseDragEnded(Peek peek = Peek::No); // $QCC
+    bool MouseDragEnded(POINT & pMouse,Peek peek = Peek::No); // $QCC
 
-    bool isMouseDragging(); 
-    bool isMouseDragging(POINT & pStartDrag); 
+    bool isMouseDragging();  // $QCC
+    bool isMouseDragging(POINT & pStartDrag);  // $QCC
 
-    POINT GetMouseDragStart();
-
-    // GetMousePos() -- Returns the current mouse coordinates relative to the window
-    //
-    bool GetMousePos(int & iMouseX,int & iMouseY); 
+    POINT GetMouseDragStart(); // $QCC
 
     // GetMousePos() -- Returns the current mouse coordinates relative to the window
     //
-    POINT GetMousePos();
+    bool GetMousePos(int & iMouseX,int & iMouseY);  // $QCC
+
+    // GetMousePos() -- Returns the current mouse coordinates relative to the window
+    //
+    POINT GetMousePos(); // $QCC
 
     // GetMouseClickPos() -- Returns the last mouse click coordinates.
     //
@@ -5188,7 +6154,7 @@ public:
     //
     // This works for both left button and right button clicks.
     //
-    bool GetMouseClickPos(int & iMouseX,int & iMouseY); 
+    bool GetMouseClickPos(int & iMouseX,int & iMouseY);  // $QCC
 
     // GetMouseClickPos() -- Returns the last mouse click coordinates.
     //
@@ -5197,13 +6163,13 @@ public:
     //
     // This works for both left button and right button clicks.
     //
-    POINT GetMouseClickPos();
+    POINT GetMouseClickPos(); // $QCC
 
-    bool MouseWheelMoved(Peek peek = Peek::No);
-    bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No);
-    int GetMouseWheelMove(bool bResetEvent = true);
-    bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No);
-    bool WindowResized(Peek peek = Peek::No);
+    bool MouseWheelMoved(Peek peek = Peek::No); // $QCC
+    bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No); // $QCC
+    int GetMouseWheelMove(bool bResetEvent = true); // $QCC
+    bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No); // $QC
+    bool WindowResized(Peek peek = Peek::No); // $QC
 
     // SetWritePos() -- Set the output position in the Window for writing text. 
     // 
@@ -5229,7 +6195,7 @@ public:
     //
     // --> Note: using Cls() sets the position to (0,0) (i.e. SetPos(0,0));
     //
-    ConsoleOp_t SetWritePos(POINT pLoc);
+    ConsoleOp_t SetWritePos(POINT pLoc); // $QC
 
 
     // SetWritePosX() -- Set the output X position in the window for writing text. 
@@ -5239,7 +6205,7 @@ public:
     //
     // See SetWritePos() for more information; 
     //
-    ConsoleOp_t SetWritePosX(int iX);
+    ConsoleOp_t SetWritePosX(int iX); // $QC
 
     // SetBkMode() -- Set the text background mode.
     // BkMode returns eeither BkMode::Transparent or BkMode::Opaque
@@ -5250,7 +6216,7 @@ public:
     // BkMode::Opaque         -- When text is written to the window, this will write the text in the foreground color and fill in the background with the
     //                           background color overwriting any text or graphics behind the new text.
     //
-    void SetBkMode(BkMode eBkType);
+    void SetBkMode(BkMode eBkType); // $QC
 
     // GetBkMode() -- Get the text background mode.
     // BkMode returns eeither BkMode::Transparent or BkMode::Opaque
@@ -5261,7 +6227,7 @@ public:
     // BkMode::Opaque         -- When text is written to the window, this will write the text in the foreground color and fill in the background with the
     //                           background color overwriting any text or graphics behind the new text.
     //
-    BkMode GetBkMode();
+    BkMode GetBkMode(); // $QC
 
     // SetWordWrap() -- sets whether text printed to the screen wraps to the next line when exceeding the window's edge. 
     //
@@ -5278,22 +6244,22 @@ public:
     // When using "console" functions (i.e. MyWidow.console.Write() or MyWindow.console.printf()) word wrap is always on. 
     // When using regular Write(), printf() and other functions, word wrap is only on if it has been set with SetWordWrap()
     //
-    bool SetWordWrap(bool bWrap = true);
+    bool SetWordWrap(bool bWrap = true); // $QC
 
     // GetWordWrap() -- returns the current word-wrap status for the window (see SetWordWrap());
     //
-    bool GetWordWrap();
+    bool GetWordWrap(); // $QC
 
     // Sets the Program/Application name.  This can also be set when initiating Sagebox, i.e. CSageBox("My Application"); 
     //
     // The Application name is used in various window title bars in SageBox.  With no Program Name set, either the window title is blank or a default
     // text string is used.
     //
-    void SetProgramName(char * sProgramName);
+    void SetProgramName(char * sProgramName); // $QC
 
     // Gets the program name set in SageBox through either the SageBox constructor (i.e. CSageBox("My Application") or through GetProgramName();
     //
-    const char * GetProgramName();
+    const char * GetProgramName(); // $QC
 
     // Returns true if the 'X' button was pressed in the window or the window is closing for some other reason.
     // 
@@ -5308,7 +6274,7 @@ public:
     //
     // See CLoseButtonPressed() to determine if the Window is closing because of a 'X' button press or some other reason.
     //
-    bool WindowClosing();
+    bool WindowClosing();       // $QC
 
     // Reset Window Closing Status.   
     //
@@ -5318,9 +6284,21 @@ public:
     // This can be used when a user has pressed the close button and CloseButtonPessed() returns true.
     // To cancel the user-based close, call ResetWindowClosing()
     //
-    bool ResetWindowClosing();
-    bool SetWindowClosing(bool bPressCloseButton = false);
-    bool PressCloseButton(); 
+    bool ResetWindowClosing(); // $QC
+    bool SetWindowClosing(bool bPressCloseButton = false); // $QC
+    bool PressCloseButton();  // $QC
+
+    /// <summary>
+    /// Simulates a press on a button when the user closes the window. 
+    /// <para></para>
+    /// When the users closes the window, a button press is simulated for the button, causing a SageEvent or return from GetEvent().  The button then may be queried for its 
+    /// pressed status. 
+    /// <para></para>&#160;&#160;&#160;
+    /// If a signal is attached to the button, the boolean value that serves as the signal is set to true.
+    /// </summary>
+    /// <param name="cButton">Button to press when the window is closed by the user</param>
+    /// <returns></returns>
+    bool PressButtonOnClose(CButton & cButton); // $QC
 
     // CloseButtonPressed() -- Returns true of the close buttton was pressed.
     //
@@ -5334,45 +6312,45 @@ public:
     //
     // Since this is an event, it can be used to reset the WindowClosing() flag by using ResetWindowClosing()
     //
-    bool CloseButtonPressed(Peek peek = Peek::No);
+    bool CloseButtonPressed(Peek peek = Peek::No); // $QCC
 
     // PeekCloseButtonPressed() -- Use to determine if the close button was pressed before 
     //
     // This is a shortcut for CLoseButtonPressed(true)
     // See CloseButtonPressed() for more Informatuion
     //
-    bool PeekCloseButtonPressed();
+    bool PeekCloseButtonPressed(); // $QCC
 
     // getCharWidth() -- get the average character width for the current window font.
     // For proportional fonts, this returns the average chacter width for the font. 
     // For termainl fonts (i.e. Courier New, etc.) this returns the width for all characters.
     //
-    int getCharWidth();
+    int getCharWidth(); // $QC
 
     // getCharHeight() -- Returns the height of the characters for the current window font.  This is 
     // the lineheight for each line printed. 
     //
-    int getCharHeight();
+    int getCharHeight(); // $QC
 
     // getCharSize() -- returns the average character width and exact height for the current window font
     // used for all text-based input and output functions.
     //
-    SIZE getCharSize(const char * sFont);
+    SIZE getCharSize(const char * sFont); // $QC
 
     // getCharSize() -- returns the average character width and exact height for the current window font
     // used for all text-based input and output functions.
     //
-    SIZE getCharSize(HFONT hFont = nullptr);
+    SIZE getCharSize(HFONT hFont = nullptr); // $QC
 
     // GetBgColor() -- Get the current backround color for the window.
     // This color is used for Cls() and all text output routines.
     //
-    RGBColor_t GetBgColor();
+    RGBColor_t GetBgColor(); // $QC
 
     // GetFgColor() -- Get the current foreground (i.e. Text) color for the window.
     // This color is used all text output routines.
     //
-    RGBColor_t GetFgColor();
+    RGBColor_t GetFgColor(); // $QC
 
     // Get the current Windows DC (device context) for the window.
     //
@@ -5388,7 +6366,7 @@ public:
     // to turn off buffering, in which case GetCurDC() will return the DC to the window
     // rather than the bitmap.
     //
-    HDC GetCurDC();
+    HDC GetCurDC(); // $QC
 
     // Get the Windows Desktop Device Context of the current window, i.e. the static Device Context.
     //
@@ -5397,7 +6375,7 @@ public:
     // 
     // See GetCurDC() for more information
     //
-    HDC GetDesktopDC();
+    HDC GetDesktopDC(); // $QC
 
     // Get the Windows Device Context for the internal bitmap Sagebox uses for output functions (i.e. Write(), printf(), drawing, etc.)
     //
@@ -5405,7 +6383,7 @@ public:
     // 
     // See GetCurDC() for more information
     //
-    HDC GetBitmapDC();
+    HDC GetBitmapDC(); // $QC
 
 
     // GetWritePos() -- Returns the current X,Y output position for all text-based functions.
@@ -5414,7 +6392,7 @@ public:
 
     // GetWritePos() -- Returns the current X,Y output position for all text-based functions.
     //
-    POINT GetWritePos();
+    POINT GetWritePos(); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -5431,7 +6409,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(RawBitmap_t & stBitmap,const  cwfOpt & cwOpt = cwfOpt());
+    CWindow & BitmapWindow(RawBitmap_t & stBitmap,const  cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -5448,7 +6426,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(CBitmap & cBitmap,const  cwfOpt & cwOpt= cwfOpt());
+    CWindow & BitmapWindow(CBitmap & cBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -5465,7 +6443,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt());
+    CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -5482,7 +6460,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(int iX,int iY,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt());
+    CWindow & BitmapWindow(int iX,int iY,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // Create a new Child Window within the parent window. 
     // This created an embedded window that is the same as other windows (and, in fact, return CWindow)
@@ -5501,8 +6479,8 @@ public:
     //
     // SetMessageHandler() may also be used.
     //
-    CWindow & ChildWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-    CWindow & ChildWindow(POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & ChildWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());             // $QC
+    CWindow & ChildWindow(POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());                           // $QC
 
     // Create a new Child Window within the parent window. 
     // This created an embedded window that is the same as other windows (and, in fact, return CWindow)
@@ -5521,8 +6499,8 @@ public:
     //
     // SetMessageHandler() may also be used.
     //
-    CWindow & ChildWindow(CWindow * cWindow,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-    CWindow & ChildWindow(CWindow * cWindow,POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & ChildWindow(CWindow * cWindow,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());      // $QC
+    CWindow & ChildWindow(CWindow * cWindow,POINT pLoc,SIZE szSize,const cwfOpt & cwOpt = cwfOpt());                    // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5538,7 +6516,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5554,7 +6532,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt);
+    CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5570,7 +6548,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(int iX,int iY,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & NewWindow(int iX,int iY,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5586,7 +6564,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(int iX,int iY,const cwfOpt & cwOpt);
+    CWindow & NewWindow(int iX,int iY,const cwfOpt & cwOpt); // $QC
 
 
     // NewWindow -- Create a new popup window.
@@ -5603,7 +6581,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5619,7 +6597,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt);
+    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5635,7 +6613,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CWindow * cWin,int iX,int iY,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CWindow & NewWindow(CWindow * cWin,int iX,int iY,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -5651,7 +6629,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CWindow * cWin,int iX,int iY,const cwfOpt & cwOpt);
+    CWindow & NewWindow(CWindow * cWin,int iX,int iY,const cwfOpt & cwOpt); // $QC
 
 
     // MakeColor() -- Make a named system color useable throughout SageBox functions.
@@ -5668,7 +6646,7 @@ public:
     // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
     // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
     //
-    RGBColor_t MakeColor(const char * sColor,DWORD rgbColor);
+    RGBColor_t MakeColor(const char * sColor,DWORD rgbColor); // $QC
 
     // MakeColor() -- Make a named system color useable throughout SageBox functions.
     //
@@ -5684,7 +6662,7 @@ public:
     // cWin.SetFgColor(LightRed);       -- Set the foreground color to the RGBColor_t color LightRed
     // cWin.Write("{MyColor}This is light red{/}")   -- Set the color "MyColor" in an output string.
     //
-    RGBColor_t MakeColor(const char * sColor,RGBColor_t rgbColor);
+    RGBColor_t MakeColor(const char * sColor,RGBColor_t rgbColor); // $QC
 
     // Get a named color.  This returns an RGBColor_t (or DWORD -- see prototypes) of a named color.
     // 
@@ -5693,7 +6671,7 @@ public:
     // auto rgbBlue = GetColor("Blue");                 -- Get RGBColor_t value for Blue
     // RGBColor_t rgbMyColor = GetColor("MyColor");     -- Get RGBColor_t value for "MyColor" created previously.
     //
-    RGBColor_t  GetColor(const char * sColor,bool * pColorFound = nullptr);
+    RGBColor_t  GetColor(const char * sColor,bool * pColorFound = nullptr); // $QC
 
     // Get a named color.  This returns an RGBColor_t (or DWORD -- see prototypes) of a named color.
     // 
@@ -5702,14 +6680,14 @@ public:
     // auto rgbBlue = GetColor("Blue");                 -- Get RGBColor_t value for Blue
     // RGBColor_t rgbMyColor = GetColor("MyColor");     -- Get RGBColor_t value for "MyColor" created previously.
     //
-    bool GetColor(const char * sColor,DWORD & rgbColor);
+    bool GetColor(const char * sColor,DWORD & rgbColor); // $QC
 
 
 
     // SetAutoBuffer() -- Sets the screen to buffer only when necessary.
     // *** This is experimental and meant for faster displays.  See SetWindowBuffering();
     //
-    void SetAutoBuffer(bool bAutoBuffer);
+    void SetAutoBuffer(bool bAutoBuffer); // $QC
 
     // SetWindowBuffering() -- Sets whether or not the window is bufferred to a bitmap before sending output to the screen. 
     //
@@ -5729,26 +6707,46 @@ public:
     // When turning the Buffering back on, Sagebox copies the contents of the window so that Buffering can be turned off for some 
     // specific purposes and easily turned back on with buffering enabled.
     //
-    void SetWindowBuffering(bool bBuffer);
+    void SetWindowBuffering(bool bBuffer); // $QC
 
 
-    // Set the Auto Update for the Window.
-    //
-    // By Default, Auto Update is turned on.  This sets the udpate to every 10 milliseconds or so, so that not every action drawn has to 
-    // draw the bitmap on the screen, resulting in much faster performance.
-    //
-    // WHen AutoUpdate() is off, Update() must be called manually to update the screen, which can be cumberome, determining when and where
-    // to sprinkle Update() calls.
-    //
-    // The drawback to Auto Updating is that, in some cases, the last update may not be current if there is a point where program executioin stops.
-    // After most large loops with output, it is a good idea to put a final Update() (without a SleepMS) to ensure the last items output to the
-    // screen are updated.
-    //
-    // EventLoop(), WaitforEvent(), getString, GetInteger, etc.  as well as creating new controls -- most Sagebox functions -- call 
-    // Update prior to executing to ensure the screen is up-to-date.
-    //
-    void SetAutoUpdate(bool bAuto = true);
-    void SetAutoUpdate(AutoUpdateType update);
+    /// <summary>
+    /// Sets the Auto Update Type for the Window
+    /// <para></para>&#160;&#160;&#160;
+    /// - By Default, Auto Update is turned on.  This sets the udpate to every 10 milliseconds or so, so that not every action drawn has to 
+    /// draw the bitmap on the screen, resulting in much faster performance.
+    /// <para></para>&#160;&#160;&#160;
+    /// - When AutoUpdate() is off, Update() must be called manually to update the screen, which can be cumberome, determining when and where
+    /// to sprinkle Update() calls.
+    /// <para></para>&#160;&#160;&#160;
+    /// - The drawback to Auto Updating is that, in some cases, the last update may not be current if there is a point where program executioin stops.
+    /// After most large loops with output, it is a good idea to put a final Update() (without a SleepMS) to ensure the last items output to the
+    /// screen are updated.
+    /// <para></para>&#160;&#160;&#160;
+    /// EventLoop(), WaitforEvent(), getString, GetInteger, etc.  as well as creating new controls -- most Sagebox functions -- call 
+    /// Update prior to executing to ensure the screen is up-to-date.
+    /// </summary>
+    /// <param name="AutoUpdateType update"> = UpdateType.  AutoUpdate(true) sets AutoUpdateType::On, AutoUpdate(false) turns off auto-update</param>
+    void SetAutoUpdate(bool bAuto = true); // $QC
+
+    /// <summary>
+    /// Sets the Auto Update Type for the Window
+    /// <para></para>&#160;&#160;&#160;
+    /// - By Default, Auto Update is turned on.  This sets the udpate to every 10 milliseconds or so, so that not every action drawn has to 
+    /// draw the bitmap on the screen, resulting in much faster performance.
+    /// <para></para>&#160;&#160;&#160;
+    /// - When AutoUpdate() is off, Update() must be called manually to update the screen, which can be cumberome, determining when and where
+    /// to sprinkle Update() calls.
+    /// <para></para>&#160;&#160;&#160;
+    /// - The drawback to Auto Updating is that, in some cases, the last update may not be current if there is a point where program executioin stops.
+    /// After most large loops with output, it is a good idea to put a final Update() (without a SleepMS) to ensure the last items output to the
+    /// screen are updated.
+    /// <para></para>&#160;&#160;&#160;
+    /// EventLoop(), WaitforEvent(), getString, GetInteger, etc.  as well as creating new controls -- most Sagebox functions -- call 
+    /// Update prior to executing to ensure the screen is up-to-date.
+    /// </summary>
+    /// <param name="AutoUpdateType update"> = UpdateType.  AutoUpdate(true) sets AutoUpdateType::On, AutoUpdate(false) turns off auto-update</param>
+    void SetAutoUpdate(AutoUpdateType update); // $QC
  
     // Create a new button on the window. 
     //
@@ -5768,7 +6766,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,int iWidth,int iHeight,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,int iWidth,int iHeight,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5788,7 +6786,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,int iWidth,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,int iWidth,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5808,7 +6806,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5828,7 +6826,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5848,7 +6846,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5868,7 +6866,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,const char * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Wchar_t
 
@@ -5890,7 +6888,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,int iWidth,int iHeight,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,int iWidth,int iHeight,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5910,7 +6908,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,int iWidth,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,int iWidth,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5930,7 +6928,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(int ix,int iy,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(int ix,int iy,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5950,7 +6948,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5970,7 +6968,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,int iWidth,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new button on the window. 
     //
@@ -5990,7 +6988,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewButton(CButton * cUserButton,int ix,int iy,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewButton(CButton * cUserButton,int ix,int iy,const wchar_t * sButtonText,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6012,7 +7010,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6034,7 +7032,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6056,7 +7054,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6078,7 +7076,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6100,7 +7098,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6122,7 +7120,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewCheckbox(CButton * cUserButton,int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6144,7 +7142,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewRadioButton(int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6166,7 +7164,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewRadioButton(int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new checkbox on the window. 
     //
@@ -6188,7 +7186,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewRadioButton(int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new RadioButton on the window. 
     //
@@ -6212,7 +7210,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,int iWidth,int iHeight,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new RadioButton on the window. 
     //
@@ -6236,7 +7234,7 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt());
+    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,int iWidth,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Create a new RadioButton on the window. 
     //
@@ -6260,32 +7258,32 @@ public:
     // JustCenter()     -- Center the button in the X plane. 
     // See opt:: descriptions for more options
     //
-    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt()) ;
+    CButton & NewRadioButton(CButton * cUserButton,int ix,int iy,const char * sName,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // Sets the location if the window on the desktop
     //
-    bool SetWinLocation(POINT pLocation);
+    bool SetWinLocation(POINT pLocation); // $QC
 
     // Sets the location if the window on the desktop
     //
-    bool SetWinLocation(int iX,int iY);
+    bool SetWinLocation(int iX,int iY); // $QC
 
     // Gets the location of the window on the desktop
     //
-    POINT GetWinLocation();
+    POINT GetWinLocation(); // $QC
 
     // Gets the HWND handle to the window that Windows uses and originally assigned to the window.
     // This can be used to perform windows functions directly.
     //
     // Also see GetCurDC()
     //
-    HWND GetWindowHandle();        
+    HWND GetWindowHandle();         // $QC
 
     // ** This is experimental **
     // Clears all event flags before entering WaitforEventLoop()
     // Again, experimental and may be deprecated.
     //
-    bool ClearFlags();
+    bool ClearFlags(); // $QC
 
     // Returns the Windows Size, either the visible canvas size or actual window size including the frame and title bar.
     //
@@ -6297,51 +7295,51 @@ public:
     //
     // See GetCanvasSize() to retrieve the size of the entire canvas that may exceed the visible window
     //
-    SIZE GetWindowSize(bool bFrameSize = false);
+    SIZE GetWindowSize(bool bFrameSize = false);    // $QC
 
     // Returns the ID assigned to the Window when ID() was used to create the window.
     //
-    int GetID();
+    int GetID(); // $QC
 
     // Returns the Name assigned to the window when Name() was used to create the window
     //
-    const char * GetName();
+    const char * GetName(); // $QC
 
     // Sets a hover message to be shown when the mouse hovers over the window
     //
-    bool SetHoverMsg(const char * sHoverMessage);
+    bool SetHoverMsg(const char * sHoverMessage); // $QC
 
     // The the X coordinare of the left part of the window
     //
-    int    StartX();
+    int    StartX(); // $QC
 
     // The the Y coordinae of the upper part of the window
     //
-    int    StartY();
+    int    StartY(); // $QC
    
     // The the X coordinare of the right part of the last window
     //
-    int    EndX();
+    int    EndX(); // $QC
 
     // The the Y coordinare of the bottom part of the window
     //
-    int    EndY();
+    int    EndY(); // $QC
 
     // GetWindowWidth() - returns the width of the displayed canvas of the window.
     // Use GetWindoWidth(true) to get the full width of the widow, including the frame.
     // See GetWindowSize() to return both Width and Height in SIZE structure.
     //
-    int GetWindowWidth(bool bFrameSize = false);
+    int GetWindowWidth(bool bFrameSize = false);    // $QC
 
     // GetWindowHeight() - returns the height of the displayed canvas of the window.
     // Use GetWindowHeight(true) to get the full width of the height, including the frame.
     // See GetWindowSize() to return both Width and Height in SIZE structure.
     //
-    int GetWindowHeight(bool bFrameSize = false);
+    int GetWindowHeight(bool bFrameSize = false);   // $QC
 
     // Returns true if the Window is showing on the desktop.  False is returned if the Window is invisible.
     //
-    bool isVisible();
+    bool isVisible(); // $QC
 
     // Returns true of the window object is a valid window.
     // False is returned if not.  This can happen when a window is retrieved that is not valid, or a 
@@ -6350,7 +7348,7 @@ public:
     // For example using auto& MyWindow = window("MyWindow") will return an empty window if a window
     // with the Name("MyWindow") does not exist.  In which case, isValid() can be used to determine this is an empty window.
     //
-    bool isValid();
+    bool isValid(); // $QC
 
 
     // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
@@ -6366,7 +7364,7 @@ public:
     //                                      or drawn items such as lines, bitmaps, etc.  Any child controls (i.e. buttons, sliders, text widgets, etc.) will not be 
     //                                      copied as part of the bitmap and the area underneath the control will be returned in the bitmap.
     //
-    CBitmap GetWindowBitmap(POINT pLoc,SIZE szSize,bool bDesktopView = false);
+    CBitmap GetWindowBitmap(POINT pLoc,SIZE szSize,bool bDesktopView = false); // $QC
     
     // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
     // and other functions.
@@ -6381,7 +7379,18 @@ public:
     //                                      or drawn items such as lines, bitmaps, etc.  Any child controls (i.e. buttons, sliders, text widgets, etc.) will not be 
     //                                      copied as part of the bitmap and the area underneath the control will be returned in the bitmap.
     //
-    CBitmap GetWindowBitmap(bool bDesktopView = false);
+    CBitmap GetWindowBitmap(bool bDesktopView = false); // $QC
+
+
+    /// <summary>
+    /// Sendes a generic message to a window.  This is used to send a Sage Event to a window and wake up a GetEvent() function waiting for a message
+    /// <para></para>&#160;&#160;&#160;
+    /// This is used when you want to have a message routine check for any status change.  This is sent to the window waiting for a message, either with GetEvent()
+    /// or overriding OnSageEvent() in a window message handler.
+    /// </summary>
+    /// <param name="cWin">The window to receive the wake-up event.  if empty or nullptr, the event is sent to itself.</param>
+    /// <returns></returns>
+    bool SendWindowEvent(CWindow * cWin = nullptr); // $QC
 
     // SendWidgetMessage()
     // 
@@ -6392,7 +7401,7 @@ public:
     // thread rather than the calling thread of an interface function with unknown status (i.e. updates, etc.)
     // (this helps avoid multi-threading issues)
     //
-    bool SendWidgetMessage(CWindow * cWin,void * cWidget = nullptr,int iMessage = 0);
+    bool SendWidgetMessage(CWindow * cWin,void * cWidget = nullptr,int iMessage = 0); // $QC
 
     // SendWidgetMessage()
     // 
@@ -6403,7 +7412,7 @@ public:
     // thread rather than the calling thread of an interface function with unknown status (i.e. updates, etc.)
     // (this helps avoid multi-threading issues)
     //
-    bool SendWidgetMessage(HWND hWndParent,void * cWidget = nullptr,int iMessage = 0);
+    bool SendWidgetMessage(HWND hWndParent,void * cWidget = nullptr,int iMessage = 0); // $QC
 
     // WaitforEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
     //
@@ -6418,7 +7427,7 @@ public:
     // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
     // only events are returned and it is not caught in a spining loop. 
     //
-    WaitEvent WaitforEvent(const char * sEvent = nullptr);
+    WaitEvent WaitforEvent(const char * sEvent = nullptr); // $QCC
 
     // WaitforEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
     //
@@ -6433,7 +7442,7 @@ public:
     // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
     // only events are returned and it is not caught in a spining loop. 
     //
-    WaitEvent WaitforEvent(cwfEvent & cwEvent) { return WaitforEvent(*cwEvent); }
+    WaitEvent WaitforEvent(cwfEvent & cwEvent) { return WaitforEvent(*cwEvent); } // $QCC
  
     
     // EventLoop() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
@@ -6450,7 +7459,7 @@ public:
     // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
     // only events are returned and it is not caught in a spining loop. 
     //
-    bool EventLoop(WaitEvent * eStatus = nullptr); 
+    bool EventLoop(WaitEvent * eStatus = nullptr);  // $QCC
  
     // GetEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
     //
@@ -6466,7 +7475,60 @@ public:
     // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
     // only events are returned and it is not caught in a spining loop. 
     //
-    bool GetEvent(WaitEvent * eStatus = nullptr);
+    bool GetEvent(WaitEvent * eStatus = nullptr); // $QCC
+
+    /// <summary>
+    /// Waits for a mouse click in the window.  This is used a simple way to hold up program execution until the user
+    /// clicks the mouse.
+    /// <para></para>&#160;&#160;&#160;
+    /// The window is set as the foreground and active window when this function is called.
+    /// --> Note: This function will return if the user closes the window.
+    /// </summary>
+    /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+    /// <returns></returns>
+    bool WaitforClick(const char * sMsg = nullptr);     // $QCC
+
+    /// <summary>
+    /// Waits for a keypress from the user and returns the key pressed. This is used as a quick way to pause program execution
+    /// until the user presses any key. 
+    /// <para></para>&#160;&#160;&#160;
+    /// The current window is set as the foreground window when this function is called.
+    /// <para></para>
+    /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+    /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+    /// --> Note: This function will return with 0 if the user closes the window.
+    /// </summary>
+    /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+    /// <returns></returns>
+    char WaitforKeyPress(const char * sMsg = nullptr);        // $QCC
+
+    /// <summary>
+    /// Waits for a Carriage Return press from the user. This is used as a quick way to pause program execution
+    /// until the user presses the carriage return. 
+    /// <para></para>&#160;&#160;&#160;
+    /// The current window is set as the foreground window when this function is called.
+    /// <para></para>
+    /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+    /// --> Use WaitforKey() to wait for any key
+    /// --> Note: This function will return with 0 if the user closes the window.
+    /// </summary>
+    /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+    /// <returns></returns>
+    bool WaitforCRPress(const char * sMsg = nullptr);         // $QCC
+
+   /// <summary>
+    /// Waits for a keypress or mouse click from the user. This is used as a quick way to pause program execution
+    /// until the user presses any key. 
+    /// <para></para>&#160;&#160;&#160;
+    /// The current window is set as the foreground window when this function is called.
+    /// <para></para>
+    /// --> Use getchar() for normal input.  WaitforKeyPress() is meant for pausing program execution
+    /// --> Use WaitforCRPress() to wait specifically for a Carriage Return
+    /// --> Note: This function will return with 0 if the user closes the window.
+    /// </summary>
+    /// <param name="sMsg"> = (optional) message to print out as text to the window.</param>
+    /// <returns></returns>
+    bool WaitforClickOrKey(const char * sMsg = nullptr);      // $QCC
 
     // WaitforCLose() -- Wait for the window to close.  
     // This simply calls EventLoop() and only returns if the window is closing, ignoring all other events.
@@ -6478,32 +7540,32 @@ public:
     //
     // If the window is invalid, -1 will be returned.
     //
-    int WaitforClose(int iReturnValue = 0);
+    int WaitforClose(int iReturnValue = 0);     // $QCC
     
     // WaitforMouseClick() -- Waits for a mouse click in the current window. 
     // This function will return on receipt of a mouseclick or the window close, unless the automatic Window Close is disabled
     // (see DisableClose())
     //
-    bool WaitforMouseClick();    // false return means window is closing down
+    bool WaitforMouseClick();     // $QCC // false return means window is closing down
 
     // ExitButton() -- Places a "Program Finished. Press Button to Continue" on the bottom of the screen and waits for input before
     // continuing.  This is useful when the program ends, to allow the user to press the button before the window closes.
     //
     // Exit Button return 0
     //
-    int ExitButton(const char * sText = nullptr);
+    int ExitButton(const char * sText = nullptr); // $QCC 
  
     // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
     //
     // NoExitMsg() returns 0;
     //
-    int NoExitMsg(bool bNoExit = true); 
+    int NoExitMsg(bool bNoExit = true); // $QC $QCNS
 
     // NoExitMsg() -- Used for Sandbox applications to tell the calling process to not display the exit button w/message on the bottom of the window.
     //
     // NoExitMsg() returns 0 unless a return code is specified.
     //
-    int NoExitMsg(int iReturnCode,bool bNoExit=true); 
+    int NoExitMsg(int iReturnCode,bool bNoExit=true);  // $QC $QCNS
 
     // EnableWindow() -- Enables or Disables the Window and all controls within the window
     //
@@ -6513,7 +7575,7 @@ public:
     // EnableWindow() -- Enable the window
     // EnableWindow(false) -- Disable the window
     //
-    bool EnableWindow(bool bEnable = true);
+    bool EnableWindow(bool bEnable = true); // $QC
 
     // DisableWindow() -- Enables or Disables the Window and all controls within the window
     //
@@ -6523,7 +7585,7 @@ public:
     // DisableWindow() -- Disable the window
     // DisableWindow(false) -- Enable the window
     //
-    bool DisableWindow(bool bDisable = true);
+    bool DisableWindow(bool bDisable = true); // $QC
 
     // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -6536,7 +7598,7 @@ public:
     // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
     // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CBitmap CreateBitmap(int iWidth,int iHeight = 1);
+    CBitmap CreateBitmap(int iWidth,int iHeight = 1); // $QC
 
     // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -6549,7 +7611,7 @@ public:
     // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
     // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CBitmap CreateBitmap(SIZE szBitmapSize);
+    CBitmap CreateBitmap(SIZE szBitmapSize); // $QC
  
     // GetBitmapStruct32() -- Returns a 32-bit RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -6563,7 +7625,7 @@ public:
     // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
     // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    [[nodiscard]] RawBitmap32_t GetBitmapStruct32(int iWidth,int iHeight = 1);
+    [[nodiscard]] RawBitmap32_t GetBitmapStruct32(int iWidth,int iHeight = 1); // $QC
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -6579,7 +7641,8 @@ public:
     // Events are returned such as editbox.ReturnedPressed() which is set when the return key is pressed or ESC key is pressed
     // (in which case an empty string is returned).
     //
-    CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt);
+    CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt); // $QC
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt) { return NewEditBox(iX,iY,iWidth,iHeight,cwOpt);}  // $QC // $$moveme
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -6595,7 +7658,8 @@ public:
     // Events are returned such as editbox.ReturnedPressed() which is set when the return key is pressed or ESC key is pressed
     // (in which case an empty string is returned).
     //
-    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt);
+    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt); // $QC
+    CInputBox & NewInputBox(CInputBox * pObject,int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt) { return NewEditBox(pObject,iX,iY,iWidth,iHeight,cwOpt); }  // $QC // $$movme
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -6611,7 +7675,8 @@ public:
     // Events are returned such as editbox.ReturnedPressed() which is set when the return key is pressed or ESC key is pressed
     // (in which case an empty string is returned).
     //
-    CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return NewEditBox(iX,iY,iWidth,iHeight,sText,cwOpt); }  // $QC //$$moveme
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -6627,7 +7692,8 @@ public:
     // Events are returned such as editbox.ReturnedPressed() which is set when the return key is pressed or ESC key is pressed
     // (in which case an empty string is returned).
     //
-    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CInputBox & NewInputBox(CInputBox * pObject,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return NewEditBox(pObject,iX,iY,iWidth,iHeight,sText,cwOpt); }  // $QC //$$moveme
 
     // CreateButtonStyle() -- Allows the creation of personalized, bitmap-based buttons.
     //
@@ -6641,7 +7707,7 @@ public:
     // Therefore, if 32 bit bitmaps are provided, the buttons will be blended with the background, allowing
     // shaped buttons with transparent background and shadows.
     //
-    bool CreateButtonStyle(const char * sStyleName,GraphicButtonStyle & stStyle);
+    bool CreateButtonStyle(const char * sStyleName,GraphicButtonStyle & stStyle); // $QC
 
     // CreateCheckboxStyle() -- Allows the creation of personalized, bitmap-based buttons.
     //
@@ -6654,7 +7720,7 @@ public:
     // Therefore, if 32 bit bitmaps are provided, the checkboxes will be blended with the background, allowing
     // shaped checkboxes with transparent background and shadows.
     //
-    bool CreateCheckboxStyle(const char * sStyleName,GraphicCheckboxStyle & stStyle);
+    bool CreateCheckboxStyle(const char * sStyleName,GraphicCheckboxStyle & stStyle); // $QC
 
     // CaptureMouse -- Keeps the mouse and keyboard entry tied to the window until the capture is release or
     // changed by Windows.
@@ -6676,14 +7742,14 @@ public:
     // catch the OnCaptureChange() Message (which is only called when the capture is released) to 
     // monitor the capture status
     //
-    bool CaptureMouse(bool bReleaseOnMouseUp = false); 
+    bool CaptureMouse(bool bReleaseOnMouseUp = false);  // $QCC
 
     // ReleaseCapture() -- this releases a mouse capture in the current window or control
     // This can be used to release the capture, such as when the mouse button is released. 
     //
     // note: The capture can be released independently.  See isMouseCaptured() for more details
     //
-    bool ReleaseCapture();
+    bool ReleaseCapture(); // $QCC
 
     // Returns true of the mouse is capture for the window or control.
     // When CaptureMouse() is used, the mouse input is set to the window, even when the mouse is outside the window.
@@ -6695,7 +7761,7 @@ public:
     // When the EventLoop() is used and MouseCapture() is called, it is a good idea to 
     // put isMouseCaptured() to monitor the status (unless using OnCaptureChanged())
     //
-    bool isMouseCaptured();
+    bool isMouseCaptured(); // $QC
 
     // Returns TRUE when the mouse capture has been release.  This only returns true when
     // the mouse capture previously engaged for the window has been released.
@@ -6703,7 +7769,7 @@ public:
     // This returns an event status.  Therefore, the event is reset after the call and will return false 
     // afterward until a subsequent release -- unless peek is set to Peek::No, in which case the status is not reset
     //
-    bool CaptureReleased(Peek peek = Peek::No);
+    bool CaptureReleased(Peek peek = Peek::No); // $QC
 
     // Delete the window.  This closes the window permanently.  All data associated with the window
     // is closed when the parent window is deleted. 
@@ -6712,7 +7778,7 @@ public:
     // be deleted right away.  Delete() can be overridden to do this, or deletObj() can be used to 
     // physically delete the Window (use carefully)
     //
-    bool Delete();
+    bool Delete(); // $QC
 
     // LockProcess() -- Lock the window process for multi-threading capability. (i.e. set Busy status)
     //
@@ -6720,13 +7786,13 @@ public:
     // occur safely.  LockProcess() uses a single lock (use LockProcess(iMyLock) for more locks) for the window and 
     // does not return until the current lock is Unlocked
     //
-    bool LockProcess();
+    bool LockProcess(); // $QC
 
     // UnlockProcess() -- Unlocks the window process for multi-threading capability. (i.e. release Busy status)
     //
     // See LockProcess() for more details
     //
-    bool UnlockProcess();
+    bool UnlockProcess(); // $QC
 
 
     // LockProcess(int & iLock) -- Lock the window process for multi-threading capability. (i.e. set Busy status)
@@ -6741,11 +7807,11 @@ public:
     //
     // LockProcess(int & iLock) blocks and does not return until iLock is freed.
     //
-    bool LockProcess(int & iLock);
+    bool LockProcess(int & iLock); // $QC
 
     // UnlockProces(int & iLock) -- Unlock a specific lock to lock the process for multi-threading (i.e. release Busy status for the specific lock)
     //
-    bool UnlockProcess(int & iLock);
+    bool UnlockProcess(int & iLock); // $QC
 
     // SetDebugID() -- set a specific ID for the window. 
     //
@@ -6756,13 +7822,13 @@ public:
     // SetDebugID() can be used to set a specific Debug ID for the window so that it can be
     // trapped in debugging.
     //
-    void SetDebugID(int iID);
+    void SetDebugID(int iID); // $QC
 
     // GetDebugID() -- returns the debug ID set for the window.
     //
     // Set SetDebugID() for more information.
     //
-    int GetDebugID();
+    int GetDebugID(); // $QC
     virtual ~CWindow();        // Destructor.  Closes the window, deleting all child controls and windows (but not their user-created objects).
 
 
@@ -6838,7 +7904,7 @@ public:
     -->
     --> note: default for text placement is Centered in the Y dimension, and Left in the X dimension.
     */
-    CTextWidget & TextWidget(int iX,int iY,int iWidth,int iHeight,const char * sMessage = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CTextWidget & TextWidget(int iX,int iY,int iWidth,int iHeight,const char * sMessage = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
     /* TextWidget() -- Creates a persistent Text Widget Windows to write Text
     
     A Text Widget is a widow that that is placed on the current window.   This protects the text, and the
@@ -6881,7 +7947,9 @@ public:
     --> Text Placement: Standard window placement options (see auto-complete in opt:: settings) -- TextCenter(),TextCenterX(),TextCenterY(),TextLeft(),TextRight(),TextTop(),TextBottom(), etc.
     -->
     --> note: default for text placement is Centered in the Y dimension, and Left in the X dimension.
-    */    CTextWidget & TextWidget(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt);
+    */ 
+    CTextWidget & TextWidget(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt); // $QC
+    
     /* TextWidget() -- Creates a persistent Text Widget Windows to write Text
     
     A Text Widget is a widow that that is placed on the current window.   This protects the text, and the
@@ -6925,7 +7993,7 @@ public:
     -->
     --> note: default for text placement is Centered in the Y dimension, and Left in the X dimension.
     */
-    CTextWidget & TextWidget(int iX,int iY,const char * sMessage = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CTextWidget & TextWidget(int iX,int iY,const char * sMessage = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // This is used to register a widget with SageBox.
     // The primary use for this is for the widget to register with Sagebox when called by Sagebox.
@@ -6936,7 +8004,7 @@ public:
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
-    int RegisterWidget(int & iRegistryID);
+    int RegisterWidget(int & iRegistryID); // $QC
 
     // SnaptoWin() -- Used by Widgets and controls to make sure their window/control is completely within the parent window
     //
@@ -6951,9 +8019,9 @@ public:
     //
     // CWidget -- the widget can send in its cWidget when a Snap action needs to change the color of the window (otherwise nothing is done)
     //
-    bool SnaptoWin(CWindow * cWin,int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);
-    bool SnaptoDesktop(int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);
-
+    bool SnaptoWin(CWindow * cWin,int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);       // $Q_C
+    bool SnaptoDesktop(int iPadX = 0,int iPadY = 0,Snap eAction = Snap::Snap,CWidget * cWidget = nullptr);                  // $Q_C
+#if 0
     // NewDialog() -- Create a new dialog window. 
     // This returns with a CDialog class that allows you to build a dialog window.
     // A dialog window is the same as a normal window, and you can retrieve the window
@@ -7013,6 +8081,51 @@ public:
     // Dialogs can be used as regular popupwindows or placed within an existing window.
     //
     CDialog & NewDialog(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+#endif
+
+
+
+    /// <summary>
+    /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+    /// <para></para>
+    /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+    /// <para></para>&#160;&#160;&#160;
+    /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+    /// that can then be querired for input.
+    /// <para></para>
+    /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+    /// <para></para>
+    /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+    /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+    /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+    /// --> Use CDialog::Close() to close the dialog box.
+    /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+    /// </summary>
+    /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+    /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+    /// <returns></returns>
+    CQuickDialog & QuickDialog(const char * sHeader = nullptr,const cwfOpt & cwOpt = CWindow::cwNoOpt); // $QC
+
+    /// <summary>
+    /// Creates a Quick Dialog Window for creating quick dialog windows for user input, such as radio buttons, checkboxes, listboxes, etc.
+    /// <para></para>
+    /// This creates a dialog window with an Ok and Cancel button, to which you can add controls.  It returns a CQuickDialog object where you can add the controls and display the dialog box.
+    /// <para></para>&#160;&#160;&#160;
+    /// Use functions such as AddCheckboxes(), AddListbox() and other functions to add controls.  These functions will return the control (or Control Group, in the case of multiple radio buttons and checkboxes) object
+    /// that can then be querired for input.
+    /// <para></para>
+    /// --> Use CQuickDialog::WaitforClose() to wait for the user to press OK or Cancel, after which values can be retrieved from all controls. Returns status of button pressed.
+    /// <para></para>
+    /// --> Use CQuickDialog::Show() to show the dialog box.  After this, you can use the GetEvent() loop or SageEvent message in your message handler to query CQuickDialog::StatusChanged() to determine of the user has pressed a button or closed
+    /// the window.   This method allows you to dynamically look at control events while the user is using the dialog box (i.e. such as reacting to Checkbox presses, etc.)
+    /// --> To re-use the dialog box, use CQuickDialog.ResetStatus() and then re-use WaitforClose() or Show()
+    /// --> Use CDialog::Close() to close the dialog box.
+    /// --> Use Modal() option to make dialog modal (disables parent window until user closes the window by pressing a button or closing it with the 'X' button)
+    /// </summary>
+    /// <param name="sHeader">(optional) top informational text header in the window.  This may be multi-line.  Set first character in first line as '+' to set title of window.</param>
+    /// <param name="cwOpt">(optional).  Options passed to QuickDialog (i.e. Modal(), Title()</param>
+    /// <returns></returns>
+    CQuickDialog & QuickDialog(const cwfOpt & cwOpt); // $QC
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7029,7 +8142,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    CString GetOpenFile(stOpenFileStruct & stFile);
+    CString GetOpenFile(stOpenFileStruct & stFile); // $QC
  
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7046,7 +8159,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    CString GetOpenFile(const char * sTypes = nullptr);
+    CString GetOpenFile(const char * sTypes = nullptr); // $QC
     
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7063,7 +8176,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetOpenFile(stOpenFileStruct & stFile,CString & csFilename);
+    bool GetOpenFile(stOpenFileStruct & stFile,CString & csFilename); // $QC
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7080,7 +8193,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetOpenFile(const char * sTypes,CString & csFilename);
+    bool GetOpenFile(const char * sTypes,CString & csFilename); // $QC
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7097,10 +8210,10 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetOpenFile(CString & csFilename);
+    bool GetOpenFile(CString & csFilename); // $QC
 
 
-    CString GetSaveFile(stOpenFileStruct & stFile);
+    CString GetSaveFile(stOpenFileStruct & stFile); // $QC
  
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7117,7 +8230,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    CString GetSaveFile(const char * sTypes = nullptr);
+    CString GetSaveFile(const char * sTypes = nullptr); // $QC
     
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7134,7 +8247,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetSaveFile(stOpenFileStruct & stFile,CString & csFilename);
+    bool GetSaveFile(stOpenFileStruct & stFile,CString & csFilename); // $QC
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7151,7 +8264,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetSaveFile(const char * sTypes,CString & csFilename);
+    bool GetSaveFile(const char * sTypes,CString & csFilename); // $QC
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -7168,7 +8281,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    bool GetSaveFile(CString & csFilename);
+    bool GetSaveFile(CString & csFilename); // $QC
 
 
     // GetOpenFileStruct() -- Return an stOpenFileStruct to set for using an GetOpenFile() or GetSaveFile() dialog.
@@ -7176,13 +8289,13 @@ public:
     // This is a shortcut for declaring a structure directly, so that auto& stStruct = GetOpenFileStruct() can be used
     // more easily.
     //
-    stOpenFileStruct GetOpenFileStruct();
+    stOpenFileStruct GetOpenFileStruct(); // $QC
 
     // WriteShadow() -- Works like Write() (but is more limited), but writes the text with a shadow behind it.
     //
     // See Write() for more information
     //
-    void WriteShadow(int iX,int iY,const char * sMessage,const cwfOpt & cwOpt = cwfOpt());
+    void WriteShadow(int iX,int iY,const char * sMessage,const cwfOpt & cwOpt = cwfOpt()); // $QCC
 
 
     // CreateMenu() -- Creates a menu that can be added as a main menu or sub menu to the window.
@@ -7191,29 +8304,29 @@ public:
     //
     // See CMenu documentation for more information.
     //
-    [[nodiscard]] CMenu CreateMenu(int iBaseMenuValue = 0);
+    [[nodiscard]] CMenu CreateMenu(int iBaseMenuValue = 0); // $QC
 
     // Find a Windows menu.  If the HMENU (Windows Menu) value is a valid windows menu, a CMenu object is returned for this menu.
     //
-    CMenu GetMenu(HMENU hMenu,bool * bFound = nullptr);
+    CMenu GetMenu(HMENU hMenu,bool * bFound = nullptr); // $QC
 
     // Find a Windows menu.  If the HMENU (Windows Menu) value is a valid windows menu, a CMenu object is returned for this menu.
     //
-    bool GetMenu(HMENU hMenu,CMenu & cMenu);
+    bool GetMenu(HMENU hMenu,CMenu & cMenu); // $QC
 
     // MenuItemSelected() -- This works as an event, and will fill the menu item if it is selected.
     // As an event, subsquent calls will return false and not fill the menu item until another menu item is selected.
     //
     // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
     //
-    bool MenuItemSelected(int & iMenuItem,Peek peek = Peek::No);
+    bool MenuItemSelected(int & iMenuItem,Peek peek = Peek::No); // $QC
 
     // MenuItemSelected() -- This works as an event, and will fill the menu item if it is selected.
     // As an event, subsquent calls will return false and not fill the menu item until another menu item is selected.
     //
     // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
     //
-    bool MenuItemSelected(Peek peek = Peek::No);
+    bool MenuItemSelected(Peek peek = Peek::No); // $QC
 
     // Retrieves the last menu item selected.
     // 
@@ -7221,13 +8334,13 @@ public:
     //
     // This will continue to return the same menu item until a new menu item is selected.
     //
-    int GetMenuItem();
+    int GetMenuItem(); // $QC
 
-    bool SetCloseButtonMenu(int iMenuItem = 0);
+    bool SetCloseButtonMenu(int iMenuItem = 0); // $QC
 
 
-    CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
-    ImageStatus GetLastImageStatus();
+    CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr); // $QC
+    ImageStatus GetLastImageStatus(); // $QC
 
     // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
@@ -7237,7 +8350,7 @@ public:
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-    CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
+    CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr); // $QC
 
     // ReadJpegMem -- Read a jpeg file already loaded into memory.
     // This reads standard 8-bit jpeg (3-channel or monochrome).
@@ -7249,12 +8362,12 @@ public:
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-    CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess);
+    CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess); // $QC
 
     // Returns the last Jpeg status.  This will return CJpeg::Status::Ok if there was no error, 
     // or an indication of what went wrong with the last call, such as CJpeg::Status::EmptyFilePath or CJpeg::Status::FileNotFound
     //
-    CJpeg::Status GetJpegError();
+    CJpeg::Status GetJpegError(); // $QC
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -7268,7 +8381,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
+    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr); // $QC
  
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -7282,7 +8395,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
+    bool QuickThumbnail(RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle); // $QC
 
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -7296,7 +8409,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
+    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr); // $QC
 
     // Quick thumbnail -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -7310,22 +8423,11 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
+    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle); // $QC
 
-    CBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
-    CBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
+    CBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit); // $QC
+    CBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit); // $QC
 
-
-    // Duplication of C++ console-mode getline()
-    //
-    // This is the same as GetString() except that the sring input is specified in the function call.
-    // This is to duplicate the C++ getline() function.
-    //
-    // CString and std::string are supported.
-    //
-    // See GetString() for option usage.
-    //
-    void getline(CString & cString,const cwfOpt & cwOpt = cwfOpt());
 
     // Duplication of C++ console-mode getline()
     //
@@ -7336,8 +8438,84 @@ public:
     //
     // See GetString() for option usage.
     //
-     void getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt());
+    CString getline(CString & cString,const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
 
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    CString __getline(CString & cString,const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
+
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    CString getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
+
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    CString __getline(std::string & cString,const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
+
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    CString getline(const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
+
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    CString __getline(const cwfOpt & cwOpt = cwfOpt()); // $QCC $QCNS
+
+    // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    int getline(char * sString,int iMaxSize); // $QCC $QCNS
+
+     // Duplication of C++ console-mode getline()
+    //
+    // This is the same as GetString() except that the sring input is specified in the function call.
+    // This is to duplicate the C++ getline() function.
+    //
+    // CString and std::string are supported.
+    //
+    // See GetString() for option usage.
+    //
+    int __getline(char * sString,int iMaxSize); // $QCC $QCNS
 
     // NewListBox() -- Create a listbox in the window. 
     //
@@ -7358,7 +8536,7 @@ public:
     // if a CListBox * cListbox object is supplied, this is used as the object so that the listbox may be subclassed to your own class and object.
     // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
     //
-    CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+    CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); // $QC
  
     // NewListBox() -- Create a listbox in the window. 
     //
@@ -7379,14 +8557,14 @@ public:
     // if a CListBox * cListbox object is supplied, this is used as the object so that the listbox may be subclassed to your own class and object.
     // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
     //
-    CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+    CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
 
-    CComboBox &  NewComboBox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); 
-    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); 
+    CComboBox &  NewComboBox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());  // $QC
+    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());  // $QC
 
-    bool SetEventWindow(CWindow * cWin = nullptr);
-    bool SetEventWindow(CWindow & cWin);
+    bool SetEventWindow(CWindow * cWin = nullptr); // $QC
+    bool SetEventWindow(CWindow & cWin); // $QC
 
     // SendEventsToParent() -- Send all events to Parent Window while also sending them to the Window itself.
     //
@@ -7397,38 +8575,62 @@ public:
     // For windows created with Sagebox (and some other instances), there is no Event Window set, and to receive events through the
     // CSageBox::GetEvent() loop, SendEventsToParent() must be called -- this will send all events to the Sagebox main window (which is hidden)
     //
-    bool SendEventsToParent(); 
+    bool SendEventsToParent();  // $QC
 
-    bool AddControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bUpdate,const cwfOpt & cwOpt = cwfOpt());
+    stControlLabel_t AddControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bUpdate,const cwfOpt & cwOpt = cwfOpt()); // $QC
    
-    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate = true,BorderType eBorderType = BorderType::Depressed, LabelJust eLabelType = LabelJust::None,const cwfOpt & cwOpt = cwfOpt());
-    bool DrawLabelBox(POINT pLocation,SIZE szSize, const char * sTitle,const cwfOpt & cwOpt);
-    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate,const cwfOpt & cwOpt);
-    bool HideMenu();
-    bool ShowMenu(CMenu & cMenu);
+    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate = true,BorderType eBorderType = BorderType::Depressed, LabelJust eLabelType = LabelJust::None,const cwfOpt & cwOpt = cwfOpt()); // $QCC
+    bool DrawLabelBox(POINT pLocation,SIZE szSize, const char * sTitle,const cwfOpt & cwOpt); // $QCC
+    bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate,const cwfOpt & cwOpt); // $QCC
+    bool HideMenu(); // $QC
+    bool ShowMenu(CMenu & cMenu); // $QCC
 
-    LONG SetFullScreen(bool bFullscreen = true,LONG dwPrevStyle = 0,bool bForceShow = false);
+    bool SetFullScreen(bool bFullscreen = true,bool bForceShow = false); // $QC
 
-    CDavinci * GetDavinciMain();
+    CDavinci * GetDavinciMain(); // $QC
 
-    SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
-    SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+    SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt()); // $QC
 
-	bool EnablePainting();
-	bool DisablePainting();
-	bool DisablePaintingSafe();
-	bool DontUpdate(bool bDontUpdate = true);
-    bool SetasTopWindow();
-    bool SetasTopmostWindow();
-    bool DrawSimpleDoc(const unsigned char * sPgrData,const cwfOpt & cwOpt = cwfOpt()); 
-    bool DrawSimpleDoc(const char * sPgrPath, const cwfOpt & cwOpt = cwfOpt());
+	bool EnablePainting(); // $QC
+	bool DisablePainting(); // $QC
+	bool DisablePaintingSafe(); // $QC
+
+	/// <summary>
+	/// Turns updating of the window off (including Windows WM_PAINT messages) until the next Update() is called or DontUpdate() is called with DontUpdate(false) to turn updates back on.
+    /// <para></para>&#160;&#160;&#160;
+    /// DontUpdate() is meant to prevent flickering for for local loops that put data to the screen rapidly.  For example, using Cls() and then placing graphics on the screen can
+    /// flicker when the automatic update (or Window's WM_PAINT message) happens after the Cls() and all data is output to the window.
+    /// <para></para>&#160;&#160;&#160;
+    /// Since the next Update() call turns updates back on, and many Sagebox functions call Update() (such as CWindow::GetEvent()), be careful within the 
+    /// DontUpdate() loop to not call certain Sagebox functions.
+    /// <para></para>&#160;&#160;&#160;Use CWindow::UpdateOnce() to update the window when DontUpdate() is active.  This will update the window one time without restting the DontUpdate() status.
+	/// </summary>
+	/// <param name="bDontUpdate"> = When true, window updates are turned off; when false, window updating is turned back on</param>
+	/// <param name="bUpdateNow"> = When true, an update is performed immediately to make sure the latest window data is showing.  The window is only updated if needed.</param>
+	/// <returns>TRUE if Window is valid, FALSE if the Window is not valid.</returns>
+	bool DontUpdate(bool bDontUpdate = true,bool bUpdateNow = false); // $QC
+
+    /// <summary>
+    /// Used to update the window once when updates are off (see DontUpdate())
+    /// <para></para>&#160;&#160;&#160;
+    /// This function forces an Update even when updates are off, allowing a loop with updates off to update one time
+    /// without changing the DontUpdate() status (i.e. no further updates will occur until updates are turned back on).
+    /// </summary>
+    /// <returns></returns>
+    bool UpdateOnce(); // $QC
+
+    bool SetasTopWindow(); // $QC
+    bool SetasTopmostWindow(); // $QC
+    bool DrawSimpleDoc(const unsigned char * sPgrData,const cwfOpt & cwOpt = cwfOpt());  // $QCC
+    bool DrawSimpleDoc(const char * sPgrPath, const cwfOpt & cwOpt = cwfOpt()); // $QCC
 
     // DevGetWindow() -- Returns the Window (i.e. CWindow) of the default DevWindow.  This can be used to access window functions for the 
     // the default DevWindow. 
     //
     // For user-created Dev Control Windows, use the CDevControls::GetWindow() function, i.e. cMyDevWindow->GetWindow(); 
     //
-    CWindow * DevGetWindow();
+    CWindow * DevGetWindow(); // $QC
 
     // DevGetGroup() -- returns the group (i.e. WinGroup) substructure for the default Dev Window.  This can be used to perform group functions.
     // For example, when using multiple DevSlider() calls with a declared common group (i.e. DevSlider("MySlider",opt::Group(100,1)), group.SliderMoved(100)
@@ -7441,7 +8643,7 @@ public:
     // This function only works for the default DevWindow.  For user-created DevWindows, use the CDevControls::group() function, i.e.
     // cMyDevWindow->group().SliderMoved(MyGroup,...)
     //
-    CWindow::WinGroup * DevGetGroup();
+    CWindow::WinGroup * DevGetGroup(); // $QC
 
     // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
@@ -7454,7 +8656,7 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(int iX = -1, int iY = -1, const cwfOpt & cwOpt = cwfOpt());
+    CDevControls * DevControlsWindow(int iX = -1, int iY = -1, const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
@@ -7467,14 +8669,14 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(const cwfOpt & cwOpt);
+    CDevControls * DevControlsWindow(const cwfOpt & cwOpt); // $QC
 
 	// DevButton() -- Add a button to the Default Dev Control Window.  This accepts all options as normal buttons, but 
 	// the default will add a regular button. 
 	//
 	// The Name used as a title for the button, but is optional. 
 	//
-    CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // DevCheckbox() -- Add a checkbox to the DevWindow. 
     //
@@ -7490,35 +8692,44 @@ public:
     //     note: to use '~' as the first character of the checkbox name, i.e. ("~Display Image"), use a double "~~". 
     //           For example, "~~Display Image" will display as "~Display Image"
     //
-    CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
     // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
 	// The title is displayed beneath the slider, as well as the value. 
 	//
-    CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
-    // AddEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
+    // DevEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
-    CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
-  	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const char * sTitle);
+    // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
+    //
+    CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    
+    // DevInputBox() -- Add an InputBox to the default Dev control Window.  The sInputBoxName, while optional, will provide a
+	// label to the left of the Input Box.  The default width is 150 pixels or so, but can be changed with normal InputBox options
+	//
+    // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
+    //
+    CEditBox & DevInputBox(const char * sInputBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return DevEditBox(sInputBoxName,cwOpt); } // $QC //$$moveme
+  	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt()); // $QC
+	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt()); // $QC
+	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt()); // $QC
+	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt()); // $QC
+	CWindow & DevWindow(const char * sTitle); // $QC
 
-    CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
+    CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt()); // $QC
+    CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt()); // $QC
+    CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt()); // $QC
+    CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt()); // $QC
 
 
  	// DevAddSection() -- Adds a text section to the default Dev Controls window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
-    bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
     // *** Important note *** -- this will return NULLPTR until a control is created with
@@ -7528,17 +8739,35 @@ public:
     // With the pointer, any CDevContgrols() function can be used, though most are replicated directly
     // through CSageBox functions for ease of use.
     //
-    CDevControls * GetDevControlsPtr();
+    CDevControls * GetDevControlsPtr(); // $QC
  
-    bool DevControlsTopmost(bool bTopmost = true);
+    bool DevControlsTopmost(bool bTopmost = true); // $QC
 
-    bool DisableClose(bool bDisable = true);
-    bool CloseWindow();
+    /// <summary>
+    /// Disable ablility for user to close the window by pressing the upper-right "X" button or 
+    /// pressing ALT-F4
+    /// <para></para>&#160;&#160;&#160;
+    /// CloseButtonPressed() can be used to determine if the user pressed the close button (or ALT-F4), or the window
+    /// has otherwise been slated to close by the system.
+    /// </summary>
+    /// <param name="bDisable">When true, disabled the window from close.  When false, allows the user to close the window</param>
+    /// <returns></returns>
+    bool DisableClose(bool bDisable = true); // $QC
 
-    bool SetClsBitmap(RawBitmap_t & stBitmap,bool bClsNow = true);
-    bool SetClsBitmap(CBitmap & cBitmap,bool bClsNow = true);
-    bool ClearClsBitmap();
-    CBitmap & GetClsBitmap();
+    /// <summary>
+    /// Returns true if the window close has been disabled (i.e. ability for the user to close the window)
+    /// <para></para>
+    /// Use DisableClose() to disable and enable the ability for the user to close the window.
+    /// </summary>
+    /// <returns>TRUE when Window close is enabled; false if the window-close has been disabled</returns>
+    bool WindowCloseEnabled();      // $QC
+
+    bool CloseWindow(); // $QC
+
+    bool SetClsBitmap(RawBitmap_t & stBitmap,bool bClsNow = true); // $QC
+    bool SetClsBitmap(CBitmap & cBitmap,bool bClsNow = true); // $QC
+    bool ClearClsBitmap(); // $QC
+    CBitmap & GetClsBitmap(); // $QC
     // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
     // CBitmap.
     //
@@ -7555,7 +8784,7 @@ public:
     // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
     // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
     //
-	CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const char * sPgrFile,bool * bSuccess = nullptr); // $QC
 
     // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
     // CBitmap.
@@ -7573,32 +8802,22 @@ public:
     // --> auto cBitmap = ReadPgrBitmap("ImageName","myPgrFile.pgr");
     // --> auto cBitmap = ReadPgrBitmap("Bitmaps:Image1",PgrMem); 
     //
-	CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr);
+	CBitmap ReadPgrBitmap(const char * sImageTitle,const unsigned char * sPGRMemory,bool * bSuccess = nullptr); // $QC
     
 
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt())
-    {
-        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,szSize.cx,szSize.cy,sButtonNames,iColumns,szSpacing,cwOpt);
-    }
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt())
-    {
-        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,sButtonNames,iColumns,cwOpt);
-    }
-
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt())
-    {
-        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,szSize.cx,szSize.cy,sButtonNames,iColumns,szSpacing,cwOpt);
-    }
-    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt())
-    {
-        return CreateButtonGroup(iGroupID,iNumButtons,pLocation.x,pLocation.y,sButtonNames,iColumns,cwOpt);
-    }
-
-    
-    bool SetSignal(SignalEvents event,bool & bSignal);
-    bool SetSignal(SignalEvents event,Signal & stSignal);
-    bool CancelSignal(SignalEvents event);
-    bool UpdateBg(bool bUpdateNow = false);
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(int iGroupID,int iNumButtons,const char * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(const char * sGroupName,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(const char * sGroupName,int iNumButtons,const wchar_t * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt());
+    bool CreateButtonGroup(const char * sGroupName,int iNumButtons,const char * * sButtonNames,POINT pLocation,SIZE szSize,int iColumns = 0, SIZE szSpacing = {-1,-1}, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    bool CreateButtonGroup(const char * sGroupName,int iNumButtons,const char * * sButtonNames,POINT pLocation,int iColumns = 0, const cwfOpt & cwOpt = cwfOpt()); // $QC
+     
+    bool SetSignal(SignalEvents event,bool & bSignal); // $QC
+    bool SetSignal(SignalEvents event,Signal & stSignal); // $QC
+    bool CancelSignal(SignalEvents event); // $QC
+    bool UpdateBg(bool bUpdateNow = false); // $QC
 
     // Returns true of the main thread is stopped.  
     // Use StartThread() to resume the main thread. 
@@ -7606,13 +8825,13 @@ public:
     // This only applies to the original program thread and will not work for other threads created after
     // the program started.
     //
-    bool ThreadStopped();
+    bool ThreadStopped(); // $QC
     
     // Returns the status of the thread.  ThreadStatus::Running or ThreadStatus::Suspended (if the thread is stopped).
     // This only applies to the original program thread and will not work for other threads created after
     // the program started.
     //
-    ThreadStatus GetThreadStatus();
+    ThreadStatus GetThreadStatus(); // $QC
 
     // Stop the main thread.  This is usually used when ending the main thread and transferring to full event-driven control. 
     //
@@ -7627,13 +8846,13 @@ public:
     // an "Ok" or "Window Closed" return value.  The default value (when iOkReturnValue is not specified) is 0.
     // the value iReturnValue is returned from EndProgram() when it wakes up.
     //
-    int StopThread(bool bEndProgramOnClose = false,int iOkReturnValue = 0);
+    int StopThread(bool bEndProgramOnClose = false,int iOkReturnValue = 0); // $QC
 
     // Resume the main thread if it is suspended.
     //
     // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
     //
-    bool ResumeThread(int iValue = 0);
+    bool ResumeThread(int iValue = 0); // $QC
 
     // End the program when in the main message thread.  This is used when StopThread() has been used to stop the main thread but events are
     // still being handled through the Main Windows Message Thread.
@@ -7643,7 +8862,7 @@ public:
     //
     // iValue will be returned by StopThread() when it is awakened. 0 is returned if it was awakened due to the window closing.
     //
-    bool EndProgram(int iValue = 0);
+    bool EndProgram(int iValue = 0); // $QC
 
     // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
     // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
@@ -7655,7 +8874,7 @@ public:
     //
     // iReturnValue specifies the returend value on end program (default is 0)
     //
-    bool EndProgramOnClose(bool bEndOnClose); 
+    bool EndProgramOnClose(bool bEndOnClose);  // $QC
     
     // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
     // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
@@ -7667,7 +8886,7 @@ public:
     //
     // iReturnValue specifies the returend value on end program (default is 0)
     //
-    bool EndProgramOnClose(int iReturnValue = 0); 
+    bool EndProgramOnClose(int iReturnValue = 0);  // $QC
 
     // SendtoClipboard() -- Send contents of window to Windows Clipboard as a bitmap (so it may be pasted into other applications)
     //
@@ -7675,7 +8894,7 @@ public:
     //
     // This transfers the visible canvas area only.  It does not copy the window frame or border. 
     //
-    bool SendtoClipboard();
+    bool SendtoClipboard(); // $QC
 
     // SendtoClipboard() -- Send contents of window to Windows Clipboard as a bitmap (so it may be pasted into other applications)
     //
@@ -7683,7 +8902,7 @@ public:
     //
     // This transfers the visible canvas area only.  It does not copy the window frame or border. 
     //
-    bool SendtoClipboard(CBitmap & cBitmap);
+    bool SendtoClipboard(const CBitmap & cBitmap); // $QC
 
 
     // ImportClipboardText() -- Returns Text String in the Windows clipboard, if it exists.
@@ -7693,7 +8912,7 @@ public:
     //
     // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CString returned is empty);
     //
-    CString ImportClipboardText(bool * bSuccess = nullptr);
+    CString ImportClipboardText(bool * bSuccess = nullptr); // $QC
 
     // ImportClipboardTextW() -- Returns a Unicode Text String in the Windows clipboard, if it exists.
     //
@@ -7702,7 +8921,7 @@ public:
     //
     // a bSuccess pointer may be included which will be filled with the results (true if text was found, false if the CStringW returned is empty);
     //
-    CStringW ImportClipboardTextW(bool * bSuccess = nullptr);
+    CStringW ImportClipboardTextW(bool * bSuccess = nullptr); // $QC
 
     // ImportClipboardBitmap() -- Returns a CBitmap with a copy of the Bitmap in the Clipboard buffer. 
     //
@@ -7716,10 +8935,10 @@ public:
     //
     // With 32-bit bitmaps, a mask element is created in the CBitmap, to which the Alpha channel for the bitmap is copied.
     //
-    CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr);
+    CBitmap ImportClipboardBitmap(bool * bSuccess = nullptr); // $QC
 
-    bool isDevWindow() { return m_bDevWindow; }
-    CSageBox * GetSageBox();
+    bool isDevWindow() { return m_bDevWindow; } // $QC
+    CSageBox * GetSageBox(); // $QC
 
     // CenterInlineFonts() -- When true, this will center the text when font changes occur in output with {<font>} changes.
     // For example Write("This is a {Arial45}Centered{/} Font" will center the larger font in the middle of the text line when
@@ -7727,11 +8946,84 @@ public:
     //
     // This is primarily used for specialized text, such as a TextWidget()
     //
-    bool CenterInlineFonts(bool bCenterFonts = true);
+    bool CenterInlineFonts(bool bCenterFonts = true); // $QC
 
+
+    // Functions with the same name as STDIO funcitons rerouted in Sandbox mode. 
+    // We only need them during the compile for the source code; otherwise they conflict. 
+
+
+// __Sandbox__Except__ deprecated (for now)
+//#ifdef __Sandbox__Except__
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
+    void __printf(const char * Format,...);
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
+    void __printf(const cwfOpt & cwOpt,const char * Format,...);
+
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
+    void __printf(int iX,int iY,const char * Format,...);
+
+    // printf() -- Works the same way as 'C' printf, except you can also put (X,Y) coordinates.
+    // printf() can be very useful to quickly print text without using streaming notation,
+    //
+    // i.e. printf("This is attempt #d\n",++iAttempNo) vs. out << "This is attempt number " << ++iAttemptNo <<  "\n"
+    //
+    // printf(50,100,"Hello World") will print "Hello World") at (50,100) in the window and set the next write location accordingly.
+    //
+    void __printf(int iX,int iY,const cwfOpt & cwOpt,const char * Format,...);
+    /// <summary>
+    /// Sets the title of the Window (shown on the Window Title bar)
+    /// </summary>
+    /// <param name="sTitle">Name of the Window</param>
+    /// <returns>TRUE if Window is valid.  FALSE is the Window is not valid.</returns>
+    bool SetWindowTitle(const char * sTitle); // $QC
+
+    /// <summary>
+    /// Sets the title of the Window (shown on the Window Title bar)
+    /// </summary>
+    /// <param name="sTitle">Name of the Window</param>
+    /// <returns>TRUE if Window is valid.  FALSE is the Window is not valid.</returns>
+    bool SetWindowTitle(const wchar_t * sTitle); // $QC
+
+                                                 /// <summary>
+    /// Returns a string with version information for the Sagebox library, as well as current
+    /// platform (i.e. 32 bits or 64 bits). 
+    /// </summary>
+    /// <returns>String with current library version and run-time platform</returns>
+    CString GetVersionInfo();   // $QC
+
+    /// <summary>
+    /// returns TRUE of running 64-bit windows, false if 32-it windows. 
+    /// </summary>
+    /// <returns></returns>
+    bool is64BitWindows();  // $QC
+
+
+//#endif
 
 };
-}; // namespae Sage
+}; // namespace Sage
 
 #endif // _CDavWindow_H_
 

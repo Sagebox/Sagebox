@@ -253,7 +253,16 @@ public:
 	// AddEditBox() -- Add an EditBox to the quick control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
+    // Note: InputBox and EditBox are the same.  EditBox is kept to remain consistent with Windows terminology
+    //
 	CEditBox & AddEditBox(const char * sEditBoxTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+
+	// AddInputBox() -- Add an Input Box to the quick control Window.  The sEditBoxTitle, while optional, will provide a
+	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal InputBox options
+	//
+    // Note: InputBox and EditBox are the same.  EditBox is kept to remain consistent with Windows terminology
+    //
+	CEditBox & AddInputBox(const char * sInputBoxTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
 
 	CTextWidget & AddText(const char * sText,const cwfOpt & cwOpt = cwfOpt());
 	CTextWidget & AddText(const char * sText,int iHeight,const cwfOpt & cwOpt = cwfOpt());

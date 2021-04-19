@@ -243,6 +243,8 @@ public:
 	SIZE ReadSize(const char * sKey,bool * bSuccess = nullptr);
 	ePGR_t ReadPoint(POINT & szPoint,const char * sKey,const char * sSubKey = nullptr);
 	POINT ReadPoint(const char * sKey,bool * bSuccess = nullptr);
+	ePGR_t ReadColor(RgbColor & rgbColor,const char * sKey,const char * sSubKey = nullptr);
+	RgbColor ReadColor(const char * sKey,bool * bSuccess = nullptr);
 	Sage::RGBColor_t ReadRGB(const char * sKey,bool * bSuccess = nullptr);
 	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,const char * sKey,const char * sSubKey = nullptr);
 	ePGR_t ReadRGB(Sage::RGBColor_t & rgbColor,Sage::RGBColor_t  rgbDefault,const char * sKey,const char * sSubKey = nullptr);

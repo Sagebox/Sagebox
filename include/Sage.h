@@ -14,7 +14,8 @@
 //#pragma once
 #if !defined(__CSage_H__)
 #define __CSage_H__
-
+#pragma warning(push)
+#pragma warning(disable : 26451)    // Mute Microsoft "warning" about overflow (which, imo, is far too broad)
 #define EmptyString(_x) (!_x || !*_x)
 
 #define kStdMsg(_x)		nullptr
@@ -72,7 +73,6 @@ enum class ImageStatus
     Corrupted,
     UnknownError
 };
-static constexpr int defColor = -1;
 
 
 #ifdef _WIN64
@@ -81,12 +81,15 @@ static constexpr int defColor = -1;
 #define stdInt //__int64
 #endif
 
-#define stdTry		bool bError = false; char *___sErrMsg = nullptr; try{
-#define stdAssert(_x,_msg) {  if (!(stdInt (_x))) {/*  Sage::StopHere();*/ throw((char *) _msg); } }
-#define stdCatch }catch(const char * sErrMsg) {sErrMsg; bError = true; }
+#define stdTry		bool bError = false; const char *___sErrMsg = nullptr; try{
+#define stdAssert(_x,_msg) {  if (!(stdInt (_x))) {/*  Sage::StopHere();*/ throw((const char *) _msg); } }
+#define stdCatch }catch(const char * sErrMsg) {___sErrMsg = sErrMsg; bError = true; }
 #define stdCatcher }catch(const char * sErrMsg) 
-#define stdCatchSage }catch(char * __y) {__y; bError = true; Sage::sLastError = __y; }
+#define stdCatchSage }catch(const char * __y) {__y; bError = true; Sage::sLastError = __y; }
+#define stdReturnMsg(_x) _x = ___sErrMsg; return (!bError); 
+#define stdReturn return (!bError); 
 #define stdAssertL stdAssert
+
 
 // stdAsserts using gotos, to avoid using exceptions.
 
@@ -141,6 +144,34 @@ namespace Sage
 	constexpr const char * BoolStringYU(bool bValue) { return bValue ? "Yes" : "No"; };
 	constexpr const char * BoolStringYUU(bool bValue) { return bValue ? "YES" : "NO"; };
 
+    // Keyboard accelerator messages -- still to be completely defined. 
+    // Right now, it a placeholder for the ^C keyboard accelerator when the Control-C Exit option is on
+    // 
+    // It's place here in case it interefere's with anyone's accelerator OR if the accelerator is replaced, then 
+    // it can be added back in as Sage::AcelMessage::CtrlCBreak
+
+    enum class AcelMessage : int
+    {
+        CtrlCBreak      = 0x1785,     // An arbitrary number 
+    };
+
+    // Temporary Structure TBD
+    //
+    struct stControlLabel_t
+    {
+        HFONT hFont; 
+        POINT pLoc;
+        SIZE szSize; 
+    };
+
+    static constexpr int defColor = -1;
+
+    enum class SysMenuItems
+    {
+        SageboxID             = 0x10,     // generic Sagebox Info, versioning
+        TerminateProcess      = 0x20,     // Terminate Program (i.e. for programs that hang or are unresponsive)
+        ShowProcessWin        = 0x30,     // Show process window debug (creates it if non-existent)
+    };
 	enum class Peek : bool
 	{
 		No = false,
@@ -558,6 +589,9 @@ typedef RGBColor32* pRGB32;
 	// Immediate:  Updates after any action that outputs to the screen, no matter how small. 
 	//             *** Warning: Immediate can slow down your program.  Use for diagnostics, status windows or other places where you don't want to do an Update(), but 
 	//             *** also don't care about it performing an Update() at every step
+    //
+    // $$ DO NOT CHANGE THE ORDER OR DELETE ITEMS -- Look at uses of AutoUpdateType as integers, such as CPasWindow::UserCreateWindow(), etc.
+    //
 	enum class AutoUpdateType
 	{
 		//  Update() must be used to update the window.
@@ -567,6 +601,10 @@ typedef RGBColor32* pRGB32;
 		// Updates 10-20 millisconds.  Use an extra Update() at the end of all routines to make sure it is updated.
 		//
 		On,
+
+        // Same as On, but installs a timer to ensure update status.  This is primarily used for Quick C++-type applications.
+        OnTime,
+
 		// Updates after any action that outputs to the screen, no matter how small. 
 		// *** Warning: Immediate can slow down your program.  Use for diagnostics, status windows or other places where you don't want to do an Update(), but 
 		// *** also don't care about it performing an Update() at every step
@@ -576,7 +614,76 @@ typedef RGBColor32* pRGB32;
 
 
 	};
+ 
 
+    
+    // Names opt:: values that can be referred to internally to ensure proper spelling 
+    // since they are passed as text.   Mostly, these are internal values that are not public
+    // in opt:: and need to be specified directly.
+    //
+    // note:  At some point, all opt:: names are expected to be replaced with an integer identifier.
+    //
+    class OptName
+    {
+    public:
+        static constexpr const char * __CenterX         = "__CenterX";      // Internal X range for centering (overriding default window size range
+        static constexpr const char * __CenterY         = "__CenterY";      // Internal Y range for centering (overriding default window size range
+        static constexpr const char * CenterXY          = "CenterXY";      
+        static constexpr const char * CenterX           = "JustCenterX";   
+        static constexpr const char * CenterY           = "JustCenterY";   
+        static constexpr const char * Center            = "CenterY";   
+        static constexpr const char * Checkbox          = "Checkbox";       // $$ May not be part of opt::namespace and used as opt::Str("<id>"), i.e. opt::str("checkbox")., etc.
+        static constexpr const char * RadioButton       = "RadioButton";    // $$ May not be part of opt::namespace and used as opt::Str("<id>"), i.e. opt::str("checkbox")., etc.
+        static constexpr const char * JustCenter        = "JustCenter";    
+        static constexpr const char * JustCenterX       = "JustCenterX";   
+        static constexpr const char * JustCenterY       = "JustCenterY";   
+        static constexpr const char * JustRight         = "JustRight";     
+        static constexpr const char * JustLeft          = "JustLeft";      
+        static constexpr const char * JustTopRight      = "JustTopRight";  
+        static constexpr const char * JustTopLeft       = "JustTopLeft";   
+        static constexpr const char * JustBottomRight   = "JustBottomRight"; 
+        static constexpr const char * JustBottomLeft    = "JustBottomLeft";  
+        static constexpr const char * JustBottomCenter  = "JustBottomCenter";
+        static constexpr const char * JustTopCenter     = "JustTopCenter";   
+        static constexpr const char * JustTop           = "JustTop";         
+        static constexpr const char * JustBottom        = "JustBottom";    
+        static constexpr const char * TextCenterX       = "TextCenterX";   
+        static constexpr const char * TextCenterY       = "TextCenterY";   
+        static constexpr const char * TextCenter        = "TextCenter";   
+        static constexpr const char * TextCenterXY      = "TextCenterXY";   
+        static constexpr const char * TextRight         = "TextRight";   
+        static constexpr const char * TextLeft          = "TextLeft";   
+        static constexpr const char * TextTop           = "TextTop";   
+        static constexpr const char * TextBottom        = "TextBottom";   
+        static constexpr const char * Default           = "Default";   
+        static constexpr const char * Horz              = "Horz";   
+        static constexpr const char * Vert              = "Vert";   
+        static constexpr const char * NoClose           = "NoClose";   
+        static constexpr const char * NoCancel          = "NoCancel";   
+        static constexpr const char * NoAutoHide        = "NoAutoHide";   
+        static constexpr const char * NoSizing          = "NoSizing";   
+        static constexpr const char * ToolWindow        = "ToolWindow";   
+        static constexpr const char * Modal             = "Modal";   
+        static constexpr const char * NoSysMenu         = "NoSysMenu";   
+        static constexpr const char * AllowDrag         = "AllowDrag";   
+        static constexpr const char * XPos              = "XPos";   
+        static constexpr const char * YPos              = "YPos";   
+        static constexpr const char * XYPos             = "GotoXY";   
+        static constexpr const char * WinLoc            = "GotoXY";   
+        static constexpr const char * GotoXY            = "GotoXY";   
+        static constexpr const char * PadX              = "PadX";   
+        static constexpr const char * PadY              = "PadY";   
+        static constexpr const char * cbTitleCell       = "cbTitleCell";
+        static constexpr const char * Title             = "Title";
+        static constexpr const char * CenterWin         = "CenterWin";
+        static constexpr const char * CenterDesktop     = "CenterDesktop";
+        static constexpr const char * MinValue          = "MinValue";
+        static constexpr const char * MaxValue          = "MaxValue";
+        static constexpr const char * Checked           = "Checked";
+        static constexpr const char * _DefaultTitle     = "_DefaultTitle";      // Internal use
+
+
+    };  
 	// This is deprecated
 
 	enum class AutoUpdateOld
@@ -649,14 +756,28 @@ public:
 	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
 	__forceinline RGBColor_t & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
 	
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
 	RGBColor_t & Init();
+
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
+	RGBColor_t & SetUndefined();
 	bool Undefined();
     __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
     __forceinline RGBColor_t fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
     __forceinline RGBColor_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
     __forceinline RGBColor_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
 	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
-	__forceinline double Gray() { return (double) (iRed+iGreen+iBlue)/3.0; }
+	__forceinline double Gray() { return (double) ((int)(iRed+iGreen+iBlue))/3.0; }
 	double LabGray();
 
 
@@ -766,7 +887,7 @@ public:
 		// Returns true of the bitmap data is invalid (i.e. corrupted), but does not determine if there is an active bitmap.
 		// Use isEmpty() to determine of a bitmap is empty, or use isValid() to combine isInvalid() + isEmpty()
 		//
-		bool isInvalid();
+		bool isInvalid() const;
 		
 		// Returns true of there is a valid bitmap contained in the structure. 
 		// Returns true if the bitmap is empty (i.e. v.s. isInvalid() which only returns true of the data is corrupted).
@@ -1102,6 +1223,7 @@ enum class ControlSubStyles
 	[[nodiscard]] RawBitmap_t ReadBitmap(const char * sFile, bool * bSucceeded = nullptr);
 
 	bool SaveBitmap(const char * sFile,RawBitmap_t & stBitmap); 
+	bool WriteBitmap(const char * sFile,RawBitmap_t & stBitmap); 
 
 	[[nodiscard]] RawBitmap32_t BMPtoBitmap32(const unsigned char * sBMP);
 	[[nodiscard]] RawBitmap_t BMPtoBitmap(const unsigned char * sBMP);
@@ -1208,6 +1330,40 @@ enum class ControlSubStyles
     //
     void ErrorExit(int iExitCode = -1);
 
+    // WinErrorExit() -- Used to exit program quickly with an optional message.
+    //
+    // ErrorExit() simply prints an optional message and exits with the error-code specified or -1
+    // This is a function that is used for a convenient exit of a program that is in a state of development.
+    //
+    // This exits the program directly with no clean up, memory deallocations, and so-forth.
+    //
+    // For a Windows program, ErrorExit() is meant for development or an emergency exit.
+    // For a console-mode program, since the message is printed to the console-mode window, ErrorExit() can 
+    // also be used as a solid and permanent way to exit a program on an error.
+    //
+    // In a Windows program, a Windows Message Box appears with the error message.
+    // In a Console Mode program, the error message is written to the console window.
+    //
+    void WinErrorExit(const char * sErrMsg,int iExitCode = -1);
+
+    // WinErrorExit() -- Used to exit program quickly with an optional message.
+    //
+    // ErrorExit() simply prints an optional message and exits with the error-code specified or -1
+    // This is a function that is used for a convenient exit of a program that is in a state of development.
+    //
+    // This exits the program directly with no clean up, memory deallocations, and so-forth.
+    //
+    // For a Windows program, ErrorExit() is meant for development or an emergency exit.
+    // For a console-mode program, since the message is printed to the console-mode window, ErrorExit() can 
+    // also be used as a solid and permanent way to exit a program on an error.
+    //
+    // In a Windows program, a Windows Message Box appears with the error message.
+    // In a Console Mode program, the error message is written to the console window.
+    //
+    void WinErrorExit(int iExitCode = -1);
+
+    CString ShowExceptMsg(const char * sTitle, const char * sMsg,const char * sFile,unsigned int sLine);
+
     namespace Rgb
     {
         static constexpr RGBColor_t Transparent = RGBColor_t{-1,-1,-1};     // Use to specify transparency for Circle(), Rectangle(), etc.
@@ -1216,10 +1372,594 @@ enum class ControlSubStyles
         static constexpr RGBColor_t Default     = RGBColor_t{-1,-1,-1};     // Used to specify default color (i.e. DrawLine() or LineTo()
     };
 
-	namespace Win
+    // WinX has been co-opted by the use of "Win" in Quick C++
+	namespace WinX
 	{
 		void ScreentoClient(HWND hWndParent,RECT & rRect);
 	} // namespace Sage::Win
-}	// namespace Sage
 
+   // Sagebox Initialization.  This is in its preliminary stages and will be built up over time. 
+    struct SageboxInit
+    {
+        public:
+            AutoUpdateType  eAutoUpdateType = Sage::AutoUpdateType::On;
+            bool bWordWrap = false;
+            bool bControlCExitDisabled = false; 
+            RgbColor        bgColor;                // TBD - Background color for created windows
+            RgbColor        bgColor2;               // TBD - Secondary color of the default background is a gradient
+            RgbColor        fgColor;                // TBD - Foreground color for created windows (i.e. text color
+            const char    * sFont = "Arial,13";       // Default font for created windows
+
+            // Functions called from other Sagebox functions.  Note that these are defaults and not current to any window
+           
+            bool GetWordWrap() { return bWordWrap; };
+            AutoUpdateType GetAutoUpdateType() { return eAutoUpdateType; }
+            const char * GetFont() { return sFont; }
+    };
+
+    // WinConio Structure -- Functions for Console Window Output 
+    // ---------------------------------------------------------
+    //
+    // WinConio (referred to as "conio" in code) functions can be used to put out formatted text with colors and control the Console Mode window. 
+    //
+    // "{}"-style modifiers may be used to control the output, such as setting text colors, background colors, and underlined text. 
+    //
+    // For example,
+    //
+    //  conio.printf("This {r}word{/} was written in red")          -- writes the word "word" in red text .
+    //  conio.printf("This {bg=y}{r}word{/}{/} was written in red") -- writes the word "word" in red text with a yellow background.
+    //  conio.printf("This {rev}word{/}{/} was written in reverse") -- writes the word "word" in reversed text 
+    //  conio.printf("This {u}word{/}{/} was written underlined")   -- writes the word "word" in underlined text.
+    //
+    // --> Note: WinConio "{}"-style modifiers are not 100% compatible with other Sagebox/Quick C++ modifiers.
+    //           For example colors like "yellow" are typically compatible, but "{rev}" (to reverse text)" is only used for WinConio.
+    //
+    // --> Note: WinConio is useful for the Console Window only.  It does not print out to stdio.  
+    //     Therefore, if stdio is re-routed conio will still print the the Console Window.
+    //     if a Console Window does not exist (such as a pure Windows program or Quick C++ project with no console mode window), WinnConio functions
+    //     will have no effect.
+    //
+    // --> Note: Tabs are set with tabstops every 4 spaces, and can be used for formatting.  See also "x=" below to set specific X character 
+    //           settings for aligned text.
+    //
+    // A complete list of "{}"-style modifiers for WinConIo
+    // ----------------------------------------------------
+    //
+    //      black       - color black (text or background)    
+    //      darkblue    - color dark blue (text or background)       
+    //      db          - color dark blue (text or background)       
+    //      darkgreen   - color dark green (text or background)       
+    //      dg          - color dark green (text or background)       
+    //      darkcyan    - color dark cyan (text or background)       
+    //      dc          - color dark cyan (text or background)       
+    //      darkRed     - color dark red(text or background)      
+    //      dr          - color dark red (text or background)       
+    //      darkpurple  - color dark purple (text or background)      
+    //      dp          - color (text or background)       
+    //      darkmagenta - color dark purple (text or background)      
+    //      dm          - color dark magenta (text or background)       
+    //      darkYellow  - color dark yellow (text or background)       
+    //      dy          - color dark yellow (text or background)       
+    //      gray        - color gray (text or background)       
+    //      grey        - color gray (text or background)       
+    //      blue        - color blue (text or background)       
+    //      b           - color blue (text or background)       
+    //      green       - color green (text or background)       
+    //      g           - color green (text or background)       
+    //      cyan        - color cyan (text or background)       
+    //      c           - color cyan (text or background)       
+    //      red         - color red (text or background)       
+    //      r           - color red (text or background)       
+    //      purple      - color purple (text or background)       
+    //      p           - color purple (text or background)       
+    //      magenta     - color magenta (text or background)       
+    //      m           - color m (text or background)       
+    //      Yellow      - color yellow (text or background)       
+    //      y           - color yellow (text or background)       
+    //      w           - color white (text or background)       
+    //      white       - color white (text or background)       
+    //      u           - underline text
+    //      vl          - left bar on character (i.e. vertical left)
+    //      vr          - right bar on character (i.e. vertical top)
+    //      ht          - topline text (i.e. underline, but on top) (i.e. horizontal top)
+    //      hb          - same as underline (i.e. horizontal bottom)
+    //      rev         - reverse text colors (foreground color = background color; background color = foreground color)
+    //      bg=         - Set background color next text (i.e. {bg=blue})
+    //      lbg=        - Set background color for entire line (i.e. {lbg=blue})
+    //      X=          - Set X character position in line (for aligning text), i.e. "This is at {x=40} column 40"
+    //
+    struct WinConio
+    {
+        /// <summary>
+        /// Write text to the console window.  "{}"-style modifiers may be used, such as conio.Write("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(MyPoint,"This message was written at character location 10,30"); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <returns></returns>
+        bool Write(const char * sText)                          ;
+
+        /// <summary>
+        /// Write text to the console window.  "{}"-style modifiers may be used, such as conio.Write("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(MyPoint,"This message was written at character location 10,30"); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <returns></returns>
+        bool Write(int iX,int iY,const char * sText)            ;
+
+        /// <summary>
+        /// Write text to the console window.  "{}"-style modifiers may be used, such as conio.Write("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// Write(MyPoint,"This message was written at character location 10,30"); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <returns></returns>
+        bool Write(POINT pLoc,const char * sText)               ;
+
+        /// <summary>
+        /// Sets the font size of the Console Window.  This change the font for all characters in the Consolle Window simultaneously.
+        /// <para></para>
+        /// Typically, 14-16 is a good number, where numbers less than 14 start to represent smaller fonts, and numbers larger than 16 represent big fonts.
+        /// <para></para>&#160;&#160;&#160;
+        /// When setting the font, this will not keep the available characters in the console window the same, keeping the Console Window the same physical size.  Therefore, use SetFont() before setting the window size. 
+        /// <para></para>&#160;&#160;&#160;
+        /// You can also use the MouseWheel when pressing the control-key -- this will keep the number of characters in the window the same while changing the size of the Console Window.  This method will keep text and other
+        /// aligned text still centered and aligned, where using SetFont() will affect any centering and text alignment.
+        /// </summary>
+        /// <param name="iSize">= Size of the new font</param>
+        /// <returns></returns>
+        bool SetFontSize(int iSize)                             ;
+
+        /// <summary>
+        /// Sets the Text (i.e. foreground) color of text in the Console Window. This affects the next printed characters.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use a text color, such as "White", "blue", "db" (for darkblue"), "darkred", etc.  to set the text color. 
+        /// <para></para>You can also use a number such as 0x04 (for red), etc. The value of the numbers can be obtained by searching the internet for "Win32 Console Mode Text Colors". 
+        /// <para></para>GetFgColor() can be used to retrieve the current color, which returns it as a numerical value specific to the Console Window.
+        /// <para></para>--> Note: You can embed the text color with conio.printf() or Write(), such as conio.printf("This {red}word{/} is written in red.")
+        /// </summary>
+        /// <param name="iColor">= The color code (0x00-0x0F) to set for the text color</param>
+        /// <param name="sColor">The color name to set for the text color</param>
+        /// <returns></returns>
+        bool SetFgColor(int iColor)                             ;
+
+        /// <summary>
+        /// Sets the Text (i.e. foreground) color of text in the Console Window. This affects the next printed characters.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use a text color, such as "White", "blue", "db" (for darkblue"), "darkred", etc.  to set the text color. 
+        /// <para></para>You can also use a number such as 0x04 (for red), etc. The value of the numbers can be obtained by searching the internet for "Win32 Console Mode Text Colors". 
+        /// <para></para>GetFgColor() can be used to retrieve the current color, which returns it as a numerical value specific to the Console Window.
+        /// <para></para>--> Note: You can embed the text color with conio.printf() or Write(), such as conio.printf("This {red}word{/} is written in red.")
+        /// </summary>
+        /// <param name="iColor">= The color code (0x00-0x0F) to set for the text color</param>
+        /// <param name="sColor">The color name to set for the text color</param>
+        /// <returns></returns>
+        bool SetFgColor(const char * sColor)                    ;
+
+        /// <summary>
+        /// Sets the Background color of text in the Console Window. This affects the next printed characters.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use a text color, such as "White", "blue", "db" (for darkblue"), "darkred", etc.  to set the text color. 
+        /// <para></para>You can also use a number such as 0x04 (for red), etc. The value of the numbers can be obtained by searching the internet for "Win32 Console Mode Text Colors". 
+        /// <para></para>GetBgColor() can be used to retrieve the current color, which returns it as a numerical value specific to the Console Window.
+        /// <para></para>--> Note: You can embed the background color with conio.printf() or Write(), such as conio.printf("This {bg=blue}word{/} has a blue background.")
+        /// <para></para>--> Note: You can also use "{rev}some text{/}" as a quick way to reverse the colors for selected text.
+        /// </summary>
+        /// <param name="iColor">= The color code (0x00-0x0F) to set for the background color</param>
+        /// <param name="sColor">The color name to set for the background color</param>
+        /// <returns></returns>
+        bool SetBgColor(int iColor,bool bFillBg = true)         ;
+
+        /// <summary>
+        /// Sets the Background color of text in the Console Window. This affects the next printed characters.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use a text color, such as "White", "blue", "db" (for darkblue"), "darkred", etc.  to set the text color. 
+        /// <para></para>You can also use a number such as 0x04 (for red), etc. The value of the numbers can be obtained by searching the internet for "Win32 Console Mode Text Colors". 
+        /// <para></para>GetBgColor() can be used to retrieve the current color, which returns it as a numerical value specific to the Console Window.
+        /// <para></para>--> Note: You can embed the background color with conio.printf() or Write(), such as conio.printf("This {bg=blue}word{/} has a blue background.")
+        /// <para></para>--> Note: You can also use "{rev}some text{/}" as a quick way to reverse the colors for selected text.
+        /// </summary>
+        /// <param name="iColor">= The color code (0x00-0x0F) to set for the background color</param>
+        /// <param name="sColor">The color name to set for the background color</param>
+        /// <returns></returns>
+        bool SetBgColor(const char * sColor,bool bFillBg = true);
+
+        /// <summary>
+        /// Sets the title of the Console Window in the Title Bar. Use "" or nullptr for no title.
+        /// </summary>
+        /// <param name="sTitle"></param>
+        /// <returns></returns>
+        bool SetWindowTitle(const char * sTitle);
+
+        /// <summary>
+        /// Clears the console window with the current (or specified background color), then sets the cursor to {0,0} (unless bResetCursor = false)
+        /// <para></para>&#160;&#160;&#160;
+        /// If a color is specified (with a color value or color name), the background text color is also set to this color.
+        /// <para></para>
+        /// Examples
+        /// <para></para>&#160;&#160;&#160; Cls("blue"); -- Clears the screen to blue, sets cursor at {0,0}
+        /// <para></para>&#160;&#160;&#160; Cls(0x10);  -- Clears the screen to blue, does not reset cursor
+        /// <para></para>&#160;&#160;&#160; Cls();      -- Clears the screen with current BG color, sets cursor to {0,0}
+        /// </summary>
+        /// <param name="iColor"> = Sets the CLS background color (optional)</param>
+        /// <param name="sColor"> = Sets the CLS background color by name (optional)</param>
+        /// <param name="bResetCursor">= Sets the cursor to {0,0}} (default) (optional)</param>
+        /// <returns></returns>
+        bool Cls(bool bResetCursor = true)                      ;
+
+        /// <summary>
+        /// Clears the console window with the current (or specified background color), then sets the cursor to {0,0} (unless bResetCursor = false)
+        /// <para></para>&#160;&#160;&#160;
+        /// If a color is specified (with a color value or color name), the background text color is also set to this color.
+        /// <para></para>
+        /// Examples
+        /// <para></para>&#160;&#160;&#160; Cls("blue"); -- Clears the screen to blue, sets cursor at {0,0}
+        /// <para></para>&#160;&#160;&#160; Cls(0x10);  -- Clears the screen to blue, does not reset cursor
+        /// <para></para>&#160;&#160;&#160; Cls();      -- Clears the screen with current BG color, sets cursor to {0,0}
+        /// </summary>
+        /// <param name="iColor"> = Sets the CLS background color (optional)</param>
+        /// <param name="sColor"> = Sets the CLS background color by name (optional)</param>
+        /// <param name="bResetCursor">= Sets the cursor to {0,0}} (default) (optional)</param>
+        /// <returns></returns>
+        bool Cls(int iColor,bool bResetCursor = true)           ;
+
+        /// <summary>
+        /// Clears the console window with the current (or specified background color), then sets the cursor to {0,0} (unless bResetCursor = false)
+        /// <para></para>&#160;&#160;&#160;
+        /// If a color is specified (with a color value or color name), the background text color is also set to this color.
+        /// <para></para>
+        /// Examples
+        /// <para></para>&#160;&#160;&#160; Cls("blue"); -- Clears the screen to blue, sets cursor at {0,0}
+        /// <para></para>&#160;&#160;&#160; Cls(0x10);  -- Clears the screen to blue, does not reset cursor
+        /// <para></para>&#160;&#160;&#160; Cls();      -- Clears the screen with current BG color, sets cursor to {0,0}
+        /// </summary>
+        /// <param name="iColor"> = Sets the CLS background color (optional)</param>
+        /// <param name="sColor"> = Sets the CLS background color by name (optional)</param>
+        /// <param name="bResetCursor">= Sets the cursor to {0,0}} (default) (optional)</param>
+        /// <returns></returns>
+        bool Cls(const char * sColor,bool bResetCursor = true)  ;
+
+        /// <summary>
+        /// Sets the background color of the entire line.  This will set the background color without erasing text to the color
+        /// specified, which may be a numeric background value, or a string for the color (i.e. "Blue","darkblue","red", etc.)
+        /// </summary>
+        /// <param name="sColor">Name of the color for the background</param>
+        /// <param name="iColor">Numeric code for the background color</param>
+        /// <returns></returns>
+        bool SetBgLine(const char * sColor)                     ;
+
+        /// <summary>
+        /// Sets the background color of the entire line.  This will set the background color without erasing text to the color
+        /// specified, which may be a numeric background value, or a string for the color (i.e. "Blue","darkblue","red", etc.)
+        /// </summary>
+        /// <param name="sColor">Name of the color for the background</param>
+        /// <param name="iColor">Numeric code for the background color</param>
+        /// <returns></returns>
+        bool SetBgLine(int iColor)                              ;
+
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool printf(const char * Format,...)                    ;
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool printf(int iX,int iY,const char * Format,...)      ;
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool printf(POINT pLoc,const char * Format,...)         ;
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool __printf(const char * Format,...)                    ;
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool __printf(int iX,int iY,const char * Format,...)      ;
+
+        /// <summary>
+        /// Print to the console window, just as printf(), but with some options.  "{}"-style modifiers may be used, such as conio.printf("This {r}{u}word{/}{/} is red and underlined"); 
+        /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(10,30,"This message was written at character location 10,30"); 
+        /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+        /// conio.printf(MyPoint,"This message was written at character location %d,%d",iX,iY); 
+        /// <para></para>
+        /// --> Note: the maximum length of input text is roughly 2k, but may be increased in a future update
+        /// </summary>
+        /// <param name="sText"> = text to write to the window</param>
+        /// <param name="..."> = standard printf parameters for formatted text (i.e. variadic arguments)</param>
+        /// <returns></returns>
+        bool __printf(POINT pLoc,const char * Format,...)         ;
+
+        /// <summary>
+        /// Returns background color.  This is the text attribute ANDed with 0xF0 to form only the background color
+        /// </summary>
+        /// <returns>Console-Based background color</returns>
+        WORD GetBgColor()                                       ;
+        
+        /// <summary>
+        /// Returns foreground color.  This is the text attribute ANDed with 0x0F to form only the foreground color
+        /// </summary>
+        /// <returns>Console-Based foreground color</returns>
+        WORD GetFgColor()                                       ;
+
+        /// <summary>
+        /// Returns the console-mode text attribute.  This includes the background color, text color, and other attributes (such as underline, etc.)
+        /// <para></para>&#160;&#160;&#160;AND the attribute with 0xF0 to obtain the background color; AND with 0x0F to obtaint the foreground color.
+        /// </summary>
+        /// <returns>Console attribute color</returns>
+        WORD GetTextAttribute()                                 ;
+
+        /// <summary>
+        /// Set the Cursor to the (X,Y) character position in the Console Window.
+        /// <para></para>&#160;&#160;&#160;    
+        /// the X and Y position are character positions rather than pixel positions.
+        /// <para></para>
+        /// Example: GotoXY(10,20); -- Sets the cursor at character position 10,20 in the console window.
+        /// </summary>
+        /// <param name="iX">X position to set Cursor</param>
+        /// <param name="iY">Y position to set Cursor</param>
+        /// <returns></returns>
+        bool GotoXY(int iX, int iY)                             ;
+
+        /// <summary>
+        /// Returns a CString with the names of colors that can be used in the "{}" Write() or printf() functions.
+        /// <para></para>&#160;&#160;&#160;    
+        /// For example, "printf("This is {red}red{/} or {r}red{/}") puts both "red" words in the color red on the console window.
+        /// </summary>
+        /// <returns></returns>
+        CString GetColorNames()                                 ;
+
+        /// <summary>
+        /// Causes the console window to become visible or hidden, dependig on bShow paramater
+        /// </summary>
+        /// <param name="bShow"> -> true = Show console window.  false = Hide console window</param>
+        /// <returns></returns>
+        bool Show(bool bShow = true);
+
+        /// <summary>
+        /// Causes the console window to become hidden or visible, depending on the bHide paramater
+        /// </summary>
+        /// <param name="bHide"> -> true = Hide console window.  true = Show console window</param>
+        /// <returns></returns>
+        bool Hide(bool bHide = true);
+
+        /// <summary>
+        /// Returns TRUE if the Console Window is Visible, FALSE if the console window is hidden
+        /// </summary>
+        /// <returns></returns>
+        bool isWindowVisible();
+
+        /// <summary>
+        /// Sets the size of the console window in pixels.
+        /// <para></para>&#160;&#160;&#160;
+        /// The window is sized to the nearest multiple of the character width and height, and is the internal size of the window, not the entire window (i.e. title bar, frame, etc.).
+        /// <para></para>
+        /// Use (iX,iY) or a SIZE value to set the window size.
+        /// </summary>
+        /// <param name="iWidth">Width of Window (in pixels)</param>
+        /// <param name="iHeight">Height of Window (in pixels)</param>
+        /// <param name="SetMaxX">When TRUE, sets the window width to remove the bottom scrollbar.  When FALSE, the max character width is not changed.</param>
+        /// <returns></returns>
+        bool SetWindowSize(int iWidth,int iHeight,bool SetMaxX = true); 
+
+        /// <summary>
+        /// Sets the size of the console window in pixels.
+        /// <para></para>&#160;&#160;&#160;
+        /// The window is sized to the nearest multiple of the character width and height, and is the internal size of the window, not the entire window (i.e. title bar, frame, etc.).
+        /// <para></para>
+        /// Use (iX,iY) or a SIZE value to set the window size.
+        /// </summary>
+        /// <param name="szSize">SIZE structure with the new window size.</param>
+        /// <param name="SetMaxX">When TRUE, sets the window width to remove the bottom scrollbar.  When FALSE, the max character width is not changed.</param>
+        /// <returns></returns>
+        bool SetWindowSize(SIZE szSize,bool SetMaxX = true); 
+
+        /// <summary>
+        /// Set the location of the Console Widow on the desktop.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use (iX,iY) or a POINT value to set the size (i.e. SetWIndowSize(myPoint)); 
+        ///
+        /// </summary>
+        /// <param name="iX">X location of Console Window</param>
+        /// <param name="iY">Y location of Console Window</param>
+        /// <returns></returns>
+        bool SetWinLocation(int iX,int iY); 
+
+        /// <summary>
+        /// Set the location of the Console Widow on the desktop.
+        /// <para></para>&#160;&#160;&#160;
+        /// Use (iX,iY) or a POINT value to set the size (i.e. SetWIndowSize(myPoint)); 
+        ///
+        /// </summary>
+        /// <param name="pLoc">POINT structure with the new window location</param>
+        /// <returns></returns>
+        bool SetWinLocation(POINT pLoc); 
+
+        /// <summary>
+        /// Brings the Window to the top of the screen, above all other windows.  This can be useful when using a Sagebox, Quick C++ or other window with your program, to ensure
+        /// the Console Window is showing above the other windows.  Use SetTopWindow() to bring the Console Window to the top permanently (i.e. can't be overlapped again)
+        /// </summary>
+        /// <returns></returns>
+        bool SetTopWindow(); 
+
+        /// <summary>
+        /// Sets the Console Window as "topmost", which means no other window can overlap it.  Other windows (including from other applications) will be underneath the console
+        /// window until the program ends or SetTopmost(false) is called to remove the TopMost status.
+        /// </summary>
+        /// <param name="bTopMost"> = when TRUE, sets the Console Window as "topmost".  When FALSE, resets the status so other window may overlap the console window</param>
+        /// <returns></returns>
+        bool SetTopmost(bool bTopMost = true); 
+
+        /// <summary>
+        /// Gets the character width of the Console Window.  This can be used for centering or otherwise aligning text.
+        /// <para></para>&#160;&#160;&#160;
+        /// For example, using code like conio.printf((GetMaxCharWidth()-TextWidth),-1,"This is the Text");
+        /// <para></para>
+        /// Will center the text on the current Y position in the console window.
+        /// <para></para>&#160;&#160;&#160;--> Note: the text width is the width without and "{}" fields.  If the text has any encoded fields, the length of the text
+        /// must be measured separately.
+        /// </summary>
+        /// <returns>Character width of Console Window</returns>
+        int GetMaxCharWidth();
+
+        /// <summary>
+        /// Shows the Console Window's cursor if it is hidden.  This can also HIDE the cursor with ShowCursor(false);
+        /// </summary>
+        /// <param name="bShow">when TRUE, shows the cursor.  When FALSE, hides the cursor.</param>
+        /// <returns></returns>
+        bool ShowCursor(bool bShow = true);
+
+        /// <summary>
+        /// Hides the Console Window's cursor.  This can also SHOW the cursor with HideCursor(false);
+        /// </summary>
+        /// <param name="bHide">when TRUE, hides the cursor.  When FALSE, shoows the cursor.</param>
+        /// <returns></returns>
+        bool HideCursor(bool bHide = true);
+
+        /// <summary>
+        /// Gets an integer from the console and returns an int value. 
+        /// Returns 0 if a number is not entered.
+        /// <para></para>
+        ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
+        /// </summary>
+        /// <returns>Integer entered or 0 if error or non-number value entered.</returns>
+        int GetInteger(); 
+
+        /// <summary>
+        /// Gets a long integer from the console and returns a long value. 
+        /// Returns 0 if a number is not entered.
+        /// <para></para>
+        ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
+        /// </summary>
+        /// <returns>Long value entered or 0 if error or non-number value entered.</returns>
+        long GetLong();
+
+        /// <summary>
+        /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
+        /// Returns 0 if a number is not entered.
+        /// <para></para>
+        ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
+        /// <para>Same as GetNumber()</para>
+        /// </summary>
+        /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
+        long long GetLongLong(); 
+
+
+        /// <summary>
+        /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
+        /// Returns 0 if a number is not entered.
+        /// <para></para>
+        ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
+        /// <para>Same as GetLongLong()</para>
+        /// </summary>
+        /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
+        long long GetNumber();
+
+        /// <summary>
+        /// Gets a double value from the console and returns the double value. 
+        /// Returns 0 if a number is not entered.
+        /// <para></para>
+        ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
+        /// </summary>
+        /// <returns>Double value entered or 0 if error or non-number value entered.</returns>
+        double GetFloat(); 
+
+        /// <summary>
+        /// Gets a text line from the user and returns it as a CString object.
+        /// <para></para>This provides a safe way to get a string of any length from the user.  
+        /// </summary>
+        /// <param name="iMax">Maximum string length (default is 2000)</param>
+        /// <returns>CString of user entry, or an emptry CString if there was an error or no entry from the user.</returns>
+        CString getline(int iMax = 2000); 
+
+        /// <summary>
+        /// Clears the cin input buffer. 
+        /// </summary>
+        /// <param name="bOnErrorOnly">when FALSE (default), the cin buffer is cleared. When TRUE, ths cin buffer is cleared only if it is an error state</param>
+        void ClearCin(bool bOnErrorOnly = false);
+
+
+    };
+    class CConsoleIO;
+    extern CConsoleIO      _sage_m_cConio;
+
+
+    extern SageboxInit m_stSageInit;       // Set the default.
+
+}	// namespace Sage
+#pragma warning(pop)
 #endif // __CSage_H__

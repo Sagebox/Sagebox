@@ -1,0 +1,143 @@
+
+Differences between Sagebox and Sagebox Quick C++
+
+------------------------------------------
+Sagebox Library (The main Sagebox Project)
+------------------------------------------
+
+The Sagebox Library is a collection of GUI-based and other tools for creative development and rapid prototyping. 
+
+Sagebox is aimed at hobbyists, non-professional and professional programmers that have experience in programming. 
+
+Sagebox purposely keeps in standard C++ space so that it doesn't create its own environment.  Where it does use 
+Sagebox defined types  (such as CString, CPoint, RgbColor) , these types convert to standard types (i.e. char *, 
+POINT, RGB()).  Sagebox functions take standard types (except for a couple exceptions), relying on Sagebox-defined
+types to convert themselves to standard types. 
+
+Sagebox is designed to work as a standalone program or included in existing projects. It can be its own development,
+or as a way to help the development of other programs, such as emulation, GUI display, input, or GUI-based help in 
+developing library or Console Mode applications. 
+
+--> A sample Sagebox Program
+
+        #include "CSagebox.h"
+        #include <iostream>                         // needed for std::cout
+        int main()
+        {
+            CSagebox cSagebox;                      // Create Sagebox Object 
+            auto& cWindow = cSagebox.NewWindow();   // Create Window of default Size
+            SetFont(100);                           // Set font("Arial,100");
+            cWin << "Hello World\n;"                // Send Big "Hello World"  to Window
+            std::cout << "Hello World\n";           // Write Hello World to Console
+                                                    // (if there is a console, 
+                                                    // as Sagebox works with Pure
+                                                    // Windows programs, as well)
+            cWin.ExiButton();                       // Get a button press so window
+                                                    // won't close when program ends
+        }
+    
+The main idea is that Sagebox sets up an environment, in a Console Mode or Windows program that is standard C++ 
+and provides a library of routines and an environment for quick development, which can be just for prototyping or a long-term project. 
+
+-------------------------
+Sagebox Quick C++ Project
+-------------------------
+
+Sagebox Quick C++ is designed for easier non-OO programming (i.e. more C-Like), for easy learning, 
+beginning-to-mid-level / hobbyists programming.
+
+While Sagebox Quick C++ sets up some environmental items, the programs are pure C++, either Console Mode or Pure Windows. 
+
+The main idea is to make C++ programming very safe and easy like a scripting language, but with the power and speed of C++.
+
+Sagebox Quick C++ is a layer on top of Sagebox.  Everything you can do in Sagebox, you can do in Sagebox Quick C++.
+
+Sagebox Quick C++ sets up a number of things for you, to make programming easier (and hopefully more fun) -- these are all
+things that can be turned on with Sagebox, but are automatic in Sagebox Quick C++. 
+
+--> Sagebox Quick C++ Additives:
+
+    1. Creates a global window and other utilities that can be used anywhere.
+       This allows using "win" and other functions without having to establish an OO structure or pass the window from 
+       function to function.
+
+       The created window is initially hidden and appears when you use it.  You can also make it visible with the 
+       "win.Show()" function.
+
+    2. Graphics functions are updated for you, but still remain extremely fast.  With Sagebox, this is an option, but the
+       default option gives you more control where graphics are updated when possible, but you occasionally have to do it 
+       yourself with an Update() function to ensure the screen is updated -- this is a sold Windows/GUI concept that isn't 
+       needed in many programs.
+
+       Sagebox has a very detailed algorithm to ensure graphics update without slowing down the graphics display. 
+       
+    3. Process Window.  Sagebox Quick C++ launches the Process Window that allows you to exit the program at any time.
+       With C++, the program can sometimes get caught in a loop, or the Windows can be hidden with no way to get it back.
+
+       With the Process Window, you can put the mouse in the upper-right-hand corner of the screen and terminate the
+       program at any time.  This makes programming much easier to think about.
+
+    4. Control-C Terminates the Program, even if Pure Windows.  With regular Console Mode programs, Control-C will terminate
+       the program, even if the program is not responding. 
+
+       But what about GUI-based programs?  With Sagebox Quick C++, you can press Control-C in an input box or at any time in
+       the program and it will terminate the program, just as with a Console Mode WIndow.
+
+       This feature allows a lot of control while developing or just playing around with programs. 
+
+       This can be turned off in Sagebox Quick C++, and in Sagebox, this is can be turned on manually.
+
+    5. Focuses on Procedural Programming vs. Event-Driven.   Sagebox does this, too, but there are plenty of Sagebox 
+       examples that are event-driven.  The Sagebox Widgets (used by Sagebox Quick C++, too), are written with Sagebox 
+       and are purely event-driven except for the interface for procedural programs. Other Sagebox examples, too, have a
+       number of events that are handled as events and not procedurally.
+
+       Sagebox Quick C++ can also work with events, but the main focus is simple, procedural programming.  See the example below.
+
+    6. Easy C++ Examples.  One of the main goals of Sagebox Quick C++ is to help people understand how C++ works at a 
+       function-by-function level, and to provide simple (and sometimes less simple) example showing how C++ works, but also
+       how we can use that to create some great stuff using graphics and events. 
+
+    7. Sagebox Quick C++ Sandbox. The Sandbox mode creates the Sagebox Quick C++ environment for you, so no extra code is
+       needed -- programs start just as standard C++, and you can use the Sagebox Quick C++ functions at any time.
+
+
+       The Sagebox Quick C++ Sandbox is a pure Windows program, and the stdio (i.e. printf, cout, cin, etc.) are re-routed to
+       the main Sagebox Quick C++ window.    This allows writing a basic C/C++ program with standard I/O (i.e. stdio) functions 
+       while mixing GUI functions in the same Window.
+
+       Still somewhat experimental (and labeled "experimental"), the main goal for the Sandbox mode is as both a learning tool and
+       a wayto have fun with programming; to create a more script-like environment similar to how the BASIC language use to allow 
+       people to learn and have fun with programming, without making it complicated, but with all of the power and speed of C/C++.
+
+--> Sagebox Quick C++ Program Example
+
+    Below is an example of Sagebox Quick C++.  This is the same example as above, but note that there is only one call to 
+    CreateQuickCpp(), and the rest is regular C++ code:
+
+            #include "CQuickCpp.h"
+
+            int main()
+            {
+                CreateQuickCpp();           // Create Sagebox Quick C++ environment.
+                SetFont(100);               // Set font("Arial,100");
+                win << "Hello World\n";     // Send Big "Hello World"  to Window
+                cout << "Hello World\n";    // Write Hello World to Console
+                                            // (if there is a console, as Sagebox works
+                                            // with Pure Windows programs, as well)
+            }
+
+    --> Notes on the above example:
+
+        1. In the Sagebox C++ Sandbox version, the "std::cout" would go to the Sagebox Window, since there would be no Console
+           Window and the cout output buffer has been re-routed to the Sagebox Window
+        2. There is no ExitButton() call.  When the program is finished, Sagebox Quick C++ automatically puts up a button (when
+           in Windows), or a Console Window Message and waits for a return press. (Note this can be turned off with the function 
+           NoExitMsg() prior to program ending).
+        3. Notice that <iostream> is no longer included, and "std::cout" is now cout.  Sagebox Quick C++ includes <iostream> and
+           sets using namespace std.
+        4. In the Project labeled "experimental" , the line "CreateQuckCpp()"  is not needed, and programs can start just as 
+           regular C++ programs with no preamble code.
+        5. There are any more differences that make Sagebox Quick C++ simpler than Sagebox.  See the examples directories 
+           for more samples.
+    

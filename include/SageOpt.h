@@ -150,6 +150,7 @@ public:
 	char * GetString() { return spOpt; }
 	void SetMemNull() { spOpt = nullptr; }
 	optRet literal(const char * sString);
+    optRet NoOpt();
 	optRet str(const char * sString);
 	optRet Name(const char * sName);
 	optRet Border();
@@ -223,6 +224,7 @@ public:
 	optRet Default(int iValue);
 	optRet Default(double fValue);
 	optRet Default(const char * sString);
+    optRet Checked(bool bChecked);
 	optRet CharWidth(int iRange);
 	optRet Width(int iWidth);
 	optRet AllowScroll();
@@ -240,7 +242,9 @@ public:
 	optRet CancelOk();
 	optRet Modal();
 	optRet NoAutoUpdate();
+	optRet AutoUpdate(int iAutoUpdate);
 	optRet CenterWin();
+	optRet CenterDesktop();
 	optRet SetTopmost();
 	optRet HideCancel();
 	optRet ProgressBar();
@@ -248,10 +252,13 @@ public:
 	optRet Transparent(int iBlendValue);
 	optRet Blend(int iBlendValue);
 	optRet Hidden();
+	optRet NoAutoHide();
 	optRet FastMode();
 	optRet Center();
 	optRet CenterX();
+	optRet CenterX(int iRange);
 	optRet CenterY();
+	optRet CenterY(int iRange);
 	optRet AddBorder();
 	optRet InnerSize();
 	optRet Resizeable();
@@ -264,8 +271,13 @@ public:
 
 
 	optRet TextCenter();
+	optRet TextCenter(int iRange);
 	optRet TextCenterX();
+	optRet TextCenterX(int iRange);
 	optRet TextCenterY();
+	optRet TextCenterY(int iRange);
+	optRet TextCenterXY();
+	optRet TextCenterXY(int iRangeX,int iRangeY);
 	optRet TextRight();
 	optRet TextLeft();
 	optRet TextTop();
@@ -273,6 +285,8 @@ public:
 
 	optRet Popup();
 	optRet NoClose();
+    optRet NoSizing();
+    optRet NoSysMenu();
 	optRet AddShadow();
 	optRet AllowDrag();
 
@@ -282,7 +296,9 @@ public:
 
 	optRet JustCenter();
 	optRet JustCenterX();
+	optRet JustCenterX(int iRange);
 	optRet JustCenterY();
+	optRet JustCenterY(int iRange);
 	optRet JustRight();
 	optRet JustLeft();
 	optRet JustTopRight();
@@ -297,7 +313,9 @@ public:
 	optRet JustBottom();
 
 	optRet CenterXY(int iOffset=0);
+	optRet CenterXY(int iRangeX,int iRangeY);
 	optRet XPos(int iPos);
+	optRet YPos(int iPos);
 	optRet TabPos(int iPos);
 	optRet Tab(int iPos);
 	optRet GotoXY(int iX,int iY);
@@ -517,6 +535,14 @@ namespace opt
 	//
 	static optRet Default(const char * sString) { return defOpt.Default(sString); }  ;	
 
+    /// <summary>
+    /// When creating a checkbox, Checked() (or Checked(true)) will set the checkbox as initially checked. 
+    ///<para></para>
+    /// Checked(false) sets the checkbox as unchecked -- howver, this is not needed since the checkbox defaults to unchecked.
+    /// </summary>
+    /// <param name="bChecked"></param>
+    /// <returns></returns>
+    static optRet Checked(bool bChecked = true) { return defOpt.Checked(bChecked); }
 
 	// Set a Maximum value allowed (for integer or floating-point).  A dialog box appears with
 	// min/max info if a value outisde of the range is entered.
@@ -695,6 +721,11 @@ namespace opt
 	//
 	static optRet XPos(int iPos) { return defOpt.XPos(iPos); }  ;		
 
+    // Can be used in a console input function (i.e. console.GetInput(), console.getFloat(), etc.) to set the position of the 
+	// input box.  This allows the boxes to be easily lined up with text to the left and aligned boxes to the right.
+	//
+	static optRet YPos(int iPos) { return defOpt.YPos(iPos); }  ;		
+
 	// Can be used in a console input function (i.e. console.GetInput(), console.getFloat(), etc.) to set the position of the 
 	// input box.  TabPos is sets (aerage character width of font)*size entered in the TabPos.  For example, TabPos(50)
 	// Sets the X position at X = 50 aerage characters for the font.
@@ -714,6 +745,32 @@ namespace opt
 	// Write("Hello World",GotoXY(100,200)) does the same thing
 	//
 	static optRet GotoXY(int iX,int iY) { return defOpt.GotoXY(iX,iY); }  ;		
+
+	/// <summary>
+	/// Sets the location of a window when creating a window or new control.
+    /// <para></para>
+    /// --> Note this function is in-progress and may not be supported on all functions.
+    /// --> Most functions allow setting the Window location in the main function call. 
+    /// <para></para>&#160;&#160;&#160;
+    /// WinLoc() is the equivalent of XYPos()
+	/// </summary>
+	/// <param name="iX">X Location of the Window or Control</param>
+	/// <param name="iY">Y Location of the Window or Control</param>
+	/// <returns></returns>
+	static optRet WinLoc(int iX,int iY) { return defOpt.GotoXY(iX,iY); }  ;	
+
+	/// <summary>
+	/// Sets the location of a window when creating a window or new control.
+    /// <para></para>
+    /// --> Note this function is in-progress and may not be supported on all functions.
+    /// --> Most functions allow setting the Window location in the main function call. 
+    /// <para></para>&#160;&#160;&#160;
+    /// WinLoc() is the equivalent of XYPos()
+	/// </summary>
+	/// <param name="iX">X Location of the Window or Control</param>
+	/// <param name="iY">Y Location of the Window or Control</param>
+	/// <returns></returns>
+	static optRet XYPos(int iX,int iY) { return defOpt.GotoXY(iX,iY); }  ;		
 
 	// Sets the range of an input box for integers or floats, to the range specified.
 	// If the range is exceeded, an error message comes up and prompts the user to enter a value in the range.
@@ -779,9 +836,15 @@ namespace opt
 	//
 	static optRet OffsetY(int iOffset) { return defOpt.OffsetY(iOffset); }  ;		
 
-	// Can be used in dialog boxes such as GetInteger() to elminate the cancel button.
-	// This will force the user to enter a value before continuing with no way to cancel the input dialog.
-	//
+	/// <summary>
+	/// Can be used in dialog boxes such as GetInteger(), GetFloat,QuickDialog(), etc. to elminate the cancel button.
+	/// This will insist the user to enter a value before continuing with no way to cancel the input dialog.
+    /// <para></para>&#160;&#160;&#160;
+	/// If the user closes the window, the dialog box will return the default value, even when NoCancel() is used.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Use opt::Modal() to disable the parent window until the dialog box is closed.
+    /// </summary>
+	/// <returns></returns>
 	static optRet NoCancel() { return defOpt.NoCancel(); }  ;	
 
 	// This allows the user to Cancel certain controls.  
@@ -806,6 +869,13 @@ namespace opt
 	// (though one Update() is sometimes required at the end of large outputs to make sure the Window is fully updated)
 	//
 	static optRet NoAutoUpdate() { return defOpt.NoAutoUpdate(); }  ;	
+    
+    /// <summary>
+    /// Sets the AutoUpdate Type to the type specified, such as No Update, On, Immediate, OnTime, etc.
+    /// </summary>
+    /// <param name="eUpdateType"> = Auto Update Type</param>
+    /// <returns></returns>
+    static optRet AutoUpdate(Sage::AutoUpdateType eUpdateType) { return defOpt.AutoUpdate((int) eUpdateType); };
 
 	// When Creating a Dialog (i.e. dialog.Info(), etc.) or Dialog Window, CenterWindow()
 	// causes the newly created window to be centered in the parent window creating it. 
@@ -814,6 +884,19 @@ namespace opt
 	// dialog functions, centered on the screen rather than the parent window.
 	//
 	static optRet CenterWin() { return defOpt.CenterWin(); }  ;	
+
+    /// <summary>
+    /// Centers the object on the desktop (such as a new window, or dialog). 
+    /// <para></para>
+    /// Some functions will center in the parent window, using CenterDesktop() will cause the
+    /// window to be centered in the Desktop instead.
+    /// <para></para>
+    /// --> Note: this functon is still in progress and may not work on all functions that create windows.
+    /// <para></para>
+    /// --> QuickDialog() is currently the only funciton that suppirts CenterDesktop()
+    /// </summary>
+    /// <returns></returns>
+    static optRet CenterDesktop() { return defOpt.CenterDesktop(); }  ;
 
 	// Specifies window as "TopMost", keeping the window at the top of all windows.  This prevents other windows from 
 	// overlapping the window.  This is useful for windows that need to be on top at all times so they do not become
@@ -870,7 +953,18 @@ namespace opt
 	//
 	static optRet Hidden() { return defOpt.Hidden(); }  ;	
 
-	// Sets FastMode() for widgets.  
+	/// <summary>
+	/// Tell various functions (such as QuickDialog) not to auto hide the window when done.
+    /// <para></para>
+    /// When this is used, it is the calling program's responsibility to hide the window when finished. 
+    /// <para></para>&#160;&#160;&#160;
+    /// This is useful for Quick Dialogs (and some other functions, TBD) to validate data after the user pressed OK, to
+    /// re-enter the loop without creating a flash when hiding and re-showing the window.
+	/// </summary>
+	/// <returns></returns>
+	static optRet NoAutoHide() { return defOpt.NoAutoHide(); }  ;	
+	
+    // Sets FastMode() for widgets.  
 	// This is a powerful function allowing widgets to update only when
 	// the system is ready for another update (around 10ms-20ms), rather than 
 	// re-drawing the control every time a value is changed.
@@ -1153,17 +1247,40 @@ namespace opt
 	//
 	static optRet Center()	{ return defOpt.Center();		}  ;		
 
-	// --> Centers the control, Widget, or Window. horizontally in the window (on the current line or Y position in the window).
-	// --> For vertical centering, use CenterY().   To center in entire window, use CenterXY()
-	// Example:
-	//          MyWindow.GetInputButton("Press to continue",opt::Center() | opt::WinColors());
-	//          (This centers the button on the current output/console line and using the current window colors for the button)
-	//
+	/// <summary>
+	/// Centers the control, Widget, or Window. horizontally in the window (on the current line or Y position in the window).
+	/// For vertical centering, use CenterY().   To center in entire window, use CenterXY()
+    /// <para></para>&#160;&#160;&#160;
+	/// Example:
+    /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+	///          MyWindow.GetInputButton("Press to continue",opt::CenterX() | opt::WinColors());
+    /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+	///          (This centers the button on the current output/console line and using the current window colors for the button
+	/// </summary>
+	/// <param name="iRange"> = Consider iRange as centering width range rather than window size.</param>
+	/// <returns></returns>
 	static optRet CenterX()	{ return defOpt.CenterX();	}  ;		
+
+	/// <summary>
+	/// Centers the control, Widget, or Window. horizontally in the window (on the current line or Y position in the window).
+	/// For vertical centering, use CenterY().   To center in entire window, use CenterXY()
+    /// <para></para>&#160;&#160;&#160;
+	/// Example:
+    /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+	///          MyWindow.GetInputButton("Press to continue",opt::CenterX(300) | opt::WinColors());
+    /// <para></para>&#160;&#160;&#160;&#160;&#160;&#160;
+	///          (This centers the button on the current output/console line and using the current window colors for the button
+	/// </summary>
+	/// <param name="iRange"> = Consider iRange as centering width range rather than window size.</param>
+	/// <returns></returns>
+	static optRet CenterX(int iRange)	{ return defOpt.CenterX(iRange);	}  ;		
 
 	// Centers the control, widget, or window in the window in the Y dimension
 	//
 	static optRet CenterY() { return defOpt.CenterY();	}  ;		
+	// Centers the control, widget, or window in the window in the Y dimension
+	//
+	static optRet CenterY(int iRange) { return defOpt.CenterY(iRange);	}  ;		
 
 	// Adds a border to the input box, window, or other control that uses borders
 	//
@@ -1202,6 +1319,16 @@ namespace opt
 	// For most text (such as with a TextWidget), use TextCenterXY() instead of CenterXY()
 	//
 	static optRet CenterXY(int iOffset=0) { return defOpt.CenterXY(iOffset); }  ;		
+	
+    // CenterXY() -- Centers the Control, Widget, or new Window in the current Window.
+	//               This is can also be used as JustCenter()
+	//
+	// ---> In some cases, this will also center Text inside of a control when there is no other context.
+	// ---> For example, Write("Hello World",CenterXY()) will center the text in the window.
+	//
+	// For most text (such as with a TextWidget), use TextCenterXY() instead of CenterXY()
+	//
+	static optRet CenterXY(int iRangeX,int iRangeY) { return defOpt.CenterXY(iRangeX,iRangeY); }  ;		
 
 	// Add a Shadow to the control, window, or widget. 
 	//
@@ -1219,7 +1346,26 @@ namespace opt
 	// Otherwise, the window is embedded in the current window at the (X,Y) position specified.
 	//
 	static optRet Popup()			{ return defOpt.Popup()			; }  ;	
-	
+
+	/// <summary>
+	/// Disallows sizing of a window (i.e. through NewWindow(), ChildWindow(), etc.).  By default, the user may resize the window up to the canvas size by dragging the window's edges. 
+    /// <para></para>
+    /// ---> When NoSizing() is used as an option, the window cannot be resized by the user (but can be resized by the program).  This does not include Minimize
+    /// and Maximize controls.  Use NoSysMenu() to eliminate these options.
+	/// </summary>
+	/// <returns></returns>
+	static optRet NoSizing()			{ return defOpt.NoSizing()	; }  ;	
+
+ 	/// <summary>
+	/// Removes Minimize and Maximize buttons on a new window (i.e. NewWindow(), ChildWindow(), etc).  By default, the user may minimize and maximize a window. 
+    /// This removes the buttons to allow minimizing and maximizing. 
+    /// <para></para>
+    /// ---> Use this option with NoSizing() to also remove the ability for the user to dynamically size the window by grabbing its edges.
+	/// </summary>
+	/// <returns></returns>
+	static optRet NoSysMenu()			{ return defOpt.NoSysMenu()	; }  ;	
+   
+
 	// Disable automatic closing for dialogs and windows
 	// When a dialo window is created, by default, pressing the 'X' close button in the top-right of the window
 	// will close the dialog.
@@ -1260,13 +1406,25 @@ namespace opt
 	//     Use JustCenterXY() to center text in both X and Y dimensions
 	static optRet JustCenterX()				{ return defOpt.JustCenterX(); }  ;		
 
+	// --> Centers the Control, Widget, or Window in the X plane.
+	// Use the X position in the function call to set an offset from this position.
+	//	   This centers the X dimension only.  To Center the Y dimension, use JustCenterY()
+	//     Use JustCenterXY() to center text in both X and Y dimensions
+	static optRet JustCenterX(int iRange)				{ return defOpt.JustCenterX(iRange); }  ;		
+
 	// --> Centers the Control, Widget, or Window in the Y dimension.
 	// Use the Y position in the function call to set an offset from this position.
 	//	   This centers the Y dimension only.  To Center the X dimension, use JustCenterX()
 	//     Use JustCenterXY() to center text in both X and Y dimensions
 	static optRet JustCenterY()				{ return defOpt.JustCenterY(); }  ;		
 
-	// ---> Sets the Control, Window, or Widget to the top of the window.
+	// --> Centers the Control, Widget, or Window in the Y dimension.
+	// Use the Y position in the function call to set an offset from this position.
+	//	   This centers the Y dimension only.  To Center the X dimension, use JustCenterX()
+	//     Use JustCenterXY() to center text in both X and Y dimensions
+	static optRet JustCenterY(int iRange)				{ return defOpt.JustCenterY(iRange); }  ;		
+
+    // ---> Sets the Control, Window, or Widget to the top of the window.
 	// Use the Y position in the function call to set an offset from this position.
 	//
 	static optRet JustTop()					{ return defOpt.JustTop(); }  ;		
@@ -1321,26 +1479,56 @@ namespace opt
 	//
 	static optRet JustTopCenter()			{ return defOpt.JustTopCenter(); }  ;		
 
-	// TextCenter() -- Centers the text inside of a Control, Widget, or Window
-	//                 This can also be used as TextCenterX()
-	//
+    // TextCenter() -- Centers the text inside of a Control, Widget, or Window in the X axis
+    //
 	// This only centers in the X dimension.  Use TextCenterY() to cener in the Y dimension, or CenterXY() for both.
 	//
 	static optRet TextCenter()				{ return defOpt.TextCenter();		}  ;		
 
-	// TextCenterX() -- Centers the text inside of a Control, Widget, or Window
+    // TextCenter() -- Centers the text inside of a Control, Widget, or Window in the X axis
+    //
+	// This only centers in the X dimension.  Use TextCenterY() to cener in the Y dimension, or CenterXY() for both.
+	//
+	static optRet TextCenter(int iRange)				{ return defOpt.TextCenter();		}  ;		
+
+    // TextCenterX() -- Centers the text inside of a Control, Widget, or Window in the X axis
 	//					This can also be used as TextCenterX()
 	//
 	// This only centers in the X dimension.  Use TextCenterY() to cener in the Y dimension, or CenterXY() for both.
 	//
 	static optRet TextCenterX()				{ return defOpt.TextCenterX();	}  ;		
 
-	// TextCenterY() -- Centers the text inside of a Control, Widget, or Window
-	//					This can also be used as TextCenterX()
+    // TextCenterX() -- Centers the text inside of a Control, Widget, or Window in the X axis
+	//
+	// This only centers in the X dimension.  Use TextCenterY() to cener in the Y dimension, or CenterXY() for both.
+	//
+	static optRet TextCenterX(int iRange)	{ return defOpt.TextCenterX(iRange);	}  ;		
+
+	// TextCenterY() -- Centers the text inside of a Control, Widget, or Window in the Y axis
 	//
 	// This only centers in the Y dimension.  Use TextCenterX() to cener in the X dimension, or CenterXY() for both.
 	//
 	static optRet TextCenterY()				{ return defOpt.TextCenterY();	}  ;		
+
+    // TextCenterY() -- Centers the text inside of a Control, Widget, or Window in the Y axis
+	//
+	// This only centers in the Y dimension.  Use TextCenterX() to cener in the X dimension, or CenterXY() for both.
+	//
+	static optRet TextCenterY(int iRange)	{ return defOpt.TextCenterY(iRange);	}  ;		
+
+    // TextCenterXY() -- Centers the text inside of a Control, Widget, or Window on both axes (X and Y)
+	//					This can also be used as TextCenterX()
+	//
+	// This only centers in the Y dimension.  Use TextCenterX() to cener in the X dimension, or CenterXY() for both.
+	//
+	static optRet TextCenterXY()				{ return defOpt.TextCenterXY();	}  ;		
+ 
+    // TextCenterXY() -- Centers the text inside of a Control, Widget, or Window on both axes (X and Y)
+	//					This can also be used as TextCenterX()
+	//
+	// This only centers in the Y dimension.  Use TextCenterX() to cener in the X dimension, or CenterXY() for both.
+	//
+	static optRet TextCenterXY(int iRangeX,int iRangeY)	{ return defOpt.TextCenterXY(iRangeX,iRangeY);	}  ;		
 
 	// TextTop() -- Sets the text to the top of the Control or WIndow
 	//
@@ -1376,7 +1564,9 @@ namespace opt
 	//
 	static optRet str(const char * sString) { return defOpt.literal(sString); }  ;	
 
-
+    // Returns a blank options object (cwfOpt) 
+    //
+    static optRet NoOpt() { return defOpt.NoOpt(); }  // Return empty options
 
 	// For Sliders, Horz() declares a horizontal slider.  This is the default.
 	//

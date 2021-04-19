@@ -75,6 +75,7 @@ private:
 	void EnableInvalidate(bool bEnable,bool bRefresh = false);		// Enable/Disable widow redraws.  Used internally.
 	bool			m_bArrowBox		= false;
 	bool			m_bLabelPending = false;
+    bool            m_bHaveLabel    = false;
 	CString			m_csLabelFont;
 	CString			m_csLabel;
 	RGBColor_t		m_rgbLabelColor;
@@ -84,7 +85,10 @@ private:
 	CArrowBox	* m_cArrowBox	= nullptr;
 
 	bool SetLabelPending(LabelJust eLabelJust,int iX,const char * sLabel,const char * sFont,RGBColor_t rgbColor); 
-
+    stControlLabel_t m_sControlLabel{};
+    bool SetLabelOpt(cwfOpt & cwOpt,SizeRect & srBox);
+    stControlLabel_t DrawLabel();
+    stControlLabel_t CalcLabel(cwfOpt & cwOpt,SizeRect & srBox);
 public:
 	friend CWindow;
 	int					  m_iControl	;		// Davinci Control ID
@@ -123,6 +127,15 @@ public:
 	//
 	int	GetTextLength()			;
 
+    /// <summary>
+    /// A temporary function to retrieve label information for the Edit Box.
+    /// <para></para>&#160;&#160;&#160;
+    /// Returns information related to the location and size of the label, which is currently printed on the Edit Box's parent window.
+    /// <para></para>&#160;&#160;&#160;
+    /// This is temporary until the next release of the Edit Box code, where the label will be more cohesive with the edit box window and will not print on the parent window.
+    /// </summary>
+    /// <returns>stLabelControl_t structure containing data about the label.  Structure is empty if there is no label.</returns>
+    stControlLabel_t GetLabelInfo();
 	// Set the text in the edit box
 	//
 	bool	SetText(const char * sText)	;
@@ -132,6 +145,14 @@ public:
 	bool GetFloat(double & fValue,double fSetValue = DBL_MIN);
 	int GetInteger(bool * bOk = nullptr);
 	bool GetInteger(int & iValue,int iSetValue = INT_MIN);
+
+    /// <summary>
+    /// Checks whether the input is valid for numbers with Range() set for validation.
+    /// If there was no validation set, this function returns true.
+    /// </summary>
+    /// <param name="bBlankLinesValid">If blank lines are considered invalid, then set this to false (default).  Otherwise, blank lines are considered valid.</param>
+    /// <returns></returns>
+    bool isInputValid(bool bBlankLinesValid = false);
 
 	// Clear the text in the Edit Box
 	//

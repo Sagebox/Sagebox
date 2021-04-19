@@ -16,6 +16,7 @@
 #if !defined(_CSageTypes_H_)
 #define _CSagTypes_H_
 
+#define kSagePrivPublic public      // used to programmatically strip public values from various. H files for release
 
 // /D NoSageSpace       - then Sage:: and Sage::opt must be referred to explicitly for things like Sage::CWindow or Sage::CStringg
 // /D SageOptOnly       - is specified, Sage::opt functions can be referred to as opt:: diretly, i.e. opt::Transparent(), opt::fgColor(), etc. -- otherwise Sage::opt::fgColor(), etc. must be used.

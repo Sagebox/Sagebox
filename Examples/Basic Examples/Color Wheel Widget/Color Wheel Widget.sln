@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Color Wheel Widget", "Color Wheel Widget.vcxproj", "{1D34B27B-9B36-494E-8976-CB71A809F377}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug|x64.ActiveCfg = Debug|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug|x64.Build.0 = Debug|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug|x86.ActiveCfg = Debug|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Debug|x86.Build.0 = Debug|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{1D34B27B-9B36-494E-8976-CB71A809F377}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FFD83A76-D015-479A-B6C8-72656D5A09ED}
+	EndGlobalSection
+EndGlobal

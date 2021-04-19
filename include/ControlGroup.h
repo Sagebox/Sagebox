@@ -26,10 +26,10 @@ class cwfOpt;
 class ControlGroup
 {
 private:
-	char			*	m_sOptString = nullptr;
+	char			*	m_sOptString    = nullptr;
 	int					m_iControlGroup;
-	CWindow		*	m_cParentWin;
-	CDavinci		*	m_cDavinci;
+	CWindow		    *	m_cParentWin    = nullptr;
+	CDavinci		*	m_cDavinci      = nullptr;
 
 	void FreeOptString() { if (m_sOptString) free(m_sOptString); m_sOptString = nullptr; };
 
@@ -37,17 +37,25 @@ protected:
 	friend CWindow;
 	ControlGroup(int iControlGroup,CWindow * cWin, CDavinci * cDavinci);
 public:
+    static ControlGroup m_cEmptyGroup; 
+
 	~ControlGroup() { FreeOptString(); }
-	ControlGroup() { m_iControlGroup = 0; };
+	ControlGroup();
 //	int GetPressed(bool bRemove = false);	-- deprecated
 	bool isPressed(Peek peek = Peek::No);
 	bool isPressed(int & iPressedID,Peek peek = Peek::No);
+    int GetCheckedButton();
+    bool isChecked(int iCheckboxID);
+    bool SetCheck(int iCheckboxID); 
+
 	bool Valid() { return m_iControlGroup != 0; }
 	inline int getGroupID() { return m_iControlGroup; }
 	char * getGroupName(); 
 	char * GetOptString() { return m_sOptString; }
 	bool SetOptions(char * sOpString);
 	bool SetOptions(cwfOpt & cwOptions);
+    static ControlGroup & GetEmptyGroup();
+    CWindow & GetParentWindow();
 };
 }; // namespace Sage
 #endif // _ControlGroup_H_
