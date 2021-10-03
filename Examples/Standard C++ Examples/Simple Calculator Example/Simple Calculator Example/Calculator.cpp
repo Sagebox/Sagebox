@@ -181,7 +181,8 @@ bool Calculator::InitWindow()
 
     // Initialize the Edit Box.  It is put just above the button grid, with the same width (i.e. 5*the button size)
     
-    m_cEditBox = &m_cWin->NewEditBox(kWinLoc.x,kWinLoc.y-35,kButtonSpacing.x*5,33,Font("Arial,23") | bgColor("white") | fgColor("black") | opt::ThickBorder() | opt::FloatsOnly());
+    m_cEditBox = &m_cWin->NewEditBox(kWinLoc.x,kWinLoc.y-35,kButtonSpacing.x*5,33,Font("Arial,23") | bgColor(SageColor::White)
+                                                                                                   | fgColor(SageColor::Black) | opt::ThickBorder() | opt::FloatsOnly());
 
     // Set generic options for all buttons. This sets a highlighted background color for each button (i.e. bgHigh()).  This is the same for 
     // all buttons to make things easy, but can be set to have a different background color for each button section with different colors, for 
@@ -190,7 +191,7 @@ bool Calculator::InitWindow()
     // Style("Windows") sets panel-style buttons vs. default buttons
     // TextColor() sets the text color on the buttons, which usually defaults to black with Windows Style buttons
 
-    cwfOpt cwOpt = opt::Style("Windows") | TextColor("White") | bgHigh({40,40,255}) | Font("Arial,20");
+    cwfOpt cwOpt = opt::Style("Windows") | TextColor(SageColor::White) | bgHigh({40,40,255}) | Font("Arial,20");
 
     // Some lambda values to make life easer. 
 

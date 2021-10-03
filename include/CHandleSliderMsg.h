@@ -39,6 +39,8 @@ public:
 	LPARAM				  lParam;
 	UINT				  Message;
 	CEControlAction_t	& stControl;
+	CEControlAction_t	* stParentControl;
+
 	CESlider_t			& stSlider;
 	UINT				  m_uiReturn;				// Return value set by WM_Message functions.  TRUE return returns this value, otherwise we return defproc
 	CUserWindow			* m_cWin;

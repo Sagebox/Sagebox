@@ -70,10 +70,10 @@ friend CWindow;
 	bool		m_bClosePending		= false; // User pressed the close button, but close is disabled. 
 											 // This will cause a return of true on dialog.WindowClosing, but not for the actual window
 
-	int			m_iMinX = MAXINT;
-	int			m_iMinY = MAXINT; 
-	int			m_iMaxX = MININT;
-	int			m_iMaxY = MININT;
+	int			m_iMinX = INT_MAX;
+	int			m_iMinY = INT_MAX; 
+	int			m_iMaxX = INT_MIN;
+	int			m_iMaxY = INT_MIN;
 	CString		m_csControls;
 	CString		m_csWinTitle;
 

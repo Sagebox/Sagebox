@@ -28,6 +28,9 @@
 #if !defined(_CDavWindow_H_)
 #define _CDavWindow_H_
 
+
+#define __SageGDIPlusSupport
+
 #include <string>
 #include "SageOpt.h"
 #include "CDevString.h"
@@ -35,13 +38,17 @@
 #include "DialogStruct.h"
 #include "EventOpt.h"
 #include "CPoint.h"
+#include "CSize.h"
 #include "CDavinci.h"
 #include "CMenu.h"
 #include "CJpeg.h"
 #include "CWindowHandler.h"
 #include "CStyleDefaults.h"
 #include "Cpaswindow.h"
-
+#ifdef __SageGDIPlusSupport
+#include <gdiplus.h>
+#include "CGdiPlus.h"
+#endif
 
 #include <vector>
 
@@ -157,11 +164,18 @@ private:
     bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
     bool m_bShowInitial             = false;                                // Internal use, subject to change
     bool m_bShowInitialized         = false;                                // Internal use, subject to change
+    unsigned char * m_sLastKnownDIBMem   = nullptr;                         // Last Known DIB section memory installed by user ($$ This is temporary and will be removed)
+    SIZE m_szLastKnownDIBSize       = {};                                   // Last Known DIB section size installed by user ($$ This is temporary and will be removed)
 
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     CDevControls * m_cDevControls = nullptr;    // Not created until first used. 
     void _vprintf(const char * Format,va_list va_args);                                 // Used internally
     void _vprintf(const cwfOpt & cwOpt,const char * Format,va_list va_args);                                 // Used internally
+
+#ifdef __SageGDIPlusSupport
+    static Gdiplus::Graphics m_cEmptyGDI;           // Empty GDI for invalid windows, etc. -- something to return that the GDI can deal with as an object with a NULL HDC
+    Gdiplus::Graphics * m_cGDI = nullptr;           // The one and only GDI graphics object, though the user can create their own.
+#endif
 
     // Bitmap Message Handle for BitmapWindow() returned windows
     // The main component is that pressing the 'X' button on the window
@@ -1314,6 +1328,7 @@ public:
     // ForceUpdate() -- This is deprecated, but may be used in the future when more update/painting options are implemented
     //
     bool __ForceUpdate(bool bIfDirty = false);
+    bool ForceUpdate();
 
     // UpdateReady() -- Returns true of <iUpdateMS> has occurred since the last update.
     //
@@ -1648,6 +1663,10 @@ public:
     // The Pen Thickness can be changed with SetPenThickness()
     //
     bool DrawPolygon(POINT * pPoints,int iVertices,int iColor1,int iColor2 = -1);  // $QCC
+    bool DrawPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);  // $QCC
+
+    bool DrawOpenPolygon(POINT * pPoints,int iVertices,int iColor1,int iPenSize = 0);  // $QCC
+    bool DrawOpenPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
 
     // Draw a Circle on the Window
     //
@@ -2532,7 +2551,7 @@ public:
     // 
     // Multiple lines may be entered with '\n', and long lines are automatically broken into multiple lines
     //
-    void QuickButton(const char * sText = nullptr,const char * sTitleBar = nullptr); // $QCC
+    void QuickButton(const char * sText = nullptr,const char * sTitleBar = nullptr); // $QC
 
 
     // ---------------------
@@ -2979,9 +2998,11 @@ public:
         // GetGroup() -- This returns a ControlGroup Class.  This is experimental and TBD
         //
         ControlGroup GetGroup(const char * sControl);
+        ButtonGroup GetButtonGroup(const char * sControl);
         // GetGroup() -- This returns a ControlGroup Class.  This is experimental and TBD
         //
         ControlGroup GetGroup(int iControl);
+        ButtonGroup GetButtonGroup(int iControl);
 
         // CreateGroup() -- Creates a group (This is experimental and in early stages)
         //
@@ -2992,7 +3013,7 @@ public:
        SIZE CreateRadioButtonGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
        SIZE CreateCheckboxGroup(int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
        CButton * GetButton(int iGroupID, int iPosition);
-       CButton * GetButton(const char * sButton, int iPosition);
+       CButton * GetButton(const char * sGroupID, int iPosition);
        bool Enable(int iGroupID,bool bEnable);
        bool Disable(int iGroupID,bool bDisable);
 
@@ -3142,6 +3163,9 @@ public:
         //
         bool MouseClicked(Peek peek = Peek::No);
         bool MouseClicked(POINT & pMouse,Peek peek = Peek::No);
+
+        bool MouseUnclicked(Peek peek = Peek::No); 
+        bool MouseUnclicked(POINT & pMouse,Peek peek = Peek::No); 
 
         bool MouseDragEvent(Peek peek = Peek::No);
         bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No);
@@ -3745,6 +3769,54 @@ public:
             Debug,                  // Brings up the Process Control Window as visible with the Debug Window.
             DebugLineNumbers,       // Brings up the Process Control Window as visible with the Debug Window with Line Numbers showing
         };
+
+        enum class UpdateType
+        {
+            Off,
+            OffOnce,
+            On,
+        };
+       bool SetUpdate(UpdateType eType);
+       bool Update();
+
+
+        bool SetGlobalString(int iIndex,const char * sString);
+        bool SetGlobalValue(int iIndex,const char * sString);
+        bool SetGlobalValue(int iIndex,long long iValue);
+        bool SetGlobalValue(int iIndex,double fValue);
+        bool SetGlobalValue(int iIndex,int iValue);
+        bool SetGlobalValue(int iIndex,unsigned int iValue);
+        bool SetGlobalValue(int iIndex,unsigned long long uiValue);
+        bool SetGlobalValue(int iIndex, void* vPointer);
+        bool SetGlobalValue(int iIndex, bool bValue);
+
+        bool SetGlobalString(const char * sName,const char * sString);
+        bool SetGlobalValue(const char * sName,const char * sString);
+        bool SetGlobalValue(const char * sName,long long iValue);
+        bool SetGlobalValue(const char * sName,double fValue);
+        bool SetGlobalValue(const char * sName,int iValue);
+        bool SetGlobalValue(const char * sName,unsigned int iValue);
+        bool SetGlobalValue(const char * sName,unsigned long long uiValue);
+        bool SetGlobalValue(const char * sName,void * vPointer);
+        bool SetGlobalValue(const char *, bool bValue);
+
+        const char * GetGlobalString(int iIndex);
+        long long GetGlobalValue(int iIndex);
+        double GetGlobalDouble(int iIndex);
+        int GetGlobalInt(int iIndex);
+        unsigned int GetGlobalUInt(int iIndex);
+        unsigned long long GetGlobalULongLong(int iIndex);
+        void * GetGlobalPointer(int iIndex);
+        bool GetGlobalBool(int iIndex);
+
+        const char * GetGlobalString(const char * sName);
+        long long GetGlobalValue(const char * sName);
+        double GetGlobalDouble(const char * sName);
+        int GetGlobalInt(const char * sName);
+        unsigned int GetGlobalUInt(const char * sName);
+        unsigned long long GetGlobalULongLong(const char * sName);
+        void * GetGlobalPointer(const char * sName);
+        bool GetGlobalBool(const char * sName);
 
         // Init() -- Initialize the process control window.
         //
@@ -5626,6 +5698,23 @@ public:
     // a false return. 
     //
     bool DisplayBitmap(int iX,int iY,RawBitmap_t & stBitmap);     // $QCC
+
+    // Display a Bitmap on the window.
+    // 
+    // ** Note: ** -- this displayed aligned bitmaps, where each row must be divisible by 4, in which 
+    // case some rows must be padded. 
+    //
+    // DisplayBitmap() shows a bitmap on the window at the specified (iX,iY) coordinates on the screen.
+    // Raw data can be used, in which case the width, height, and memory pointer must also be supplied.
+    // RawBitmap_t and CBitmap can also be used, in which case only the iX, and iY parameters are necessary.
+    //
+    // Note: Negate the height to display the bitmap upside-down.  In the case of RawBitmap_t or CBitmap, put
+    // a '-' sign in front of the bitmap structure.  DisplayBitmapR() can also be used.
+    //
+    // In the case of RawBitmap_t and CBitmap, bad or corrupted bitmaps are not displayed and passed through with 
+    // a false return. 
+    //
+    bool DisplayBitmap(POINT pLoc,RawBitmap_t & stBitmap);     // $QCC
  
     // Display a Bitmap on the window.
     // 
@@ -5699,6 +5788,43 @@ public:
     //
     bool DisplayBitmapR(RawBitmap_t & stBitmap);     // $QCC
 
+    // --- 32-Bit Display Bitmap -- 
+
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(int iX,int iY,RawBitmap32_t & stBitmap);     // $QCC
+    
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(POINT pLoc,RawBitmap32_t & stBitmap);     // $QCC
+    
+    // Display a bitmap upside-down.  This is often useful for bitmaps, as they are typically stored upside-down, and default
+    // Windows behavior is to correct this.
+    //
+    // However, it is common to work with correct bitmaps that will then display upside down. 
+    // DisplayBitmapR() will display a bitmap right-side up.  You can also negate the height or 
+    // struture (by putting a '-' in front of it) to use the regular DisplayBitmap()
+    //
+    // See DisplayBitmap() for more details on this function.
+    //
+    bool DisplayBitmapR(RawBitmap32_t & stBitmap);     // $QCC
+
+    // -------------------------------
+
     //Display a 32-bit bitmap. 
     //
     // This function is the same as DisplayBitmap(), except that it displays a 32-bit bitmap. 
@@ -5769,6 +5895,21 @@ public:
     //
     bool BlendBitmap(POINT pLoc,RawBitmap_t & stBitmap,RawBitmap_t & stMask); // $QCC
 
+    // Deprecated -- Use BlendBitmap32()
+    //
+    bool BlendBitmapEx(Sage::RawBitmap32_t & stSource,POINT pDest,SIZE szDest); // $QCC
+
+    // Deprecated -- Use BlendBitmapREx()
+    //
+    bool BlendBitmapREx(Sage::RawBitmap32_t & stSource,POINT pDest,SIZE szDest); // $QCC
+
+    bool BlendBitmap32(Sage::RawBitmap32_t & stSource,const POINT pDest,const SIZE szDest = {}); // $QCC
+    bool BlendBitmap32(const unsigned char * sBitmap,const SIZE szSize,const POINT pDest,const SIZE szDest = {}); // $QCC
+    bool BlendBitmap32R(Sage::RawBitmap32_t & stSource,const POINT pDest,const SIZE szDest = {}); // $QCC
+    bool BlendBitmap32R(const unsigned char * sBitmap,const SIZE szSize, const POINT pDest,const SIZE szDest = {}); // $QCC
+
+    bool BlendDIB(HBITMAP hBitmap,const SIZE szSize,const POINT pDest,const SIZE szDest = {});
+
     // StretchBitmap() -- Display a stretched bitmap to the window.  
     //
     // The source bitmap can be stretched to any size, and from any portion of the bitmap.
@@ -5785,6 +5926,22 @@ public:
     bool StretchBitmapR(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0}); // $QCC
     bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest);  // $QCC
     bool StretchBitmapR(CBitmap & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
+
+    bool StretchBitmap32(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0}); // $QCC
+    bool StretchBitmap32(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmap32(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
+
+    bool StretchBitmap32R(unsigned char * sMemory,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource,SIZE szSourceBitmap = {0,0}); // $QCC
+    bool StretchBitmap32R(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmap32R(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
+
+    bool StretchBitmap(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmap(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
+
+    bool StretchBitmapR(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest);  // $QCC
+    bool StretchBitmapR(RawBitmap32_t & cBitmap,POINT pDest,SIZE szDest,POINT pSrc, SIZE szSource); // $QCC
+
+
 
     bool DisplayBitmapEx(unsigned char * sMemory,POINT pDest,POINT pSrc, SIZE szSize,SIZE szSourceBitmap); // $QCC
     bool DisplayBitmapEx(CBitmap & cBitmap,POINT pDest,SIZE szSize);  // $QCC
@@ -6127,7 +6284,10 @@ public:
     // You can also use GetMouseClickPos() to retrieve the last mouse-click coordinates.
     //
     bool MouseClicked(POINT & pMouse,Peek peek = Peek::No); // $QCC
-    
+  
+    bool MouseUnclicked(Peek peek = Peek::No); 
+    bool MouseUnclicked(POINT & pMouse,Peek peek = Peek::No); 
+
     bool MouseDragEvent(Peek peek = Peek::No); // $QCC
     bool MouseDragEvent(POINT & pMouse,Peek peek = Peek::No); // $QCC
 
@@ -6136,6 +6296,8 @@ public:
 
     bool isMouseDragging();  // $QCC
     bool isMouseDragging(POINT & pStartDrag);  // $QCC
+
+    bool StartMouseDrag(POINT pPoint); // $QCC
 
     POINT GetMouseDragStart(); // $QCC
 
@@ -6385,6 +6547,13 @@ public:
     //
     HDC GetBitmapDC(); // $QC
 
+    /// <summary>
+    /// Returns the Windows Bitmap handle for the Bitmap currently selected in the window client area.
+    /// <para></para>
+    /// Also See: GetBitmapDC();
+    /// </summary>
+    /// <returns></returns>
+    HBITMAP GetBitmapHandle(); // $QC
 
     // GetWritePos() -- Returns the current X,Y output position for all text-based functions.
     //
@@ -7742,7 +7911,7 @@ public:
     // catch the OnCaptureChange() Message (which is only called when the capture is released) to 
     // monitor the capture status
     //
-    bool CaptureMouse(bool bReleaseOnMouseUp = false);  // $QCC
+    bool CaptureMouse(bool bReleaseOnMouseUp = true);  // $QCC
 
     // ReleaseCapture() -- this releases a mouse capture in the current window or control
     // This can be used to release the capture, such as when the mouse button is released. 
@@ -8338,8 +8507,65 @@ public:
 
     bool SetCloseButtonMenu(int iMenuItem = 0); // $QC
 
-
+    /// <summary>
+    /// Reads an image file and returns a CBitmap.  If the Bitmap is not valid, then there was an error. 
+    /// <para></para>
+    /// Use GetLastImageStatus() to determine error type.
+    /// <para></para>
+    /// --> Image Types Supported: BMP, Jpeg, and PNG.
+    /// </summary>
+    /// <param name="sPath">Path fo File </param>
+    /// <param name="bSuccess">(optional) filled with true/false if image was read successfully.</param>
+    /// <returns></returns>
     CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr); // $QC
+    [[nodiscard]] RawBitmap32_t ReadImageFile32(const char * sPath,bool * bSuccess = nullptr); // $QC
+
+    /// <summary>
+    /// Reads an image in memory and returns a CBitmap.  If the Bitmap is not valid, then there was an error. 
+    /// <para></para>
+    /// Use GetLastImageStatus() to determine error type.
+    /// <para></para>
+    /// Memory and Memory Size, Vector, or Mem classes may be used instead.  See function prototypes. 
+    /// <para></para>
+    /// --> Image Types Supported: BMP, Jpeg, and PNG.
+    /// </summary>
+    /// <param name="sMem">Start of Image Memory</param>
+    /// <param name="tMemLength">Length of Memory</param>
+    /// <param name="bSuccess">(optional) filled with true/false if image was read successfully.</param>
+    /// <returns></returns>
+    CBitmap ReadImageMem(const unsigned char * sMem,size_t tMemLength,bool * bSuccess = nullptr); // $QC
+
+    /// <summary>
+    /// Reads an image in memory and returns a CBitmap.  If the Bitmap is not valid, then there was an error. 
+    /// <para></para>
+    /// Use GetLastImageStatus() to determine error type.
+    /// <para></para>
+    /// Memory and Memory Size, Vector, or Mem classes may be used instead.  See function prototypes. 
+    /// <para></para>
+    /// --> Image Types Supported: BMP, Jpeg, and PNG.
+    /// </summary>
+    /// <param name="sMem">Start of Image Memory</param>
+    /// <param name="tMemLength">Length of Memory</param>
+    /// <param name="bSuccess">(optional) filled with true/false if image was read successfully.</param>
+    /// <returns></returns>
+    CBitmap ReadImageMem(Mem<unsigned char> & cMem,bool * bSuccess = nullptr); // $QC
+
+    /// <summary>
+    /// Reads an image in memory and returns a CBitmap.  If the Bitmap is not valid, then there was an error. 
+    /// <para></para>
+    /// Use GetLastImageStatus() to determine error type.
+    /// <para></para>
+    /// Memory and Memory Size, Vector, or Mem classes may be used instead.  See function prototypes. 
+    /// <para></para>
+    /// --> Image Types Supported: BMP, Jpeg, and PNG.
+    /// </summary>
+    /// <param name="sMem">Start of Image Memory</param>
+    /// <param name="tMemLength">Length of Memory</param>
+    /// <param name="bSuccess">(optional) filled with true/false if image was read successfully.</param>
+    /// <returns></returns>
+    CBitmap ReadImageMem(std::vector<unsigned char> & vMem,bool * bSuccess = nullptr); // $QC
+
+
     ImageStatus GetLastImageStatus(); // $QC
 
     // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
@@ -8537,6 +8763,7 @@ public:
     // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
     //
     CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CListBox & NewListBox(int ix,int iy,int iWidth,int iHeight,const char * sItemList,const cwfOpt & cwOpt = cwfOpt()); // $QC
  
     // NewListBox() -- Create a listbox in the window. 
     //
@@ -8558,10 +8785,13 @@ public:
     // It is recommnded to use CListBox::SetMessageHandler() rather than creating a subclass, as it is easier. 
     //
     CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CListBox & NewListBox(CListBox * cListBox,int ix,int iy,int iWidth,int iHeight,const char * sItemList,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
 
-    CComboBox &  NewComboBox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());  // $QC
-    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());  // $QC
+    CComboBox &  NewComboBox(int iX,int iY,int iWidth,const cwfOpt & cwOpt = cwfOpt());  // $QC
+    CComboBox &  NewComboBox(int iX,int iY,int iWidth,const char * sItemList,const cwfOpt & cwOpt = cwfOpt());  // $QC
+    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,const cwfOpt & cwOpt = cwfOpt());  // $QC
+    CComboBox &  NewComboBox(CComboBox * cComboBox,int iX,int iY,int iWidth,const char * sItemList,const cwfOpt & cwOpt = cwfOpt());  // $QC
 
     bool SetEventWindow(CWindow * cWin = nullptr); // $QC
     bool SetEventWindow(CWindow & cWin); // $QC
@@ -8694,6 +8924,99 @@ public:
     //
     CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup DevRadioButtons(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup DevRadioButtons(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup DevRadioButtons(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+     /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup DevRadioButtons(std::vector<char *>  vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
     // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
     // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
@@ -8715,6 +9038,7 @@ public:
     //
     CEditBox & DevInputBox(const char * sInputBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return DevEditBox(sInputBoxName,cwOpt); } // $QC //$$moveme
   	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt()); // $QC
+  	CComboBox & DevComboBox(const cwfOpt & cwOpt = cwfOpt()); // $QC
 	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt()); // $QC
 	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt()); // $QC
 	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt()); // $QC
@@ -8726,10 +9050,92 @@ public:
     CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt()); // $QC
 
 
+
+    /// <summary>
+    /// Auto-hides the DevWindow when the user presses the 'x' button or close button.  This does not destroy the devwindow, and only hides it.
+    /// <para></para>
+    /// Once Hidden, the DevWindow can be shown again with a call to Show()
+    /// </summary>
+    /// <param name="bAutoHide"> - True to auto-hide window; false to turn auti-hide off</param>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    bool DevWindowAutoHide(bool bAutoHide = true,bool bAddCloseButton = false); // $QC
+
+    /// <summary>
+    /// Shows the DevWindow if it is hidden.  
+    /// </summary>
+    /// <param name="bShow">True to show the Dev Window. False to hide the DevWindow</param>
+    /// <returns></returns>
+    bool DevWindowShow(bool bShow = true);  // $QC
+
+    /// <summary>
+    /// Hides the DevWindow if it is visible.  
+    /// </summary>
+    /// <param name="bShow">True to hide the Dev Window. False to show the DevWindow</param>
+    /// <returns></returns>
+    bool DevWindowHide(bool bHide = true); // $QC
+
+    /// <summary>
+    /// Returns true if the DevWindow Close Button was pressed, but only once -- it returns false after this point until the DevWindow
+    /// is again made visible by a call to DevWindowShow()
+    /// <para></para>
+    /// --> This difference from DevWindowsClosed() which will continuously give a Windows-Close status of TRUE if the window is closed
+    /// <para></para>
+    /// DevWindowCloseEvent(), however, is an event status and only returns TRUE once after the close (or X) button is pressed.
+    /// </summary>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    bool DevWindowCloseEvent(bool bAddCloseButton = false); // $QC
+
+    /// <summary>
+    /// Adds 'X' on top-right and optional "Close" button.
+    /// <para></para>&#160;&#160;&#160;
+    /// Dev Windows are not typically closed and do not have close controls by default.  DevAllowClose() adds the ability to close the window,
+    /// which can be used as a way to terminate a console-mode or other program that does not have a visible window. 
+    /// <para></para>
+    /// Use DevWindowClosed() to determine if the window has been closed (or the added Close Button has been pressed).
+    /// <para></para>
+    /// When the 'X' button is pressed, a Sage Event is sent to the window where it can be checked. The Close button also sends a Sage Event.
+    /// <para></para>&#160;&#160;&#160;
+    /// Note: When the user presses the 'X' button or "Close" button, the window is not closed or hidden.  These controls are only used
+    /// to provide an indication (through DevWindowClosed()) that the user has pressed a control as a message to terminate the application.
+    /// <para></para>&#160;&#160;&#160;
+    /// ---> This function is not used to close the Dev Window but as an easy way for the user to signal to close the application.
+    /// </summary>
+    /// <param name="bAddCloseButton">when TRUE adds a "Close" button.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
+    /// <returns></returns>
+    bool DevAllowClose(bool bAddCloseButton = false);   // $QC
+
+    /// <summary>
+    /// Returns TRUE if the "Close" Button or 'X' has been pressed (both are added by DevAllowClose()).
+    /// <para></para>
+    /// This can be used as a quick way to close an application that only has a Dev Window and no other window except the Console Window.
+    /// </summary>
+    /// <returns>true if the user has attempted to close the window.</returns>
+    /// <param name="bAddCloseButton">when TRUE adds a "Close" button on first usage.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
+    /// <returns>true if the user has attempted to close the window.</returns>
+    bool DevWindowClosed(bool bAddCloseButton = false);     // $QC
+
  	// DevAddSection() -- Adds a text section to the default Dev Controls window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
     bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+
+    /// <summary>
+    /// Waits for an event in the Dev Window Only.  Only use this when there is no other window -- otherwise use GetEvent() for the window (DevWindow events come through this window)
+    /// <para></para>
+    /// --> This function is intended to be used as a method to retrieve Dev Window events and react to its closing like a regular event loop.  This function will return false
+    /// if the Dev Window is closed, allowing passthrough.  NOTE: It is up to the program to handle the window closure.
+    /// <para></para>
+    /// This function is useful when the DevWindow is the only window displaying. 
+    /// <para></para>
+    /// --> This function will return TRUE when an event occurs; FALSE if the window is closed by the user. 
+    /// --> This function will add a Close Button if it does not exist (when bReturnFalseOnClose is set to TRUE)
+    /// </summary>
+    /// <param name="bReturnFalseOnClose">- (optional) When TRUE (default), DevWaitEvent() returns false if the user closes the window, also adding a Close Button.  
+    /// When false, it returns TRUE as a regular event if the window is closed (and does not add a close option automatically)</param>
+    /// <returns></returns>
+    bool DevWaitEvent(bool bReturnFalseOnClose = true); // $QC
 
     // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
     // *** Important note *** -- this will return NULLPTR until a control is created with
@@ -9019,7 +9425,108 @@ public:
     /// <returns></returns>
     bool is64BitWindows();  // $QC
 
+#ifdef __SageGDIPlusSupport
+    /// <summary>
+    /// Initializes Windows GDI+. This only needs to be called once and is initialized for the entire application.  InitGdiPlus() does not need to be called
+    /// for every Window, and is provided in the CWindow class for ease-of-use.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note:  For individual windows, you can call CWindow::CreateGdiObject(), which will return a GDI Graphics object for the current window.  This will also 
+    /// <para></para>&#160;&#160;&#160;
+    /// --> call InitGdiPlus() automatically, eliminating the need to call InitGdiPlus()
+    /// See CreateGDIObject() for more information.             
+    /// </summary>
+    /// <returns></returns>
+    bool InitGdiPlus(); // $QC
 
+    Gdiplus::Graphics & GetGdiGraphics();   // $QC
+
+#endif
+    /// <summary>
+    /// Waits for the monitor VSync blank time to start before returning.  This will sync your graphics with the graphic output to the monitor. 
+    /// <para></para>
+    /// --> Note: DirectDraw() must be available on your system and initialize correctly.  Otherwise, VsyncWait() will return immediately.
+    /// <para></para>
+    /// --> Use VsyncIsValid() to check for initialization status (a return of TRUE indicates the VsyncWait() is working correctly)
+    /// <para></para>
+    /// --> Important Note: VsyncReady() and VsyncWait() are mutually exclusive. Using them together will cause performance issues. 
+    /// </summary>
+    /// <returns></returns>
+    bool VsyncWait();   // $QCC
+
+    /// <summary>
+    /// Returns TRUE if the VsyncWait and VsyncThread capabilities are accurate (i.e. if DirectDraw() was initialized and can look for the Vertical ReSync)
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note this will initialize DirectDraw() and put the application in a performance mode, using more processing time (i.e. it assumes you are using graphics by checking its status)
+    /// <para></para>
+    /// Use this as a DEBUG function to check the validity of Vsync operations (once true, then there is no need to check)
+    /// </summary>
+    /// <returns></returns>
+    bool VsyncIsValid();    // $QC
+
+    /// <summary>
+    /// Returns true if a Vsync blank period has started, setting the status on the Vertical Retrace of your monitor
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note: This will start a passive thread to monitor the Vsync state (see: VsyncStartThread()), which will then send an event to your window, causing
+    /// VsyncReady() to return true.
+    /// <para></para>
+    /// VSyncReady() is an event, and therefore will return TRUE only once until the Vsync is signaled again, unless Peek::Yes is used to intentially not reset it.
+    /// <para></para>
+    /// --> Important Note: VsyncReady() and VsyncWait() are mutually exclusive. Using them together will cause performance issues. 
+    /// <para></para>
+    /// --> Note: Only one window can use the Vsync Thread at a time.  Using the thread in another window will cause the thread to be reset to that window.
+    /// </summary>
+    /// <param name="peek">Does not change the event status if Peek == Peek::Yes</param>
+    /// <returns></returns>
+    bool VsyncReady(Peek peek = Peek::No);  // $QCC
+
+    /// <summary>
+    /// Starts the main Vsync thread to send a VsyncReady() event to your window with the Vertical Retrace occurs on your monitor. 
+    /// <para></para>
+    /// Using VsyncReady() starts the thread automatically.  VsyncStartThread() can be used as a pre-step to make sure the thread is operating
+    /// and valid (see VsyncIsValid()) before entering the main loop, saving an initial burst of processing time on the first VsyncReady() call. 
+    /// <para></para>
+    /// --> The Vsync Thread is a passive thread that sleeps until the Vertical Retrace occurs, and takes little processing time. 
+    /// <para></para>
+    /// --> Note: Only one window can use the Vsync Thread at a time.  Using the thread in another window will cause the thread to be reset to that window.
+    /// <para></para>
+    /// --> Note: All Vsync functions assume graphics processing and put your application in a performance mode, using more CPU time, but will
+    /// not cause your system to become sluggish unless you manually set your application to a Realtime or High-priority mode.
+    /// </summary>
+    /// <returns></returns>
+    bool VsyncStartThread();    // $QC
+
+    /// <summary>
+    /// Ends the Vsync Retrace Thread.  Use this when finished with your graphics loop using the vertical retrace. 
+    /// <para></para>
+    /// --> The VSync Thread is passive and is ok to leave running, as it will not take up too much processing time. 
+    /// </summary>
+    /// <returns></returns>
+    bool VsyncEndThread();  // $QC
+
+    /// <summary>
+    /// Selects a new Windows Bitmap into the device context. This does not delete the original bitmap, which is still available for re-selection with a null parameter.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note: Once a new bitmap is selected, the bitmap will not be automatically resized when window sizes change.  The bitmap can be sized to the maximum possible
+    /// window size, or can be re-allocated on WM_SIZE messages from Windows by trapping these messages with a Window Handler (i.e. CWindowHandler).
+    /// <para></para>
+    /// Use SelectNewBitmap() with a nullptr or SelectOriginalBitmap() to revert back to the original bitmap created by Sagebox when the window was created. 
+    /// <para></para>
+    /// </summary>
+    /// <param name="hBitmap">Windows HANDLE to the bitmap</param>
+    /// <returns></returns>
+    bool SelectNewBitmap(HBITMAP hBitmap);          // $QC
+
+    bool SelectOriginalBitmap();                    // $QC
+
+    std::tuple<HBITMAP,unsigned char *> CreateDIBitmap32(bool bUpsideDown);         // $QC     
+    std::tuple<HBITMAP,unsigned char *> CreateDIBitmap32(SIZE szSize = {},bool bUpsideDown = false);         // $QC     
+    std::tuple<HBITMAP,unsigned char *> CreateDIBitmap32(int iWidth,int iHeight,bool bUpsideDown = false);            // $QC
+
+    bool SetDirtyFlag(bool bDirty = true);                                          // $QC
+
+
+    __forceinline unsigned char * GetLastKnownDIBMem()    { return m_sLastKnownDIBMem; }    // $QC      -- $$ This is a temorary function and will be removed; for internal use.
+    __forceinline SIZE GetLastKnownDIBSize()    { return m_szLastKnownDIBSize; }    // $QC      -- $$ This is a temorary function and will be removed; for internal use.
 //#endif
 
 };

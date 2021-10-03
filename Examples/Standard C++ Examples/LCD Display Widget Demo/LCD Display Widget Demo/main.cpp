@@ -118,7 +118,7 @@ int main()
     // (otherwise, the default is to create the window the Width x Height specified, including frame/border). 
 
     auto& cWin = cSageBox.NewWindow(100,100,320,320,InnerSize());
-    cWin.Cls("SkyBlue","SkyBlueDark");                                      // Clear screen with a gradient of two stock colors
+    cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                    // Clear screen with a gradient of two stock colors
     CPoint pLcdLoc = { 10,10 };                                             // Get Start X,Y of Lcd Widget
     CLcdDisplayWidget clcd(&cWin,pLcdLoc.x,pLcdLoc.y,0,Transparent());      // Create the LCD Widget
 

@@ -37,7 +37,7 @@ int main()
 
     do
     {      
-        cWin.Cls("black","skybluedark");        // Clear screen with a gradient
+        cWin.Cls(SageColor::Black,SageColor::SkyBlueDark);        // Clear screen with a gradient
          
         for (double i=0;i<6240;i++)
         { 

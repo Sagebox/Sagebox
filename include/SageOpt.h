@@ -123,7 +123,7 @@ class cwfOpt
 {
 private:
 	static constexpr int iMaxArray = 5000;	// Size of recycled array
-	char sOpt[100];
+	char sOpt[101];     // $$ This needs to be a constexpr throughout the code. 
 	char * spOpt		= nullptr;
 	int iLength			= 0;
 	int ipLength		= 0;
@@ -222,11 +222,15 @@ public:
 	optRet MinValue(double fValue);
 	optRet MaxValue(double fValue);
 	optRet Default(int iValue);
+	optRet Default(bool bValue);
 	optRet Default(double fValue);
 	optRet Default(const char * sString);
     optRet Checked(bool bChecked);
 	optRet CharWidth(int iRange);
 	optRet Width(int iWidth);
+	optRet Height(int iHeight);
+	optRet Rows(int iRows);
+	optRet Columns(int iColumns);
 	optRet AllowScroll();
 	optRet WinColors();
 	optRet Newline();
@@ -321,7 +325,7 @@ public:
 	optRet GotoXY(int iX,int iY);
 	optRet ValidateGroup(const char * sGroup);
 	optRet ValidateGroup(ControlGroup & cGroup);
-	optRet Group(ControlGroup & cGroup,int iID = MAXINT);
+	optRet Group(ControlGroup & cGroup,int iID = INT_MAX);
 
 	cwfOpt & operator + (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
@@ -498,6 +502,13 @@ namespace opt
 	//
 	static optRet MinValue(int iValue) { return defOpt.MinValue(iValue); }  ;		
 
+    // Set a Minimum value allowed (for integer or floating-point).  A dialog box appears with
+	// min/max info if a value outisde of the range is entered.
+	//
+	// Example:  GetGloat(fDefault,MinValue(0)); 
+	//
+	static optRet MinValue(bool bValue) { return defOpt.MinValue(bValue ? 1 : 0); }  ;		
+
 	// Set a Minimum value allowed (for integer or floating-point).  A dialog box appears with
 	// min/max info if a value outisde of the range is entered.
 	//
@@ -653,6 +664,7 @@ namespace opt
 	static optRet Style(const char * sStyle,const char * sOptions) { return defOpt.Style(sStyle,sOptions); }  ;	
 
 	// Font() -- Set the Text Font for the current Control, Widget, or Window
+	// When a plain integer is used, i.e. Font(15), it is set to the default font with a size of the value, i.e. "Arial,15"
 	//
 	// ---> Form Examples: 
 	// --->    Font("Arial,20")  -- Set the font to "Arial,20".  You can also add italic an bold, i.e. Font("Arial,20,bold,italic");
@@ -660,6 +672,16 @@ namespace opt
 	// --->    Font(MyFont)      -- Set the font with a standard Windows HFONT returned by CreateFont(), GetFont(), or SetFont().
 	// 
 	static optRet Font(const char * sFont) { return defOpt.Font(sFont); }  ;
+
+    // Font() -- Set the Text Font for the current Control, Widget, or Window.  
+	// When a plain integer is used, i.e. Font(15), it is set to the default font with a size of the value, i.e. "Arial,15"
+    //
+	// ---> Form Examples: 
+	// --->    Font("Arial,20")  -- Set the font to "Arial,20".  You can also add italic an bold, i.e. Font("Arial,20,bold,italic");
+	// --->    Font("MyFont")    -- Set the font by a previously created font named "MyFont"
+	// --->    Font(MyFont)      -- Set the font with a standard Windows HFONT returned by CreateFont(), GetFont(), or SetFont().
+	// 
+	static optRet Font(int iFontSize) { char sTemp[20]; itoadec(iFontSize > 0 ? iFontSize : 2,sTemp); return defOpt.Font(sTemp); }  ;
 
 	// Sets the Font for the highlighted button, checkbox or radiobox -- used for Panel Type buttons.
 	// See Font() for more information how to set the Font.  Example: FontHigh("Arial,40") or FontHigh(MyFont)
@@ -694,7 +716,28 @@ namespace opt
 	// Set the width (in pixels) of a control or input box.
 	// This sets the width of the input box of a control such as GetString(). 
 	//
-	static optRet Width(int iWidth) { return defOpt.Width(iWidth); }  ;		
+	static optRet Width(int iWidth) { return defOpt.Width(iWidth); }  ;	
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="iHeight"></param>
+	/// <returns></returns>
+	static optRet Height(int iHeight) { return defOpt.Height(iHeight); }  ;		
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="iRows"></param>
+	/// <returns></returns>
+	static optRet Rows(int iRows) { return defOpt.Rows(iRows); }  ;		
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="iColumns"></param>
+	/// <returns></returns>
+	static optRet Columns(int iColumns) { return defOpt.Columns(iColumns); }  ;		
 
 	// Allows scrolling in an input box.  This allows the text to roll in the box when the box is smaller than the input
 	// text.  Otherwise, the text is lmited to the size of the input box.

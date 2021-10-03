@@ -229,7 +229,7 @@ int CMandelbrot::main()
     //       translatable from text in the "{<colorname>}" format.
 
     cWin->DevText("{ly}Use the MouseWheel to zoom in/out. Click on screen to center.");
-    cWin->DevText("Resize the window with the mouse to change display size.",TextColor("lightgray"));   // Use light gray to subdue it a little.
+    cWin->DevText("Resize the window with the mouse to change display size.",TextColor(SageColor::LightGray));   // Use light gray to subdue it a little.
 
     // -------------------------------
     // Create and Set Control Defaults

@@ -34,7 +34,7 @@ int main()
                                                     // button in the upper-right.  This allows us to put the Exit Button out (otherwise it would fall
                                                     // through).  If we didn't do this we could also call cWin.ResetWindowClosing()
 
-    cWin.Cls("SkyBlueDark","SkyBlueLight");         // We can also do Cls({100,200,100}) (or similar) for RGB values rather than stock colors
+    cWin.Cls(SageColor::SkyBlueDark,SageColor::SkyBlueLight);         // We can also do Cls({100,200,100}) (or similar) for RGB values rather than stock colors
 
     CPoint szWinSize = cWin.GetWindowSize();        // Get in a CPoint (GetWindowSize() returns a SIZE) so we can use it later when we call DrawRect()
                                                     // We could just use this inline below, I left it here for clarity of code.
@@ -55,7 +55,7 @@ int main()
     auto DrawRect = [&](POINT pLoc)
     {
         cWin.Cls();     // Not the most efficient compared to a region, but good enough
-        cWin.DrawRectangle(pLoc.x-100,pLoc.y-100,200,200,cWin.GetColor("Red"),cWin.GetColor("White")); 
+        cWin.DrawRectangle(pLoc.x-100,pLoc.y-100,200,200,SageColor::Red,SageColor::White); 
     };
 
     DrawRect(szWinSize/2);      // Draw initial rectangle in the center (CPoint will divide 'x and 'y' element by 2 here)
@@ -69,8 +69,9 @@ int main()
 
     while(cWin.GetEvent() && !cWin.CloseButtonPressed())
     {
-        POINT pMouse;
-        if (cWin.MouseMoved(pMouse) && cWin.MouseButtonDown()) DrawRect(pMouse);
+        // Put event-related things here, or use an event-driven system by subclassing the window to get events directly.
+
+        if (cWin.MouseClicked() || cWin.MouseDragEvent()) DrawRect(cWin.GetMousePos());
     }
 
     cWin.ExitButton();      // Put a button at the bottom of the screen to inform the user we're done.

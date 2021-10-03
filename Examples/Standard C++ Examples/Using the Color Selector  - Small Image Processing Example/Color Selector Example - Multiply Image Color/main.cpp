@@ -129,7 +129,7 @@ int main()
 
     cWin.SetWindowSize(CPoint(cResized.GetSize()) + SIZE{iIndent*2,iIndent*2},true); 
 
-    cWin.Cls("black","darkblue");               // Now the we've resized it, lets give it a gradient of Black-to-Dark Blue
+    cWin.Cls(SageColor::Black,SageColor::DarkBlue);               // Now the we've resized it, lets give it a gradient of Black-to-Dark Blue
 
     CColorSelector cColor(&cWin,cResized.GetWidth() + iIndent*2 + 30,20,Popup() | NoClose());
 

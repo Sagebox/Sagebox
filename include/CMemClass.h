@@ -235,8 +235,8 @@ template <class _t>
                 // If the iEval is preemptive (i.e. bigger than current memory, allocate to the iEval value + Blocksize margin)
 
                 if (iEval > iSize) iBlockSize = iBlockSize*((iEval + iBlockSize-1)/iBlockSize) - iSize + iBlockSize;
-                _sbDebug(printf("%s: Allocated Memory: OrgEval = %d, iEvalMod = %d, iBlockSize = %d, iMem = %d, iNewMem = %d\n",    \
-                                                                    __func__,iEval,iEvalMod,iBlockSize,iSize,iSize+iBlockSize));
+            //    _sbDebug(printf("%s: Allocated Memory: OrgEval = %d, iEvalMod = %d, iBlockSize = %d, iMem = %d, iNewMem = %d\n",    \
+            //                                                        __func__,iEval,iEvalMod,iBlockSize,iSize,iSize+iBlockSize));
                 int iCurSize = iSize;
                 ResizeMax(iSize+iBlockSize);
                 if (bClearNewBlock && pMem && iSize == iCurSize+iBlockSize)
@@ -281,6 +281,7 @@ template <class _t>
         //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
         //
         __forceinline _t * SetMaxBlock(int iEval,int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlock(iEval,iBlockSize,iBlockSize,bClearNewBlock); }
+        __forceinline _t * SetMaxBlock(int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlock(GetNumitems(),iBlockSize,iBlockSize,bClearNewBlock); }
 
         // SetMaxBlockFast() -- Inlined version of SetMaxBlock() for when speed is an issue
         //
@@ -383,15 +384,51 @@ template <class _t>
 		//
 		// ResizeMax() returns the current pointer to the allocated memory, or nullptr if the allocation failed.
 		//
-		__forceinline _t * ResizeMax(int iMemSize)
+        // Note:  if the re-allocation fails, all memory is invalid and a nullptr is returned.  Check the return value for success or failure.
+        //
+		__forceinline _t * ResizeMax(int iNumElements)
 		{
-			if (iMemSize > iSize) 
+			if (iNumElements > iSize) 
 			{
-				pMem = (_t *) realloc(pMem,iMemSize*sizeof(_t)); 
-				iSize = iMemSize;
+				auto pMem2 = (_t *) realloc(pMem,iNumElements*sizeof(_t)); 
+                if (pMem2)
+                {
+                    pMem = pMem2; 
+                    iSize = iNumElements;
+                }
+                else if (pMem)
+                {
+                    free(pMem); 
+                    pMem = nullptr;
+                }
 			}
 			if (!pMem) iSize = 0;
 			return pMem;
+		}
+
+        // This will perform a new allocation and will not re-allocate data.
+        // Any current data is lost when using this function.  Use ResizeMax() to reallocate memory and keep the same memory. 
+        // 
+        // This function will set the memory required, reducing or growing stored memory.  ResizeMax() will only size upwards and will not reduce memory.
+        //
+		__forceinline _t * SetMemSize(int iNumElements)
+		{
+            if (iNumElements <= 0) return pMem;
+            if (pMem) free(pMem);
+			pMem = (_t *) malloc(iNumElements*sizeof(_t)); 
+            iSize = pMem ? iNumElements : 0;
+			return pMem;
+		}
+
+       // This will perform a new allocation and will not re-allocate data, but will only grow memory, and will not reduce the size of the current memory.
+       // This is useful in establishing a maximum buffer size that can vary, without reducing the maximum value seen.
+        // Any current data is lost when using this function.  Use ResizeMax() to reallocate memory and keep the same memory. 
+        // 
+        // Use SetMemSize() to set a specific memory size, which will grow or shrink memory used. 
+        //
+		__forceinline _t * SetMemSizeMax(int iNumElements)
+		{
+			return iNumElements > iSize ? SetMemSize(iNumElements) : pMem;
 		}
 	
 		_t MemNull{};
@@ -468,6 +505,7 @@ template <class _t>
 	public:
 		int iSize = 0;
 		_t * pMem = nullptr;
+        _t * GetMem() { return pMem; }
 
    MemA(MemA && p2) noexcept
     {
@@ -582,7 +620,7 @@ template <class _t>
 			pMem->iSize = 0;
 		}
 
-		// ResizeMax() -- Resize the memory to the new value or keep the current size, whichever is greater
+		// ResizeMax() -- Resize the memory to the new value or keep the current size (number of elements), whichever is greater
 		// if the parameter iMemSize is larger than the current memory size, the memory is reallocated.
 		// Otherwise, the memory is not changed.
 		//
@@ -591,18 +629,51 @@ template <class _t>
 		//
 		// ResizeMax() returns the current pointer to the allocated memory, or nullptr if the allocation failed.
 		//
-		__forceinline _t * ResizeMax(int iMemSize)
+		__forceinline _t * ResizeMax(int iNumElements)
 		{
-			if (iMemSize > iSize) 
+            _t * pNewMem = nullptr;
+			if (iNumElements > iSize) 
 			{
-				pMem = (_t *) _aligned_realloc(pMem,iMemSize*sizeof(_t),128); 
-				iSize = iMemSize;
+				if (pNewMem = (_t *) _aligned_realloc(pMem,iNumElements*sizeof(_t),128))
+                {
+				    iSize = iNumElements;
+                    pMem = pNewMem;
+                } 
 			}
-			if (!pMem) iSize = 0;
+			if (!pNewMem) 
+            {
+                iSize = 0;
+                if (pMem) _aligned_free(pMem);
+                pMem = nullptr;
+            }
+			return pMem;     // Return nullptr if we failed, even if old memory is still intact. 
+		}
+
+        // This will perform a new allocation and will not re-allocate data.
+        // Any current data is lost when using this function.  Use ResizeMax() to reallocate memory and keep the same memory. 
+        // 
+        // This function will set the memory required, reducing or growing stored memory.  ResizeMax() will only size upwards and will not reduce memory.
+        //
+		__forceinline _t * SetMemSize(int iNumElements)
+		{
+            if (iNumElements <= 0) return pMem;
+            if (pMem) _aligned_free(pMem);
+			pMem = (_t *) _aligned_malloc(iNumElements*sizeof(_t),128); 
+            iSize = pMem ? iNumElements : 0;
 			return pMem;
 		}
-	
-		_t MemNull{};
+
+       // This will perform a new allocation and will not re-allocate data, but will only grow memory, and will not reduce the size of the current memory.
+       // This is useful in establishing a maximum buffer size that can vary, without reducing the maximum value seen.
+        // Any current data is lost when using this function.  Use ResizeMax() to reallocate memory and keep the same memory. 
+        // 
+        // Use SetMemSize() to set a specific memory size, which will grow or shrink memory used. 
+        //
+		__forceinline _t * SetMemSizeMax(int iNumElements)
+		{
+			return iNumElements > iSize ? SetMemSize(iNumElements) : pMem;
+		}		_t MemNull{};
+
 		bool isValid() { return pMem != nullptr; };
 		bool isEmpty() { return pMem == nullptr; };
 	//	_t * operator ->() const { return &pMem; };

@@ -81,7 +81,7 @@ static constexpr bool   bWriteFrames    = false;    // Set this to true to write
 // Set these paths as appropriate
 
 static constexpr const char * sAviOutputFile    = "c:\\sagebox\\avi\\avitest.avi";
-static constexpr const char * sBackgroundImage  = "C:\\SageBox\\git\\Examples\\Fractal Tree\\Fractal Tree Animated\\texture-fractal-tree.jpg";
+static constexpr const char * sBackgroundImage  = "C:\\SageBox\\git\\Examples\\Standard C++ Examples\\Fractal Tree\\Fractal Tree Animated\\texture-fractal-tree.jpg";
 
 // Set a color table for each depth.  If the max depth limitation moves past 15, extra RGB values need to be added.
 //
@@ -203,7 +203,7 @@ int main( int argc, char* argv[] )
     // can send to controls and other functions.
     // 
 
-    auto& cWin = CSagebox::AutoWindow(CSize(650,450+50),Title("Fractal Tree") | bgGradient("black","blue") | NoAutoUpdate() | opt::NoClose()); 
+    auto& cWin = CSagebox::AutoWindow(CSize(650,450+50),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::DarkBlue) | NoAutoUpdate() | opt::NoClose()); 
 
     // Put a Text Widget with the title.  We can just print it out if we want, but the TextWidget is easy
     // to use.  In this case, the returned object isn't saved because we don't need it once we displayed it.
@@ -261,6 +261,8 @@ int main( int argc, char* argv[] )
 
     auto cBg = cWin.ReadImageFile(sBackgroundImage); 
 
+    cWin.SetClsBitmap(cBg);     // When we do it this way, the screen clears even when we fail to load the bitmap.
+
     CPoint szWinSize = cWin.GetWindowSize();
 
     int iFramesWritten = 0;
@@ -273,7 +275,7 @@ int main( int argc, char* argv[] )
     {
         double i = (fTotalFrames*pow((double) j/fTotalFrames,2.5));
 
-        cWin.DisplayBitmap(cBg);        // Display the background bitmap to clear the last output
+        cWin.Cls(cBg);        // Display the background bitmap to clear the last output
 
         // Just some setup for easy changes if we want to experiment
 

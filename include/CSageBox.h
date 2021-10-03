@@ -36,6 +36,16 @@
 #include "CQuickControls.h"
 #include "CComplex.h"
 #include "CQuickDialog.h"
+#include "CSageTimer.h"
+#include "InstructionSet.h"
+
+// Thesse libraries are included here primarily to eliminate a "_NULL_IMPORT_DESCRIPTOR" warning. 
+// On the other hand, I am also thinking of putting all external dependencies here so that they are not included in the 
+// static library, but linked with the compiled application.  TBD 
+
+ #pragma comment(lib,"gdiplus.lib")
+ #pragma comment(lib,"ddraw.lib")
+ #pragma comment(lib,"winmm.lib")
 
 // -------------------
 // Main CSageBox Class
@@ -98,6 +108,7 @@
 namespace Sage
 {
 
+class CStoreValues;
 // Empty values useful for returning null objects of various types when errors occur. 
 
 static constexpr RGBColor_t EmptyRGB{};
@@ -111,17 +122,26 @@ class CSageBox;
 class CProcessWindow;
 class CHandleWindowMsg;
 using CSagebox = CSageBox;          // Allow CSagebox to be used, as well, since I keep putting CSagebox cSagebox in videos. 
+using Sagebox = CSageBox;          // Allow CSagebox to be used, as well, since I keep putting CSagebox cSagebox in videos. 
 class CConsoleIO;
 struct WinConio; 
+
+#define SageboxStatic
+
+#ifdef SageboxStatic
+#define __sagestatic static        // used for possible .DLL changes in the future
+#else
+#define __sagestatic              // Otherwise define these functions as non-static
+#endif
 
 class CSageBox
 {
     friend CHandleWindowMsg;
     friend WinConio;
+	CWindow * m_cWin = nullptr;
 public:
 
 
-	CWindow * m_cWin = nullptr;
     
     // Process Window Start Mode
     //
@@ -141,7 +161,8 @@ public:
 
 private:
 	void Postamble(CWindow & cWin);
-	void Preamble(CWindow & cWin,bool bHidden = false);
+	__sagestatic void Preamble(CWindow & cWin,bool bHidden = false);
+	void PreambleStatic(CWindow & cWin,bool bHidden = false);
 	void CreateDefaultWindow();
     bool InitDevControls();   // Initialize default Dev Controls Window -- added only if used. 
     static void CreateProcessAccelerator();       // Creates ^C accelerator
@@ -162,7 +183,8 @@ private:
 
 	int m_iConsoleWinNum = 0;		// Used for positioning windows when ConsoleWin() is called
     CPasWindow * m_cWinCore = nullptr;
-    void Init(const char * sAppName);
+    void InitPriv(const char * sAppName);
+    static CStoreValues DebugValues; 
 public:
 
     /// <summary>
@@ -256,8 +278,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
-    static CSagebox * m_cStaticSagebox;
+	__sagestatic CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const char * sWinTitle,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -273,7 +294,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CWindow & NewWindow(CWindow * cWin,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -289,7 +310,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(CWindow * cWin,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & NewWindow(CWindow * cWin,const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -305,7 +326,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(CWindow * cWin,const cwfOpt & cwOpt);
+	__sagestatic CWindow & NewWindow(CWindow * cWin,const cwfOpt & cwOpt);
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -321,7 +342,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sWinTitle, const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const char * sWinTitle, const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -337,7 +358,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -353,7 +374,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-	CWindow & NewWindow(const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & NewWindow(const char * sWinTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -369,7 +390,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(cwfOpt & cwOpt);
+    __sagestatic CWindow & NewWindow(cwfOpt & cwOpt);
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -387,7 +408,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(SIZE szSize,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CWindow & NewWindow(SIZE szSize,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -405,7 +426,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(SIZE szSize,const cwfOpt & cwOpt); 
+    __sagestatic CWindow & NewWindow(SIZE szSize,const cwfOpt & cwOpt); 
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -421,7 +442,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CPoint pLoc,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CWindow & NewWindow(CPoint pLoc,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
 	// NewWindow -- Create a new popup window.
     // This creates a regular window with all of the functions and properties of the parent window.
@@ -437,7 +458,7 @@ public:
     // When the User presses the 'X' window close button, a WindowClosing() for the new window will come back as true, and a 
     // CloseButtonPressed() event will be triggerred.
     //
-    CWindow & NewWindow(CPoint pLoc,const cwfOpt & cwOpt); 
+    __sagestatic CWindow & NewWindow(CPoint pLoc,const cwfOpt & cwOpt); 
 
     // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
     //
@@ -472,6 +493,23 @@ public:
     // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
     //
 	static CWindow & AutoWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+
+     // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
+    //
+    // AutoWindow() returns a CWindow object.  if m_cStaticSagebox doesn't exist, it is created.
+    //
+    // AutoWindow() is used for when you want to quickly start a Sagebox session with a window -- this allows a quick
+    // way to create the window without the need to create Sagebox first. 
+    //
+    // Use GetStaticSagebox() to get the static Sagebox object.
+    //
+    // m_cStaticSagebox will then be the reference CSagebox for the entire application.
+    // When a window is created, CSagebox is typically not required as most functions can be accessed through the created Window.
+    // For specific CSagebox functions, use GetStaticSagebox() to retrieve the object.
+    //
+    // ** Do not create another CSagebox after using AutoWindow().  This should be ok, but it is not recommended **
+    //
+	static CWindow & AutoWindow(POINT pLoc, SIZE szSize,const cwfOpt & cwOpt = cwfOpt());
 
     // AutoWindow() -- Uses m_cStaticSagebox to creat a new window
     //
@@ -747,7 +785,7 @@ public:
     // can enter a processor-using wild loop.   When testing, it is a good idea to have printfs() to the window or console to make sure
     // only events are returned and it is not caught in a spining loop. 
     //
-    bool GetEvent(Sage::WaitEvent * eStatus = nullptr);
+    static bool GetEvent(Sage::WaitEvent * eStatus = nullptr);
 
     // QuickButton() -- Put up a quick button and information line. 
     //
@@ -810,7 +848,7 @@ public:
     // --> ThickBorder()    -- Puts a thick border around the input box, appearing more like a window rather than an input box.
     // --> NoBlankEntry()   -- Does not return unless some text is entered (i.e. will not return on a blank line).  If the Window is closing (WindowClosing() is true), GetString() will return regardless.
     //
-	int GetInteger(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
+	__sagestatic int GetInteger(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
 
     // GetInteger() -- Creates an Edit Box at the current console cursor (X,Y) point and waits for the user to enter an integer
     //
@@ -838,7 +876,7 @@ public:
     // --> ThickBorder()    -- Puts a thick border around the input box, appearing more like a window rather than an input box.
     // --> NoBlankEntry()   -- Does not return unless some text is entered (i.e. will not return on a blank line).  If the Window is closing (WindowClosing() is true), GetString() will return regardless.
     //
-	int GetInteger(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
+	__sagestatic int GetInteger(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
 
     // console.GetFloat() -- Get a floating-point value from the user, in an inline console-style input (i.e. as part of a text line rather than a windowed box)
     //
@@ -894,7 +932,7 @@ public:
     //
     // There are 4 different function prototypes so that options can be omitted when not required.
     //
-	dllvirt double GetFloat(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt()) dllfloat;
+	dllvirt __sagestatic double GetFloat(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt()) dllfloat;
 
     // console.GetFloat() -- Get a floating-point value from the user, in an inline console-style input (i.e. as part of a text line rather than a windowed box)
     //
@@ -950,7 +988,7 @@ public:
     //
     // There are 4 different function prototypes so that options can be omitted when not required.
     //
-    virtual double GetFloat(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
+    dllvirt __sagestatic double GetFloat(const char * sTitle = nullptr,const cwfOpt & cwOptions = cwfOpt());
 
 
     // GetString() -- Creates an Edit Box at the current console cursor (X,Y) point and waits for the user to enter text an press return.
@@ -993,7 +1031,7 @@ public:
     // auto MyString = MyWindow.Console.GetString();    -- Gets a string using defaults
     // auto MyString = MyConsole.GetString(SageOpt_Colors("bw") SageOpt_CharWidth(10) SageOpt_BgColor("Yellow") SageOpt_BlankDefault);
     //
-	CString GetString(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
+	__sagestatic CString GetString(const char * sTitle,bool & bCancelled,const cwfOpt & cwOptions = cwfOpt());
 
     // GetString() -- Creates an Edit Box at the current console cursor (X,Y) point and waits for the user to enter text an press return.
     //
@@ -1035,7 +1073,7 @@ public:
     // auto MyString = MyWindow.Console.GetString();    -- Gets a string using defaults
     // auto MyString = MyConsole.GetString(SageOpt_Colors("bw") SageOpt_CharWidth(10) SageOpt_BgColor("Yellow") SageOpt_BlankDefault);
     //
-	CString GetString(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	__sagestatic CString GetString(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 
     // Duplication of C++ console-mode getline()
     //
@@ -1061,7 +1099,7 @@ public:
 
 	// Dialog Info/Question Windows
 
-	void InfoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
+	__sagestatic void InfoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 	bool YesNoWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 	Sage::DialogResult YesNoCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
 	bool OkCancelWindow(const char * sTitle,const cwfOpt & cwOptions = cwfOpt());
@@ -1195,7 +1233,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-	CString GetOpenFile(Sage::stOpenFileStruct & stFile);
+	__sagestatic CString GetOpenFile(Sage::stOpenFileStruct & stFile);
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -1212,7 +1250,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-    CString GetOpenFile(const char * sTypes = nullptr);
+    __sagestatic CString GetOpenFile(const char * sTypes = nullptr);
 	
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -1229,7 +1267,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-	bool GetOpenFile(Sage::stOpenFileStruct & stFile,CString & csFilename);
+	__sagestatic bool GetOpenFile(Sage::stOpenFileStruct & stFile,CString & csFilename);
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
     // CString comes back empty if no file is chosen.
@@ -1245,7 +1283,7 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-	bool GetOpenFile(const char * sTypes,CString & csFilename);
+	__sagestatic bool GetOpenFile(const char * sTypes,CString & csFilename);
 
     // Open a file through the windows dialog, allowing setting title, file types, and other criteria.
     // 
@@ -1262,14 +1300,14 @@ public:
     // For a quick open, use GetOpenFile() with only file types, such as GetOpenFile("*.bmp;*.jpg"), etc.
     // Note: Use ';' to separate types.
     //
-	bool GetOpenFile(CString & csFilename);
+	__sagestatic bool GetOpenFile(CString & csFilename);
 
     // GetOpenFileStruct() -- Return an stOpenFileStruct to set for using an GetOpenFile() or GetSaveFile() dialog.
     //
     // This is a shortcut for declaring a structure directly, so that auto& stStruct = GetOpenFileStruct() can be used
     // more easily.
     //
-    Sage::stOpenFileStruct GetOpenFileStruct();
+    __sagestatic Sage::stOpenFileStruct GetOpenFileStruct();
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -1283,7 +1321,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,Sage::ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
+     __sagestatic bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,Sage::ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -1297,7 +1335,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-	bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
+	 __sagestatic bool QuickThumbnail(Sage::RawBitmap_t & stBitmap,int iWidth,int iHeight,const char * sTitle);
 
         // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -1311,7 +1349,7 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-    bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
+     __sagestatic bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,ThumbType eType = ThumbType::BestFit,const char * sTitle = nullptr);
 
     // QuickThumbnail() -- Create and display a window with a thumbnail of bitmap data.
     //
@@ -1325,28 +1363,10 @@ public:
     // A RawBitmap_t or CBitmap must currently be provided.
     // Raw data and more data types (such as float, float mono, 16-bit bitmaps, etc.) will be supported in a future release.
     //
-	bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
+	 __sagestatic bool QuickThumbnail(CBitmap & cBitmap,int iWidth,int iHeight,const char * sTitle);
 
-
-    CBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
-    CBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
-
-    // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
-    //
-    // This can create a popup window or embedded window, with a bitmap included to display on creation.
-    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
-    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
-    //
-    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
-    // created.
-    //
-    // The window is sized to the input bitmap.
-    //
-    // Once the window is created, it may be treated as any window.
-    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
-    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
-    //
-	CWindow & BitmapWindow(Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
+     __sagestatic CBitmap QuickResize(RawBitmap_t & stBitmap,int iWidth,int iHeight,ResizeType eType = ResizeType::BestFit);
+     __sagestatic CBitmap QuickResize(RawBitmap_t & stBitmap,SIZE szSize,ResizeType eType = ResizeType::BestFit);
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1363,7 +1383,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-	CWindow & BitmapWindow(CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & BitmapWindow(Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1380,7 +1400,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-	CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & BitmapWindow(CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -1397,10 +1417,28 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-	CWindow & BitmapWindow(int iX,int iY,Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
 
-    CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
-    ImageStatus GetLastImageStatus();
+    // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
+    //
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+	__sagestatic CWindow & BitmapWindow(int iX,int iY,Sage::RawBitmap_t & stBitmap,const cwfOpt & cwOpt = cwfOpt());
+
+    __sagestatic CBitmap ReadImageFile(const char * sPath,bool * bSuccess = nullptr);
+    __sagestatic [[nodiscard]] RawBitmap32_t ReadImageFile32(const char * sPath,bool * bSuccess = nullptr);
+    __sagestatic ImageStatus GetLastImageStatus();
 
 
     // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
@@ -1411,7 +1449,7 @@ public:
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
+	__sagestatic CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 
     // ReadJpegFile -- Read a jpeg file and store it into a CBitmap. 
     // This reads standard 8-bit jpeg (3-channel or monochrome).
@@ -1421,12 +1459,12 @@ public:
     //
     // if (bSuccess) is supplied, it is filled with true for a successful read, otherwise false.
     //
-	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess);
+	__sagestatic CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess);
 
     // Returns the last Jpeg status.  This will return CJpeg::Status::Ok if there was no error, 
     // or an indication of what went wrong with the last call, such as CJpeg::Status::EmptyFilePath or CJpeg::Status::FileNotFound
     //
-    CJpeg::Status GetJpegError();
+    __sagestatic CJpeg::Status GetJpegError();
 
     // DevControls -- passed through to default CDevControls so that adding buttons, sliders, etc. is easy. 
     // For more controls (i.e. other Dev Control windows, use DevControlsWindow() to create new ones. 
@@ -1436,7 +1474,7 @@ public:
 	//
 	// The Name used as a title for the button, but is optional. 
 	//
-    CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CButton & DevButton(const char * sButtonName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // DevCheckbox() -- Add a checkbox to the DevWindow. 
     //
@@ -1452,45 +1490,230 @@ public:
     //     note: to use '~' as the first character of the checkbox name, i.e. ("~Display Image"), use a double "~~". 
     //           For example, "~~Display Image" will display as "~Display Image"
     //
-    CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CButton & DevCheckbox(const char * sCheckboxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    __sagestatic ButtonGroup DevRadioButtons(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    __sagestatic ButtonGroup DevRadioButtons(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    __sagestatic ButtonGroup DevRadioButtons(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+     /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    __sagestatic ButtonGroup DevRadioButtons(std::vector<char *>  vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
 
     // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
     // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
 	// The title is displayed beneath the slider, as well as the value. 
 	//
-    CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // DevEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
     // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
     //
-    CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
-    
+    __sagestatic CEditBox & DevEditBox(const char * sEditBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+  
     // DevInputBox() -- Add an InputBox to the default Dev control Window.  The sInputBoxName, while optional, will provide a
 	// label to the left of the Input Box.  The default width is 150 pixels or so, but can be changed with normal InputBox options
 	//
     // Note: DevEditBox() and DevInputBox() are the same.  The term Editbox is deprecated and is used for consitency with Windows control names.
     //
-     CEditBox & DevInputBox(const char * sInputBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return DevEditBox(sInputBoxName,cwOpt); } // $$moveme
+    __sagestatic CEditBox & DevInputBox(const char * sInputBoxName = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return DevEditBox(sInputBoxName,cwOpt); } // $$moveme
   
-	CComboBox & DevComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt());
-	CWindow & DevWindow(const char * sTitle);
+	__sagestatic CComboBox & DevComboBox(const char * sItemList,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CComboBox & DevComboBox(const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt());
+	__sagestatic CWindow & DevWindow(const char * sTitle);
 
-    CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt());
-    CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
+    __sagestatic CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt());
+    __sagestatic CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    __sagestatic CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt());
+    __sagestatic CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt());
 
+    /// <summary>
+    /// Auto-hides the DevWindow when the user presses the 'x' button or close button.  This does not destroy the devwindow, and only hides it.
+    /// <para></para>
+    /// Once Hidden, the DevWindow can be shown again with a call to Show()
+    /// </summary>
+    /// <param name="bAutoHide"> - True to auto-hide window; false to turn auti-hide off</param>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    __sagestatic bool DevWindowAutoHide(bool bAutoHide = true,bool bAddCloseButton = false);
+
+    /// <summary>
+    /// Shows the DevWindow if it is hidden.  
+    /// </summary>
+    /// <param name="bShow">True to show the Dev Window. False to hide the DevWindow</param>
+    /// <returns></returns>
+    __sagestatic bool DevWindowShow(bool bShow = true);
+
+    /// <summary>
+    /// Hides the DevWindow if it is visible.  
+    /// </summary>
+    /// <param name="bShow">True to hide the Dev Window. False to show the DevWindow</param>
+    /// <returns></returns>
+    __sagestatic bool DevWindowHide(bool bHide = true); 
+
+    /// <summary>
+    /// Adds 'X' on top-right and optional "Close" button.
+    /// <para></para>&#160;&#160;&#160;
+    /// Dev Windows are not typically closed and do not have close controls by default.  DevAllowClose() adds the ability to close the window,
+    /// which can be used as a way to terminate a console-mode or other program that does not have a visible window. 
+    /// <para></para>
+    /// Use DevWindowClosed() to determine if the window has been closed (or the added Close Button has been pressed).
+    /// <para></para>
+    /// When the 'X' button is pressed, a Sage Event is sent to the window where it can be checked. The Close button also sends a Sage Event.
+    /// <para></para>&#160;&#160;&#160;
+    /// Note: When the user presses the 'X' button or "Close" button, the window is not closed or hidden.  These controls are only used
+    /// to provide an indication (through DevWindowClosed()) that the user has pressed a control as a message to terminate the application.
+    /// <para></para>&#160;&#160;&#160;
+    /// ---> This function is not used to close the Dev Window but as an easy way for the user to signal to close the application.
+    /// </summary>
+    /// <param name="bAddCloseButton">when TRUE adds a "Close" button.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
+    /// <returns></returns>
+    __sagestatic bool DevAllowClose(bool bAddCloseButton = false); 
+
+    /// <summary>
+    /// Returns TRUE if the "Close" Button or 'X' has been pressed (both are added by DevAllowClose()).
+    /// <para></para>
+    /// This can be used as a quick way to close an application that only has a Dev Window and no other window except the Console Window.
+    /// </summary>
+    /// <param name="bAddCloseButton">when TRUE adds a "Close" button on first usage.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
+    /// <returns>true if the user has attempted to close the window.</returns>
+    __sagestatic bool DevWindowClosed(bool bAddCloseButton = false); 
+
+    /// <summary>
+    /// Waits for the DevWindow to close before returning.  If DevAllowClose() has not been called, an 'x' will appear in the upper-right 
+    /// part of the dev window.
+    /// <para></para>
+    /// This can be useful when there is no main window (or it is hidden) to use for a method to wait for the user to indicate closing the program down, without
+    /// using a console mode input or other button window. 
+    /// </summary>
+    /// <param name="bAddCloseButton">- when TRUE, adds a close button to the window for easier close options</param>
+    /// <returns>true if everything is fine; false if there is an issue with the DevWindow</returns>
+    __sagestatic bool DevWaitforClose(bool bAddCloseButton = false);
+
+    /// <summary>
+    /// Returns true if the DevWindow Close Button was pressed, but only once -- it returns false after this point until the DevWindow
+    /// is again made visible by a call to DevWindowShow()
+    /// <para></para>
+    /// --> This difference from DevWindowsClosed() which will continuously give a Windows-Close status of TRUE if the window is closed
+    /// <para></para>
+    /// DevWindowCloseEvent(), however, is an event status and only returns TRUE once after the close (or X) button is pressed.
+    /// </summary>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    __sagestatic bool DevWindowCloseEvent(bool bAddCloseButton = false);
+
+    /// <summary>
+    /// Waits for an event in the Dev Window Only.  Only use this when there is no other window -- otherwise use GetEvent() for the window (DevWindow events come through this window)
+    /// <para></para>
+    /// --> This function is intended to be used as a method to retrieve Dev Window events and react to its closing like a regular event loop.  This function will return false
+    /// if the Dev Window is closed, allowing passthrough.  NOTE: It is up to the program to handle the window closure.
+    /// <para></para>
+    /// This function is useful when the DevWindow is the only window displaying. 
+    /// <para></para>
+    /// --> This function will return TRUE when an event occurs; FALSE if the window is closed by the user. 
+    /// --> This function will add a Close Button if it does not exist (when bReturnFalseOnClose is set to TRUE)
+    /// </summary>
+    /// <param name="bReturnFalseOnClose">- (optional) When TRUE (default), DevWaitEvent() returns false if the user closes the window, also adding a Close Button.  
+    /// When false, it returns TRUE as a regular event if the window is closed (and does not add a close option automatically)</param>
+    /// <returns></returns>
+    __sagestatic bool DevWaitEvent(bool bReturnFalseOnClose = true);
 
  	// DevAddSection() -- Adds a text section to the default Dev Controls window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
-    bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic bool DevAddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
     // GetDevControlsPtr() -- returns the pointer to the default CDevControls object. 
     // *** Important note *** -- this will return NULLPTR until a control is created with
@@ -1500,14 +1723,14 @@ public:
     // With the pointer, any CDevContgrols() function can be used, though most are replicated directly
     // through CSageBox functions for ease of use.
     //
-    CDevControls * GetDevControlsPtr();
+    __sagestatic CDevControls * GetDevControlsPtr();
 
     // DevGetWindow() -- Returns the Window (i.e. CWindow) of the default DevWindow.  This can be used to access window functions for the 
     // the default DevWindow. 
     //
     // For user-created Dev Control Windows, use the CDevControls::GetWindow() function, i.e. cMyDevWindow->GetWindow(); 
     //
-    CWindow * DevGetWindow();
+    __sagestatic CWindow * DevGetWindow();
 
     // DevGetGroup() -- returns the group (i.e. WinGroup) substructure for the default Dev Window.  This can be used to perform group functions.
     // For example, when using multiple DevSlider() calls with a declared common group (i.e. DevSlider("MySlider",opt::Group(100,1)), group.SliderMoved(100)
@@ -1520,7 +1743,7 @@ public:
     // This function only works for the default DevWindow.  For user-created DevWindows, use the CDevControls::group() function, i.e.
     // cMyDevWindow->group().SliderMoved(MyGroup,...)
     //
-    CWindow::WinGroup * DevGetGroup();
+    __sagestatic CWindow::WinGroup * DevGetGroup();
     
     // DevControlsWindow() -- Create a CDevControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
@@ -1533,7 +1756,7 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(int iX = -1,int iY = -1,const cwfOpt & cwOpt = cwfOpt());
+    __sagestatic CDevControls * DevControlsWindow(int iX = -1,int iY = -1,const cwfOpt & cwOpt = cwfOpt());
 
     // DevControlsWindow() -- Create a CDevControls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
@@ -1546,7 +1769,7 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(const cwfOpt & cwOpt);
+    __sagestatic CDevControls * DevControlsWindow(const cwfOpt & cwOpt);
 
     // DevControlsTopmost() -- Sets the Default Dev controls windows as a 'topmost' window, 
     // preventing other windows from overlapping and obscuring the Dev Controls Window.
@@ -1556,7 +1779,7 @@ public:
     // Setting bTopMost = false sets the default Dev Controls Window to normal behavior, allowing
     // other windows to overlap when they gain focus and are overlapping the default Dev Controls Window
     //
-    bool DevControlsTopmost(bool bTopmost = true);
+    __sagestatic bool DevControlsTopmost(bool bTopmost = true);
 
     // ExitButton() -- Create a modal button (i.e. a button that needs input before continuing) with a message.  This can be used
     // prior to exiting a console-mode program so that the windows and controls remain intact until the user pressed
@@ -1567,7 +1790,7 @@ public:
     // 
     // Exit Button returns 0. 
     //
-    int ExitButton(const char * sText = nullptr); 
+    __sagestatic int ExitButton(const char * sText = nullptr); 
 
     // WaitforClose() -- Displays a message box notifying the user the program has ended.
     // Since Sagebox has no window, WaitforClose() calls ExitButton() and returns the code given. 
@@ -1579,7 +1802,7 @@ public:
     // ReturnCode is returned from WaitforClose() to allow an easy return from main() as return WaitforClose(); 
     // If WaitforClose() fails for any reason, it returns -1
     //
-    int WaitforClose(int iReturnCode = 0);
+    __sagestatic int WaitforClose(int iReturnCode = 0);
 
    // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
     // CBitmap.
@@ -1628,7 +1851,7 @@ public:
     // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
     // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CBitmap CreateBitmap(int iWidth,int iHeight = 1);
+   __sagestatic  CBitmap CreateBitmap(int iWidth,int iHeight = 1);
 
     // GetBitmapStruct() -- Returns a RawBitmap_t struct with memory for the Width and height.
     // If Height is omitted, a Bitmap structure of height 1 is returned.
@@ -1641,7 +1864,7 @@ public:
     // Assign this to CBitmap, such as CBitmap cBitmap = GetWindowBitmap(); 
     // CBitmap will delete this memory automatically.  Otherwise, call RawBitmap_t::Delete() to make sure the memory is deleted
     //
-    CBitmap CreateBitmap(SIZE szBitmapSize);
+    __sagestatic CBitmap CreateBitmap(SIZE szBitmapSize);
 
     bool ShowConsole(bool bShow = true);
     bool HideConsole(bool bPermanent = false);
@@ -1801,7 +2024,7 @@ public:
     /// </summary>
     /// <param name="bDisable">Disables Control^C exit when true.  Enables Control ^C exit when false</param>
     /// <returns></returns>
-    bool DisableControlCExit(bool bDisable = true);
+    __sagestatic bool DisableControlCExit(bool bDisable = true);
 
      /// <summary>
     /// Enables pressing ^C to exit from the program  when pressed in input boxes or when the program is running.
@@ -1815,13 +2038,13 @@ public:
     /// </summary>
     /// <param name="bEnable">Enables Exit by ^C when true; Disables when false</param>
     /// <returns></returns>
-    bool EnableControlCExit(bool bEnable = true);
+    __sagestatic bool EnableControlCExit(bool bEnable = true);
 
    /// <summary>
     /// Returns true when ^C will exit the program when pressed
     /// </summary>
     /// <returns></returns>
-    bool isControlCExitDisabled(); 
+    __sagestatic bool isControlCExitDisabled(); 
 
 
     /// <summary>
@@ -1868,21 +2091,21 @@ public:
     //
     // See items unique to CSagebox version (this one) at the bottom. 
     //
-    struct WinDebug
+    struct Debug
     {
         friend CSagebox;
     private:
         CWindow         * m_cWin = nullptr;     // Main CSagebox Window (which is always hidden)
     public:
-        WinDebug & operator << (const char * x)       ;
-        WinDebug & operator << (char x)               ;
-        WinDebug & operator << (std::string & cs)     ;
-        WinDebug & operator << (CString & cs)         ;
-        WinDebug & operator << (int x)                ;
-        WinDebug & operator << (unsigned int x)       ;
-        WinDebug & operator << (float x)              ;
-        WinDebug & operator << (double x)             ;
-                                                    ;
+        Debug & operator << (const char * x)       ;
+        Debug & operator << (char x)               ;
+        Debug & operator << (std::string & cs)     ;
+        Debug & operator << (CString & cs)         ;
+        Debug & operator << (int x)                ;
+        Debug & operator << (unsigned int x)       ;
+        Debug & operator << (float x)              ;
+        Debug & operator << (double x)             ;
+
         // Process Control Window initialization types. 
         // Determines how to open Process Control Window when it is initialized with Init()
         //
@@ -1893,6 +2116,55 @@ public:
             Debug,                  // Brings up the Process Control Window as visible with the Debug Window.
             DebugLineNumbers,       // Brings up the Process Control Window as visible with the Debug Window with Line Numbers showing
         };
+
+        enum class UpdateType
+        {
+            Off,
+            OffOnce,
+            On,
+
+        };
+
+        __sagestatic bool SetUpdate(UpdateType eType);
+        __sagestatic bool Update();
+
+        __sagestatic bool SetGlobalString(int iIndex,const char * sString);
+        __sagestatic bool SetGlobalValue(int iIndex,const char * sString);
+        __sagestatic bool SetGlobalValue(int iIndex,long long iValue);
+        __sagestatic bool SetGlobalValue(int iIndex,double fValue);
+        __sagestatic bool SetGlobalValue(int iIndex,int iValue);
+        __sagestatic bool SetGlobalValue(int iIndex,unsigned int iValue);
+        __sagestatic bool SetGlobalValue(int iIndex,unsigned long long uiValue);
+        __sagestatic bool SetGlobalValue(int iIndex, void* vPointer);
+        __sagestatic bool SetGlobalValue(int iIndex, bool bValue);
+
+        __sagestatic bool SetGlobalString(const char * sName,const char * sString);
+        __sagestatic bool SetGlobalValue(const char * sName,const char * sString);
+        __sagestatic bool SetGlobalValue(const char * sName,long long iValue);
+        __sagestatic bool SetGlobalValue(const char * sName,double fValue);
+        __sagestatic bool SetGlobalValue(const char * sName,int iValue);
+        __sagestatic bool SetGlobalValue(const char * sName,unsigned int iValue);
+        __sagestatic bool SetGlobalValue(const char * sName,unsigned long long uiValue);
+        __sagestatic bool SetGlobalValue(const char* sName, void* vPointer);
+        __sagestatic bool SetGlobalValue(const char* sName, bool bValue);
+
+        __sagestatic const char * GetGlobalString(int iIndex);
+        __sagestatic long long GetGlobalValue(int iIndex);
+        __sagestatic double GetGlobalDouble(int iIndex);
+        __sagestatic int GetGlobalInt(int iIndex);
+        __sagestatic unsigned int GetGlobalUInt(int iIndex);
+        __sagestatic unsigned long long GetGlobalULongLong(int iIndex);
+        __sagestatic void * GetGlobalPointer(int iIndex);
+        __sagestatic bool GetGlobalBool(int iIndex);
+
+        __sagestatic const char * GetGlobalString(const char * sName);
+        __sagestatic long long GetGlobalValue(const char * sName);
+        __sagestatic double GetGlobalDouble(const char * sName);
+        __sagestatic int GetGlobalInt(const char * sName);
+        __sagestatic unsigned int GetGlobalUInt(const char * sName);
+        __sagestatic unsigned long long GetGlobalULongLong(const char * sName);
+        __sagestatic void* GetGlobalPointer(const char* sName);
+        __sagestatic bool GetGlobalBool(const char* sName);
 
         // Init() -- Initialize the process control window.
         //
@@ -1906,17 +2178,17 @@ public:
         //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
         //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
         //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
-        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //      Init(Debug::InitType::Debug)            -- Brings up the Process Control Window with the Debug Window showing. This will
         //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
-        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
-        //                                                            (see WinDebug:ShowLineNumbers())
+        //      Init(Debug::InitType::DebugLineNumbers)            -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see Debug:ShowLineNumbers())
         //
         // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
         // and display the Process Control Window and its debug window. 
         //
         // returns TRUE if Process Window is active. 
         //
-        bool Init(bool bVisible = false);
+        __sagestatic bool Init(bool bVisible = false);
         
         // Init() -- Initialize the process control window. 
         //
@@ -1930,39 +2202,39 @@ public:
         //      Init() or Init(false)                   -- Bring up Process Control Window as hidden.
         //      Init(true)                              -- Brings up the Process Control Window as a title bar in the 
         //                                                 upper-right of the window.  Move the mouse over the window to enlarge.
-        //      Init(WinDebug::InitType::Debug)         -- Brings up the Process Control Window with the Debug Window showing. This will
+        //      Init(Debug::InitType::Debug)            -- Brings up the Process Control Window with the Debug Window showing. This will
         //                                                 not auto-minimize as it does when the "Show Debug" switch is off. 
-        //      Init(WinDebug::InitType::DebugLineNumbers)         -- Same as WinDebug::InitType::Debug, but with line numbers turn on
-        //                                                            (see WinDebug:ShowLineNumbers())
+        //      Init(Debug::InitType::DebugLineNumbers)            -- Same as WinDebug::InitType::Debug, but with line numbers turn on
+        //                                                            (see Debug:ShowLineNumbers())
         //
         // Init() is not necessary for debug output -- the first call to any debug output routine will automatically initalize
         // and display the Process Control Window and its debug window. 
         //
         // returns TRUE if Process Window is active. 
         //
-        bool Init(InitType eInitType);
+         __sagestatic bool Init(InitType eInitType);
         
         
         // Show() -- Show or Hide the Process Control Window
         //
-        bool Show(bool bShow = true); 
+         __sagestatic bool Show(bool bShow = true); 
 
         // Hide() -- Hide or Show the Process Control Window
         //
-        bool Hide(bool bHide = true);
+         __sagestatic bool Hide(bool bHide = true);
 
         // printf() -- print out to the debug window, just as in std::printf()
         //
-        bool printf(const char * Format,...);
+         __sagestatic bool printf(const char * Format,...);
 // __Sandbox__Except__ deprecated (for now)
 //#ifdef __Sandbox__Except__
         // printf() -- print out to the debug window, just as in std::printf()
         //
-        bool __printf(const char * Format,...);
+         __sagestatic bool __printf(const char * Format,...);
 //#endif
         // Write() -- Write out to the debug window.  Can be quicker than using printf()
         //
-        bool Write(const char * sText);
+         __sagestatic bool Write(const char * sText);
 
         // KillTimer() -- Kills the 250ms timer that looks at mouse movement.  
         //
@@ -1974,21 +2246,21 @@ public:
         //
         // Use KillTimer(false) to turn the timer back on.
         //
-        bool KillTimer(bool bKillTimer = true);
+         __sagestatic bool KillTimer(bool bKillTimer = true);
 
         // ShowLineNumbers() -- Shows line numbers in the debug display.
         //
         // The Debug window defaults to ShowLineNumbers off.  You can use 
-        // Init(CWindow::WinDebug::InitType::DebugLineNumbers) to initialize the window with line numbers on.
+        // Init(CWindow::Debug::InitType::DebugLineNumbers) to initialize the window with line numbers on.
         //
         // Use ShowLineNumbers(true) turn turn line numbers on
         // Use ShowLineNumbers(false) to turn line numbers off.
         //
-        bool ShowLineNumbers(bool bShowLineNumbers = true);
+         __sagestatic bool ShowLineNumbers(bool bShowLineNumbers = true);
 
-        // --------------------------------------------------
-        // CSagebox::WinDebug unique items (may be called by CWindow)
-        // --------------------------------------------------
+        // -------------------------------------------------------
+        // CSagebox::Debug unique items (may be called by CWindow)
+        // -------------------------------------------------------
 
         // SetControlCBreak() -- Allow ^C to terminate the process. 
         //
@@ -2001,14 +2273,151 @@ public:
         // Note: debug.Init() activates ^C, but debug.Write(), when it instantiates the Proess Control Window will not turn it on. 
         // use debug.Init() or SetControlCBreak() to ensure use of ^C to break the program execution.
         //
-       bool SetControlCBreak(bool bActive); 
+        __sagestatic bool SetControlCBreak(bool bActive); 
 
      };
 
-    WinDebug debug; 
+    __sagestatic Debug debug; 
+
+    // This is a pointer to the global CSagebox.  There is only one per application.  This can 
+    // be automatically allocated by using static Sagebox functions.
+    //
+    // Use GetStaticSagebox() to retrieve the value.  it will create the sagebox obejct if it doesn't exist. 
+    //
+    static CSagebox * m_cStaticSagebox;
+
+    __sagestatic CWindow * GetMainWindow(); 
+    __sagestatic bool SetGlobalSageEventHook(SageEventHookFunc fHookFunc,void * vpData = nullptr,int64_t ullExtraData = 0); 
+    __sagestatic bool RemoveGlobalSageEventHooks(); 
+    __sagestatic bool RemoveGlobalSageEventHook(SageEventHookFunc fHookFunc); 
+
+    /// <summary>
+    /// Initialize static Sagebox.  Most functions will initialize Sagebox automatically. 
+    /// <para></para>
+    /// However, there are a few Sagebox functions that will return unprocress if Sagebox has not been created when called.
+    /// <para></para>
+    /// --> CSagebox::Init() will initialize Sagebox statitcally to ensure all static CSagebox functions run correctly.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note: When specifyin a Sagebox object, i.e. "CSagebox cSagebox", this initializes Sagebox and CSagebox::Init() is unnecessary.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Important Note:  Do not create a Sagebox object after using CSagebox::Init() -- Use GetStaticSagebox() instead.
+    /// </summary>
+    /// <returns></returns>
+    __sagestatic void Init(); 
+
+    /// <summary>
+    /// Initializes Windows GDI+. This only needs to be called once and is initialized for the entire application.  InitGdiPlus() does not need to be called
+    /// for every Window, and is provided in the CWindow class for ease-of-use.
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note:  For individual windows, you can call CWindow::CreateGdiObject(), which will return a GDI Graphics object for the current window.  This will also 
+    /// <para></para>&#160;&#160;&#160;
+    /// --> call InitGdiPlus() automatically, eliminating the need to call InitGdiPlus()
+    /// See CreateGDIObject() for more information.             
+    /// </summary>
+    /// <returns></returns>
+    __sagestatic bool InitGdiPlus();
+
+    /// <summary>
+    /// Waits for the monitor VSync blank time to start before returning.  This will sync your graphics with the graphic output to the monitor. 
+    /// <para></para>
+    /// --> Note: DirectDraw() must be available on your system and initialize correctly.  Otherwise, VsyncWait() will return immediately.
+    /// <para></para>
+    /// --> Use VsyncIsValid() to check for initialization status (a return of TRUE indicates the VsyncWait() is working correctly)
+    /// <para></para>
+    /// --> Important Note: VsyncReady() and VsyncWait() are mutually exclusive. Using them together will cause performance issues. 
+    /// </summary>
+    /// <returns></returns>
+    __sagestatic bool VsyncWait(); 
+
+    /// <summary>
+    /// Returns TRUE if the VsyncWait and VsyncThread capabilities are accurate (i.e. if DirectDraw() was initialized and can look for the Vertical ReSync)
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note this will initialize DirectDraw() and put the application in a performance mode, using more processing time (i.e. it assumes you are using graphics by checking its status)
+    /// <para></para>
+    /// Use this as a DEBUG function to check the validity of Vsync operations (once true, then there is no need to check)
+    /// </summary>
+    /// <returns></returns>
+    __sagestatic bool VsyncIsValid();
+
+    /// <summary>
+    /// Returns true if a Vsync blank period has started, setting the status on the Vertical Retrace of your monitor
+    /// <para></para>&#160;&#160;&#160;
+    /// --> Note: This will start a passive thread to monitor the Vsync state (see: VsyncStartThread()), which will then send an event to your window, causing
+    /// VsyncReady() to return true.
+    /// <para></para>
+    /// VSyncReady() is an event, and therefore will return TRUE only once until the Vsync is signaled again, unless Peek::Yes is used to intentially not reset it.
+    /// <para></para>
+    /// --> Important Note: VsyncReady() and VsyncWait() are mutually exclusive. Using them together will cause performance issues. 
+    /// <para></para>
+    /// --> Note: Only one window can use the Vsync Thread at a time.  Using the thread in another window will cause the thread to be reset to that window.
+    /// </summary>
+    /// <param name="cWin">Window to send Sage Event to when Vsync is ready</param>
+    /// <param name="peek">Does not change the event status if Peek == Peek::Yes</param>
+    /// <returns></returns>
+    __sagestatic bool VsyncReady(CWindow & cWin,Peek peek = Peek::No);
+
+    /// <summary>
+    /// Starts the main Vsync thread to send a VsyncReady() event to your window with the Vertical Retrace occurs on your monitor. 
+    /// <para></para>
+    /// --> Use VsyncStartThread() with no window to use the global Sagebox Window
+    /// <para></para>
+    /// Using VsyncReady() starts the thread automatically.  VsyncStartThread() can be used as a pre-step to make sure the thread is operating
+    /// and valid (see VsyncIsValid()) before entering the main loop, saving an initial burst of processing time on the first VsyncReady() call. 
+    /// <para></para>
+    /// --> The Vsync Thread is a passive thread that sleeps until the Vertical Retrace occurs, and takes little processing time. 
+    /// <para></para>
+    /// --> Note: Only one window can use the Vsync Thread at a time.  Using the thread in another window will cause the thread to be reset to that window.
+    /// <para></para>
+    /// --> Note: All Vsync functions assume graphics processing and put your application in a performance mode, using more CPU time, but will
+    /// not cause your system to become sluggish unless you manually set your application to a Realtime or High-priority mode.
+    /// </summary>
+    /// <param name="cWin">Window to send VsyncReady() events</param>
+    /// <returns></returns>
+    __sagestatic bool VsyncStartThread();
+
+    /// <summary>
+    /// Starts the main Vsync thread to send a VsyncReady() event to your window with the Vertical Retrace occurs on your monitor. 
+    /// <para></para>
+    /// --> Use VsyncStartThread() with no window to use the global Sagebox Window
+    /// <para></para>
+    /// Using VsyncReady() starts the thread automatically.  VsyncStartThread() can be used as a pre-step to make sure the thread is operating
+    /// and valid (see VsyncIsValid()) before entering the main loop, saving an initial burst of processing time on the first VsyncReady() call. 
+    /// <para></para>
+    /// --> The Vsync Thread is a passive thread that sleeps until the Vertical Retrace occurs, and takes little processing time. 
+    /// <para></para>
+    /// --> Note: Only one window can use the Vsync Thread at a time.  Using the thread in another window will cause the thread to be reset to that window.
+    /// <para></para>
+    /// --> Note: All Vsync functions assume graphics processing and put your application in a performance mode, using more CPU time, but will
+    /// not cause your system to become sluggish unless you manually set your application to a Realtime or High-priority mode.
+    /// </summary>
+    /// <param name="cWin">Window to send VsyncReady() events</param>
+    /// <returns></returns>
+    __sagestatic bool VsyncStartThread(CWindow & cWin);
+
+
+    /// <summary>
+    /// Ends the Vsync Retrace Thread.  Use this when finished with your graphics loop using the vertical retrace. 
+    /// <para></para>
+    /// --> The VSync Thread is passive and is ok to leave running, as it will not take up too much processing time. 
+    /// </summary>
+    /// <returns></returns>
+    __sagestatic bool VsyncEndThread();
+
+    // Get the size of the desktop (i.e. monitor). 
+    // This returns the current monitor size (i.e. 1920x1080).  This can help in centering and otherwize
+    // placing windows and controls.
+    //
+    // Currently, this returns the active desktop and will be updated to work with systems with multiple monitors in a future update.
+    //
+    __sagestatic SIZE GetDesktopSize(); 
+
+
+
 };
+#include "CSageTypes2.h" // items applicable after Classes and Types are defined. 
 
 }; // namespace Sage;
+
 
 
 

@@ -213,10 +213,62 @@ public:
 		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
 		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
 	}			
+	/// <summary>
+	/// Returns pixel bounded to the bitmap size (i.e. won't overflow).  May be a little slower than GetPixel(), which returns a 0 pixel (i.e. black)
+    /// when boundaries are exceeded (but may be quicker).
+    /// <para></para>
+    /// Use GetPixel() when boundaries are expected to be honored/
+    /// <para></para>
+    /// Use GetFastPixel() for a fast version -- unchecked GetPixel() that does not check memory or bounds.
+	/// </summary>
+	/// <returns></returns>
+	__forceinline  RGBColor_t GetPixelBounded(int iX,int iY = 0) 
+	{ 
+        if (!stBitmap.stMem) return { 0,0,0 };
+        if (iX < 0) iX = 0;
+        if (iY < 0) iY = 0;
+        if (iY >= stBitmap.iHeight) iY = stBitmap.iHeight-1;
+        if (iX >= stBitmap.iWidth) iX = stBitmap.iWidth-1;
+
+        unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
+		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
+	}			
+	/// <summary>
+	/// Returns pixel bounded to the bitmap size (i.e. won't overflow).  May be a little slower than GetPixel(), which returns a 0 pixel (i.e. black)
+    /// when boundaries are exceeded (but may be quicker).
+    /// <para></para>
+    /// Use GetPixel() when boundaries are expected to be honored/
+    /// <para></para>
+    /// Use GetFastPixel() for a fast version -- unchecked GetPixel() that does not check memory or bounds.
+	/// </summary>
+	/// <returns></returns>
+	__forceinline  RGBColor_t GetPixelBounded(POINT p) 
+	{ 
+        if (!stBitmap.stMem) return { 0,0,0 };
+        if (p.x < 0) p.x = 0;
+        if (p.y < 0) p.y  = 0;
+        if (p.y  >= stBitmap.iHeight) p.y  = stBitmap.iHeight-1;
+        if (p.x >= stBitmap.iWidth) p.x = stBitmap.iWidth-1;
+
+        unsigned char * sTemp = stBitmap.stMem + p.y*stBitmap.iWidthBytes + p.x*3;
+		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
+	}			
+
+	__forceinline  RGBColor_t GetPixel(POINT p) 
+	{ 
+		if (!stBitmap.stMem || p.x < 0 || p.x >= stBitmap.iWidth || p.y < 0 || p.y >= stBitmap.iHeight) return { 0,0,0};
+		unsigned char * sTemp = stBitmap.stMem + p.y*stBitmap.iWidthBytes + p.x*3;
+		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
+	}			
 
 	__forceinline  RGBColor_t GetFastPixel(int iX,int iY = 0) 
 	{ 
 		unsigned char * sTemp = stBitmap.stMem + iY*stBitmap.iWidthBytes + iX*3;
+		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
+	}			
+	__forceinline  RGBColor_t GetFastPixel(POINT p) 
+	{ 
+		unsigned char * sTemp = stBitmap.stMem + p.y*stBitmap.iWidthBytes + p.x*3;
 		return { (int) sTemp[2], (int) sTemp[1], (int) sTemp[0] };
 	}			
 
@@ -259,7 +311,24 @@ public:
 		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
 	}
 
-   
+    /// <summary>
+    /// Blends a color using the Alpha channel.  If no Alpha Channel exists, the bitmap is not changed.
+    /// <para></para>
+    /// --> If no color is given, the color defaults to Black (i.e. {0,0,0} or RGB(0))
+    /// </summary>
+    /// <param name="rgbColor">Color to fill with Alpha Channel Mask</param>
+    /// <returns>Reference to input bitmap</returns>
+    CBitmap & BlendAlphaColor(RGBColor_t rgbColor); 
+
+    /// <summary>
+    /// Blends a color using the Alpha channel.  If no Alpha Channel exists, the bitmap is not changed.
+    /// <para></para>
+    /// --> If no color is given, the color defaults to Black (i.e. {0,0,0} or RGB(0))
+    /// </summary>
+    /// <param name="rgbColor">Color to fill with Alpha Channel Mask</param>
+    /// <returns>Reference to input bitmap</returns>
+   CBitmap & BlendAlphaColor(COLORREF rgbColor = 0); 
+
     CBitmap(CBitmap && p2) noexcept
     {
         stBitmap = p2.stBitmap;
@@ -272,6 +341,17 @@ public:
 //		printf("Deleting bitmap.. size = %d,%d\n",stBitmap.iWidth,stBitmap.iHeight);	// Debug
 		stBitmap.Delete(); 
 	};
+
+    /// <summary>
+    /// Swaps red and blue channels.  This supports BGR uses, such as GPU uses or libraries and other routines that may  look for BGRA
+    /// <para></para>
+    /// The CBitmap (and RawBitmap32) types are RGB in memory, unless converted with this function to BGR.
+    /// <para></para>
+    /// --> Note: Once converted, all bitmap functions will still work, with the RED and BLUE channels reversed.
+    /// </summary>
+    /// <returns>true of successful, false if not successful (i.e. invalid bitmap, etc.)</returns>
+    bool SwapBlueRedInline();
+
 	__forceinline SIZE GetSize() { return { stBitmap.iWidth, stBitmap.iHeight }; }
     __forceinline int GetTotalPixels() { return stBitmap.iWidth*stBitmap.iHeight; };
 	__forceinline int GetWidth() { return stBitmap.iWidth; }
@@ -341,7 +421,17 @@ public:
 	bool __forceinline FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(dwColor,pStart,szSize); }
 
 	void Delete(){ stBitmap.Delete(); }
-	RawBitmap_t  Clean(){ RawBitmap_t stOld = stBitmap; stBitmap.Clean(); return stOld; }
+	/// <summary>
+	/// Initialize the Bitmap to an empty bitmap without deallocating the bitmap contained inside or any mask that may be active.
+    /// <para></para>
+    /// A RawBitmap_t is returned that contains the bitmap data so that it can be manipulated directly.
+    /// <para></para>
+    /// This function is used when the need arises to use the bitmap data directly outside of a Cbitmap.
+    /// <para></para>
+    /// *** You must deallocate any bitmap data (Bitmap and Mask) that is active yourself once this function is used
+	/// </summary>
+	/// <returns>RawBitmap_t of bitmap data contained in the CBitmap before it was initialized</returns>
+	[[nodiscard]] RawBitmap_t  Clean(){ RawBitmap_t stOld = stBitmap; stBitmap.Clean(); return stOld; }
     
     // GaussianBlurStd() -- Blur the image with a Gaussian Blur of the given Radius (fRadius)
     //

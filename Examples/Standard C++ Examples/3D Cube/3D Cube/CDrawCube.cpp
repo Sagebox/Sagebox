@@ -56,7 +56,7 @@ void DrawCube::Main()
     int iUpdateCount = 0;                       // Updated every time we print a cube, just for general info
 
     m_cWin->SetWindowSize(850,650,true);        // Whatever the window size we were given, resize it so 850,650
-    m_cWin->Cls("darkblue","black");            // Clear screen from a dark blue to black gradient. 
+    m_cWin->Cls(SageColor::DarkBlue,SageColor::Black);            // Clear screen from a dark blue to black gradient. 
 
     // We don't need to clear the screen (above) since we're loading a texture.
     // The Cls() above was kept in so that the cTexture can be removed to show a non-textured version, with 

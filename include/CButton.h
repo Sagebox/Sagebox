@@ -419,7 +419,7 @@ public:
 	int GetControlID();
 	bool SetHoverMsg(const char * sMessage);
 	bool SetSignal(ButtonSignal & stSignal);
-	bool SetSignal(bool * bSignal,bool * bSignalData = nullptr);
+	bool SetSignal(bool * bSignal,bool * bChecked = nullptr);
 
     // signal -- this is used to access button data and events without using the normal CButton call process.
     //           This makes getting presses and status changes much quicker. 

@@ -29,7 +29,7 @@ int main()
     //
     // bgGradient() -- Clears the window using a gradient from the first color to the second.
 
-    auto& cWin = CSagebox::AutoWindow(bgGradient("black","darkblue"));
+    auto& cWin = CSagebox::AutoWindow(bgGradient(SageColor::Black,SageColor::DarkBlue));
 
     double fR = 150;        // Set a radius. 
 

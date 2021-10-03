@@ -11,7 +11,7 @@
 // This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
 //
 
-//#pragma once
+#pragma once
 
 #if !defined(_CSageTypes_H_)
 #define _CSagTypes_H_
@@ -32,6 +32,5 @@ using opt = Sage::opt;
 #elif SageOnly
 using namespace Sage;
 #endif
-
 
 #endif // _CSageTypes_H_

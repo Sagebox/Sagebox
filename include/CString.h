@@ -24,9 +24,10 @@ class CString;
 class CStringW;
 using CStr = CString;
 using CStrW = CStringW;
+class CStringW;
+
 class CString
 {
-	class CStringW;
 public:
     struct csFloatType
     {
@@ -112,12 +113,13 @@ public:
 	__forceinline CString & operator >> (DWORD x)				{ StartString((unsigned int) x); return((CString &) *this); }
 	__forceinline CString & operator >> (double x2)			    { iPlace = 0; AddDouble(x2); return((CString &) *this); }
 
-	char * operator * () { return (char *) s; };
-	const char * str() { return s; };
-	char * c_str() { return s; };
-	const char * cc_str() { return (const char *)  s; };
-	char * GetBuffer() { return s; };
-	bool isEmpty(){ return  s && *s ? false : true; };\
+	__forceinline char * operator * () const { return (char *) s; };
+	__forceinline const char * str() { return s; };
+	__forceinline char * c_str() { return s; };
+	__forceinline const char * cc_str() { return (const char *)  s; };
+  // CStringW w_str();
+	__forceinline char * GetBuffer() { return s; };
+	__forceinline bool isEmpty(){ return  s && *s ? false : true; };
 
     /// <summary>
     /// Returns whether CString object is valid or not.  If a memory allocation error occurs, the string will be reset to 
@@ -138,7 +140,7 @@ public:
 	CString & operator = (unsigned int x)	{	ClearString(); return *this << x; }
 	CString & operator = (DWORD x)			{	ClearString(); return *this << x; }
 
-	operator const char * () const { return (const char *) s; }
+//	operator const char * () const { return (const char *) s; }
 	operator char * () const { return (char *) s; }
 	
     /// <summary>
@@ -253,6 +255,8 @@ public:
 		Init();
 		_AddString((wchar_t *) sString);
 	}
+	CString(const CStringW & cStringW);
+
 	CString(const CString &p2);
 
     CString(CString && p2) noexcept;
@@ -410,7 +414,7 @@ public:
 
 
 //	CDevString & operator << (COLORREF x) { AddNumber((int) x); return((CDevString &) *this); }
-	wchar_t * operator * () { return (wchar_t *) s; };
+	wchar_t * operator * () const { return (wchar_t *) s; };
 
 	CStringW & operator << (double x2) {  AddDouble(x2); return((CStringW &) *this); }
 	CStringW & operator << (csFloatType csft)	{ SetFloatStyle(csft); return *this; }
@@ -429,7 +433,7 @@ public:
 	CStringW & operator = (unsigned int x)	    {	ClearString();	return *this << x; }
 	CStringW & operator = (DWORD x)			    {	ClearString();	return *this << x; }
 
-	operator const wchar_t * () const { return (const wchar_t *) s; }
+//	operator const wchar_t * () const { return (const wchar_t *) s; }
 	operator wchar_t * () const { return (wchar_t *) s; }
 	void Init();
 	~CStringW()
@@ -469,6 +473,8 @@ public:
   
 	wchar_t * UnEmptyStr()  { return (*s) ? s : nullptr; }
 	bool isEmpty(){ return  s && *s ? false : true; };
+//    CString c_str() { return !this ? CString() : CString(*this); };
+    __forceinline wchar_t * w_str() { return !this ? (wchar_t *)  L"" : this->s; };
 
 
 };

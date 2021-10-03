@@ -135,12 +135,51 @@ class CDevControls
 	// Note: This is still in-progress, and items will be added as needed.
 
 private:
+
+    class CDevWinHandler : public CWindowHandler
+    {
+    public:
+        MsgStatus OnNCLButtonDown(int iMouseX,int iMouseY) override;
+        MsgStatus OnSageEvent() override;
+    };
+    static constexpr char m_cDefaultOpen = '|';
+    static constexpr char m_cDefaultClose = '|'; 
+    // Various structure for individual control items
+    struct stCheckboxData_t
+    {
+        CString       cText; 
+        CButton     * cCheckbox;
+        bool          bDefault;
+    };
+    struct stCheckboxDefaults_t
+    {
+        const char * sDefault;
+        bool bDefault;
+    };
+    // How to specify checkbox defaults in text, i.e. "Checkbox 1|ch|" = checked; default is not checked.
+    //
+    static constexpr stCheckboxDefaults_t m_stCheckboxDefaults[] = 
+    {
+        { "0", false },
+        { "1", true },
+        { "u", false },
+        { "c", true },
+        { "uc", false },
+        { "ch", true },
+        { "f", false },
+        { "t", true },
+        { "unchecked", false },
+        { "checked", true },
+        { nullptr, true },
+    };
+
 	// Various control types used in CQuickControls
 	//
 	enum class ControlType
 	{
 		Button,
 		Checkbox,
+        RadioButtonGroup,
 		Slider,
 		EditBox,
 		TextWidget,
@@ -148,6 +187,7 @@ private:
 		Window,
 		Header,
 		Divider,
+		Unknown,
 	};
 
 	// Control structure saved for each entry
@@ -165,6 +205,11 @@ private:
 			CEditBox * cEditBox;
 		};
 		Un un;
+
+        // *** Makeshift data settings -- the union above should be structures for each type, rather than just pointers to controls. 
+        //    $$ This needs to be fixed at some point 
+
+        bool bSlider_SmallStyle;         // For now, we'll just put these here
 	};
 
 	std::vector<stControl_t> m_vControls;		// Controls storage
@@ -175,13 +220,22 @@ private:
 	static constexpr SIZE kMaxWinSize	= { 1920,1080 };	// Max Window Size
 	static constexpr SIZE kMaxSize		= { 800, 700 };		// Max outlay size (in Window)
 	static constexpr int kSectionWidth	= 400;				// TBD when multi-column support is added.
-	
+    static constexpr SIZE szIndent      = { 10,10 };        // Indent for X and Y (left and top)
+
+    bool m_bWindowClosed    = false;                        // True when close controls are active (either 'X' button and optional Close Button)
+    bool m_bCloseX          = false;                        // true when there is an 'x' to close on the window.
+    bool m_bAutoHide        = false;                        // Auto-hide the window when the 'x' or close button is pressed.
+    SizeRect m_srClose{};                                   // bounds for close rect, when active.
+
+
 	CWindow * m_cParentWin	= nullptr;
 	CWindow * m_cWin		= nullptr;
 	bool m_bInitialHide		= true;		// Hide the window initially, until we see our first control.
 	bool m_bShowing			= true;		
 	bool m_bTopmost			= false;	// When true, window is forced as top window so other windows won't overlap. 
+    bool m_bWindowCloseEvent = false;   // Set when the 'X' or close button is pressed.  Resets when window is shown.
 
+    CButton * m_cButtonClose    = nullptr;  // Added close button for automatic close controls
 	int m_iCurrentX	= 0;
 	int m_iCurrentY	= 0;
 
@@ -192,12 +246,24 @@ private:
 	int m_iUnnamedCheckboxes	= 0;
 	int m_iUnnamedEditBoxes		= 0;
 	int m_iUnnamedWindows		= 0;
+	int m_iUnnamedRadioGroups   = 0;
 
-	void InitialShow();
+    int m_iGroupCount           = 0;
+
+    CDevWinHandler  m_cWindowHandler;
+	
+    static constexpr const char * m_sGroupPrefix = "__Sage_DevControls__";
+    void InitialShow();
 	void SetWindow();
 	bool AddControl(void * cControl,ControlType type,SIZE szSize);
 	void SetTopWindow();
     bool isLastCheckbox(stControl_t * & stCheckbox);
+    stControl_t * GetLastControl();
+    bool DrawCloseX(bool bUpdate); 
+    bool HaveCloseX();
+    void CheckCheckboxDefault(stCheckboxData_t & stData);
+    CString CleanLine(const char * sLine);
+    CString GetNewGroupName();
 public:
 	// ----------------
 	// Public Interface
@@ -236,6 +302,61 @@ public:
     //
     CWindow::WinGroup * group(); 
 
+    /// <summary>
+    /// Adds 'X' on top-right and optional "Close" button.
+    /// <para></para>&#160;&#160;&#160;
+    /// Dev Windows are not typically closed and do not have close controls by default.  AllowClose() adds the ability to close the window,
+    /// which can be used as a way to terminate a console-mode or other program that does not have a visible window. 
+    /// <para></para>
+    /// Use WindowClosed() to determine if the window has been closed (or the added Close Button has been pressed.
+    /// <para></para>
+    /// When the 'X' button is pressed, a Sage Event is sent to the window where it can be checked. The Close button also sends a Sage Event.
+    /// <para></para>&#160;&#160;&#160;
+    /// Note: When the user presses the 'X' button or "Close" button, the window is not closed or hidden.  These controls are only used
+    /// to provide an indication (through WindowClosed()) that the user has pressed a control as a message to terminate the application.
+    /// <para></para>&#160;&#160;&#160;
+    /// ---> This function is not used to close the Dev Window but as an easy way for the user to signal to close the application.
+    /// </summary>
+    /// <param name="bAddCloseButton">when TRUE adds a "Close" button.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
+    /// <returns></returns>
+    bool AllowClose(bool bAddCloseButton = false); 
+
+    // Returns true if a close button or 'x' has been placed.  Used internally to decide when to attach a close button
+    // or just stay with a previous configuration.
+    //
+    bool Closeable(); 
+
+    /// <summary>
+    /// Auto-hides the DevWindow when the user presses the 'x' button or close button.  This does not destroy the devwindow, and only hides it.
+    /// <para></para>
+    /// Once Hidden, the DevWindow can be shown again with a call to Show()
+    /// </summary>
+    /// <param name="bAutoHide"> - True to auto-hide window; false to turn auti-hide off</param>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    bool AutoHide(bool bAutoHide = true,bool bAddCloseButton = false);
+
+    /// <summary>
+    /// Returns TRUE if the "Close" Button or 'X' has been pressed (both are added by AllowClose()).
+    /// <para></para>
+    /// This can be used as a quick way to close an application that only has a Dev Window and no other window except the Console Window.
+    /// </summary>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns>true if the user has attempted to close the window.</returns>
+    bool WindowClosed(bool bAddCloseButton = false); 
+
+    /// <summary>
+    /// Returns true if the DevWindow Close Button was pressed, but only once -- it returns false after this point until the DevWindow
+    /// is again made visible by a call to Show()
+    /// <para></para>
+    /// --> This difference from WindowsClose() which will continuously give a Windows-Close status of TRUE if the window is closed
+    /// <para></para>
+    /// WindowCloseEvent(), however, is an event status and only returns TRUE once after the close (or X) button is pressed.
+    /// </summary>
+    /// <param name="bAddCloseButton"> -- True to create a close button.  Otherwise only the 'x' appears in the upper-right corner.</param>
+    /// <returns></returns>
+    bool WindowCloseEvent(bool bAddCloseButton = false);
+
 	// AddButton() -- Add a button to the Quick Control Window.  This accepts all options as normal buttons, but 
 	// the default will add a regular button. 
 	//
@@ -249,6 +370,98 @@ public:
 	// The Name used as a title for the button, but is optional. 
 	//
 	CButton & AddCheckbox(const char * sButtonText = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup AddRadioButtonGroup(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup AddRadioButtonGroup(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup AddRadioButtonGroup(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+     /// <summary>
+    /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
+    /// <para></para>
+    /// In the case of using a simple string, separate button names with '\n', such as: 
+    /// <para></para>
+    /// --> AddRadioButtonGroup("Button1\nButton2\nButton3"); 
+    /// <para></para>
+    /// Use Title() for the section title, and Default to set a default (if Default() is not supplied, the first button is the default)
+    /// <para></para>
+    /// --> Example: AddRadioButtonGroup("Button1\nButton2\nButton3",Title("Select Button") | Default(1))
+    /// <para></para>
+    /// This sets the title to "Select Button" and sets the default button to the second button.
+    /// <para></para>
+    /// You can also use char * *, or vector&lt;char *&gt; to give a list of pointers to each button. 
+    /// <para></para>
+    /// --> Important Note: In the case of using a "char * *" array, the last entry MUST be a nullptr.  You can precede the char ** array with the number of items to avoid using a nullptr.
+    /// </summary>
+    /// <param name="iNumButtons">- (optional) When using "const char * *" for a list of names, you can give it the number of items (the end does not need to be a nullptr in this case)</param>
+    /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
+    /// <param name="cwOpt">Options such as Default() and Title()</param>
+    /// <returns></returns>
+    ButtonGroup AddRadioButtonGroup(std::vector<char *>  vButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
 	// AddEditBox() -- Add an EditBox to the quick control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options

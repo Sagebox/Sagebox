@@ -24,7 +24,6 @@ class CDialog;
 
 class CTextWidget : CWindow
 {
-
 	class CWidget : public Sage::CWidget
 	{
 		bool bTransparent = false;
@@ -192,6 +191,13 @@ public:
     CTextWidget & operator << (CString & cString);
     CTextWidget & operator << (const char * sMessage);
     CTextWidget & operator << (std::string sString);
+
+    CTextWidget & operator << (char x)                ;
+    CTextWidget & operator << (int x)                 ;
+    CTextWidget & operator << (unsigned int x)        ;
+    CTextWidget & operator << (float x)               ;
+    CTextWidget & operator << (double x)              ;
+
 };
 }; // namespace Sage
 #endif // _CTextWidget_H_

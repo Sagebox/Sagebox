@@ -38,8 +38,8 @@ int main()
     constexpr int iDefault1     = 100;      // Now we have some defaults we want to add.
     constexpr int iDefault2     = 50;       // (we could have done it with the windows-based console version, too)
 
-    RgbColor rgbColor = { 255,0,0 };  // We could use win.GetColor("Red'); 
-                                      // We can also use a standard Windows COLORREF RGB(255,0,0); 
+    RgbColor rgbColor = SageColor::Red; // We could use { 255,0,0 }; 
+                                        // We can also use a standard Windows COLORREF RGB(255,0,0); 
     int iRadius1,iRadius2;
 
     // Use a Quick Dialog so we can get the number of edit boxes we want. 

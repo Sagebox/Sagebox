@@ -73,7 +73,7 @@ int main()
         // win.GetColor() is used, but an RGB color can also be put in place, either directly, with 
         // Windows COLORREF type of RgbColor type. -- for example, using "{255,0,0}" is the same as win.GetColor("Red");
 
-        if (cWin.MouseClicked(pMouse)) cWin.DrawRectangle(pMouse.x-50,pMouse.y-50,100,100,cWin.GetColor("Red"));
+        if (cWin.MouseClicked(pMouse)) cWin.DrawRectangle(pMouse.x-50,pMouse.y-50,100,100,SageColor::Red);
     }
 
     // We don't need to hold up the exit, since the user closed the window manually.

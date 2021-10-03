@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = CSagebox::AutoWindow(CSize(1000,700),Title("Fractal Tree") | bgGradient("black","skybluedark")); 
+    auto& cWin = CSagebox::AutoWindow(CSize(1000,700),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
 
     // These values can be changed for a different effect. 
   

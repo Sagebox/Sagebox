@@ -29,7 +29,7 @@ int main()
 {
    auto& cWin = CSagebox::AutoWindow();
 
-    cWin.DrawCircle(400,400,100,cWin.GetColor("Red"));
+    cWin.DrawCircle(400,400,100,SageColor::Red);
 
     int iValue = cWin.GetInteger("Enter a Number...",Range(50,100) | NoCancel());
     

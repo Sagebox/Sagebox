@@ -259,8 +259,9 @@ public:
 	bool SetSelection(int iSelection);
 	bool AddItem(const char * sItem);
     bool AddItems(const char * * sItems); 
+    bool AddItems(const char * sItems); 
     bool AddItems(int iNumItems,const char * * sItems); 
-
+    int GetNumItems();
 	bool ItemSelected(int & iItem,bool bPeek = true);
 	bool ItemSelected(bool bPeek = true);
 	int GetItemSelected();

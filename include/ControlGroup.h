@@ -42,9 +42,43 @@ public:
 	~ControlGroup() { FreeOptString(); }
 	ControlGroup();
 //	int GetPressed(bool bRemove = false);	-- deprecated
+    
+	/// <summary>
+	/// When int iPressedID is given, isPressed(iPressedID) returns TRUE when one of the control buttons has been pressed, filling
+    /// iPressedID with the value.
+    /// <para></para>&#160;&#160;&#160;
+    /// When iPressedID is omitted, isPressed() returns -1 when no button has been pressed.  Otherwise, the 0-based index of the button pressed is returned.
+    /// <para></para>
+    /// --> The index returned is the 0-based index of the button int the group, in order they were added.
+    /// --> Peek (i.e. Peek::yes) can be added to Peek get the result without resetting the event.
+    /// <para></para>
+    /// --> Important Note: This is an event query. Therefore, it will only return a true value once (unless Peek is used), resetting the the
+    /// event to false on subsequent calls until another button is pressed.
+	/// </summary>
+	/// <param name="iPressedID">- (optional) Integer value to fill with 0-based index of button pressed when an event is active (otherwise it is not changed)</param>
+	/// <param name="peek">- Use Peek::Yes to avoid resetting the event flag</param>
+	/// <returns>TRUE when button is pressed (when supplying the event reference, i.e. iPressedID); otherwise returns the button pressed or -1 when no event is active.</returns>
 	bool isPressed(Peek peek = Peek::No);
+
+	/// <summary>
+	/// When int iPressedID is given, isPressed(iPressedID) returns TRUE when one of the control buttons has been pressed, filling
+    /// iPressedID with the value.
+    /// <para></para>&#160;&#160;&#160;
+    /// When iPressedID is omitted, isPressed() returns -1 when no button has been pressed.  Otherwise, the 0-based index of the button pressed is returned.
+    /// <para></para>
+    /// --> The index returned is the 0-based index of the button int the group, in order they were added.
+    /// --> Peek (i.e. Peek::yes) can be added to Peek get the result without resetting the event.
+    /// <para></para>
+    /// --> Important Note: This is an event query. Therefore, it will only return a true value once (unless Peek is used), resetting the the
+    /// event to false on subsequent calls until another button is pressed.
+	/// </summary>
+	/// <param name="iPressedID">- (optional) Integer value to fill with 0-based index of button pressed when an event is active (otherwise it is not changed)</param>
+	/// <param name="peek">- Use Peek::Yes to avoid resetting the event flag</param>
+	/// <returns>TRUE when button is pressed (when supplying the event reference, i.e. iPressedID); otherwise returns the button pressed or -1 when no event is active.</returns>
 	bool isPressed(int & iPressedID,Peek peek = Peek::No);
     int GetCheckedButton();
+    CButton & GetButton(int iPosition);
+
     bool isChecked(int iCheckboxID);
     bool SetCheck(int iCheckboxID); 
 
@@ -57,5 +91,17 @@ public:
     static ControlGroup & GetEmptyGroup();
     CWindow & GetParentWindow();
 };
+
+class ButtonGroup : public ControlGroup
+{
+protected:
+	friend CWindow;
+    ButtonGroup(int iControlGroup,CWindow * cWin, CDavinci * cDavinci) : ControlGroup(iControlGroup,cWin,cDavinci) {}
+public:
+    ButtonGroup() : ControlGroup() { }
+    __forceinline CButton & operator [](int i) { return GetButton(i); }
+
+};
+
 }; // namespace Sage
 #endif // _ControlGroup_H_

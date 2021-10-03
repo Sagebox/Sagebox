@@ -67,7 +67,7 @@ int main()
     // Draw a red circle to show how we can do it.  Instead of GetColor("Red)", rgb value
     // {255,0,0}, a Windows COLORREF, or RgbColor type value may also be used. 
 
-    cWin.DrawCircle(300,200,100,cWin.GetColor("red"));  
+    cWin.DrawCircle(300,200,100,SageColor::Red);  
 
     return cWin.ExitButton();    // We use the exit button (or win.WaitforClose()) to prevent the program from 
                                 // terminating and destroying the window since we don't have any other user input.

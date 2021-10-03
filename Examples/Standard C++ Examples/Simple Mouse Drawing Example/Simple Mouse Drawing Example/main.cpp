@@ -33,7 +33,7 @@ int main()
 
     // Cycle through colors for each time the mouse is lifted and then pressed again.
 
-    const char * sColors[6] = { "White","Red","Green","Cyan","LightPurple","Yellow" };
+    RgbColor rgbColors[6] = { SageColor::White, SageColor::Red, SageColor::Green, SageColor::Cyan, SageColor::LightPurple, SageColor::Yellow };
     
     int iColorIndex     = 0;    // Initial Color Index
     int iPenThickness   = 4;    // Initial Pen Thickness
@@ -42,7 +42,7 @@ int main()
 
     cWin.SetPenThickness(iPenThickness);    // Set the initial pen thickness. 
 
-    cWin.Cls("black","darkblue");            // Clear the screen with a gradient 
+    cWin.Cls(SageColor::Black,SageColor::DarkBlue);            // Clear the screen with a gradient 
 
     // Create a text Widget to display information and the pen thickness.
     //
@@ -75,10 +75,9 @@ int main()
         // If the mouse is clicked, consider this the starting point for the mouse, since it was previously not pressed.
 
         if (cWin.MouseClicked(pLastMouse))
-            rgbCurColor = cWin.GetColor(sColors[iColorIndex++ % 6]);    // Get the next color in the index
-                                                                        // new mousemovment, we can draw a line.
+            rgbCurColor = rgbColors[iColorIndex++ % 6];    // Get the next color in the index
 
-        if (cWin.MouseRButtonClicked()) cWin.Cls();                     // If the Right Mouse Buttton was clicked, clear the screen
+        if (cWin.MouseRButtonClicked()) cWin.Cls();         // If the Right Mouse Buttton was clicked, clear the screen
 
         // If the MouseWheel was moved, then increase or decrease the pen thickness depending on the direction.
         // iMouseWheel will be a positive value, usually -1 or 1, but sometimes -2 or 2 if the mousewheel was moved quickly.

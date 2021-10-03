@@ -148,7 +148,7 @@ void CAsciiDonut::CalcSinCosTable()
 //
 void CAsciiDonut::Main()
 {
-    Cls("black","blue");
+    Cls(SageColor::Black,SageColor::Blue);
 
     SetAutoUpdate(false);
 
@@ -169,7 +169,7 @@ void CAsciiDonut::Main()
     SIZE szSize     = cWheel.GetWindowSize();
     POINT szPoint   = cWheel.GetWindowPos();
 
-    TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Transparent() | Font("Arial,14,bold") | fgColor("NearWhite") | TextCenterX());
+    TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Transparent() | Font("Arial,14,bold") | fgColor(SageColor::NearWhite) | TextCenterX());
 
     FillColorTable({ 0,1.0,1.0 });        // HSL Color: H = 0, S = 1, L = 1
     FillBgTable();

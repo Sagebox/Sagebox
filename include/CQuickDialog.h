@@ -164,7 +164,9 @@ private:
     static constexpr int          m_iIndentY            = 10;
     static constexpr int          m_iIndentYBot         = 5; //10;
     static constexpr int          m_iMaxWidth           = 1200;
-    static constexpr RgbColor     m_rgbDefaultBg        = { 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg        = {20,70,150}; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg1        = { 35, 76, 172 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg2        = { 11, 43, 120 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
     static constexpr int          m_iHeaderFontSizes[m_iMaxHeaderLines+1] = { 17,14,13,12,12,12 };  // This follows H1 (+blank), not number of lines. 
     static constexpr const char * m_sListboxTitleFont   = "Arial,13";
     static constexpr const char * m_sListboxItemFont    = "Arial,13";
@@ -173,6 +175,8 @@ private:
     static constexpr const char * m_sComboboxItemFont    = "Arial,13";
     static constexpr const SIZE   m_szComboboxPadding    = { 0,10 };
 
+    RgbColor                      m_bgColor1             = m_rgbDefaultBg1;
+    RgbColor                      m_bgColor2             = m_rgbDefaultBg2;
     // Justification for text items
     //
     enum class Just 

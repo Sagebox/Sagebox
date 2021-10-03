@@ -63,7 +63,7 @@ int main()
 
     auto& cWin = cSageBox.NewWindow(100,100,1080,800,NoAutoUpdate() | InnerSize());
     
-    cWin.Cls("black","darkblue");        // Set an initial background gradient from black to blue
+    cWin.Cls(SageColor::Black,SageColor::DarkBlue);        // Set an initial background gradient from black to blue
 
 
     constexpr int iX = 0;            // Set initial points (we don't really need these, but they are leftover
@@ -91,9 +91,9 @@ int main()
     // Set some initial values for each rectangle (and backdrop).  
     // These are basically chosen at random
 
-    cColor1.SetRGBValue(cWin.GetColor("blue") );    
+    cColor1.SetRGBValue(SageColor::Blue);    
     cColor2.SetRGBValue({15,200,60});               // Kind of a green -- shows we can use RGB values as well as known text-based values
-    cColor3.SetRGBValue(cWin.GetColor("purple"));
+    cColor3.SetRGBValue(SageColor::Purple);
 
 
     constexpr RGBColor_t rgbBlack = { 0,0,0 };      // Get an easy way to refer to an RGB black color

@@ -71,7 +71,7 @@ int main( int argc, char* argv[] )
     // we don't use it, we can just get a window.  The CSagebox object can be retreived with 
     // CSagbox::GetStaticSagebox()
     //
-    auto& cWin = CSagebox::AutoWindow(CSize(1300,900),Title("Fractal Tree") | bgGradient("black","darkblue")); 
+    auto& cWin = CSagebox::AutoWindow(CSize(1300,900),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::DarkBlue)); 
     FractalTree(cWin,cWin.GetWindowSize(),24*3.14159/180,130.0f*1.45);
     return cWin.WaitforClose(); // Wait for user to close the window
 

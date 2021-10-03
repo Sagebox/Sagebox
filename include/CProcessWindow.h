@@ -53,6 +53,13 @@ public:
         LightGray                   ,
         Default                     ,
     };
+    enum class UpdateType
+    {
+        Off,
+        OffOnce,
+        On,
+    };
+
 private:
 
     struct stButton_t
@@ -162,6 +169,7 @@ private:
     RgbColor        m_rgbDebugText; 
     RgbColor        m_rgbDebugBg; 
 
+
     enum class DebugFont : int
     {
         Normal,
@@ -184,6 +192,8 @@ private:
     char            * m_sWriteLine = nullptr;
     bool        m_bInit                 = false; 
     bool        m_bTerminatePressed     = false;
+    UpdateType  m_eUpdateType           = UpdateType::On;
+
     HWND        m_hWnd          = nullptr;
     HINSTANCE   m_hInstance     = nullptr;
     DWORD       m_dwThreadID;
@@ -231,7 +241,7 @@ private:
     bool Show(bool bShow);
     bool CaptureMouse();
     bool ReleaseCapture();
-    void SendUpdateMsg();
+    void SendUpdateMsg(bool bForce = false);
     bool WriteText(const char * sText);
     bool DisplayHelpWindow();
     void SetWndTimer();
@@ -251,6 +261,9 @@ public:
     bool isVisible();
     bool _KillTimer(bool bKillTimer);
     bool ShowLineNumbers(bool bShowLineNumbers);
+    bool SetUpdateType(UpdateType eType);
+    UpdateType GetUpdateType();
+    bool Update();
     ~CProcessWindow();
 
 

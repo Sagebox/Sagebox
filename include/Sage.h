@@ -22,6 +22,13 @@
 #define kStdPassThrough nullptr			// i.e. "@", or some other token to refer to passing the last error 
 #define stdNoMsg		nullptr
 
+#define __SageInline  __forceinline
+#define SupportGDI
+
+#ifdef SupportGDI
+#include <windows.h>
+#include <gdiplus.h>
+#endif
 
 #include "CMemClass.h"
 // SageBox defines for .DLL output. 
@@ -61,6 +68,7 @@ enum class ImageType
 {
     Jpeg,
     Bitmap,
+    PNG,
     Unknown,
 };
 enum class ImageStatus
@@ -71,6 +79,7 @@ enum class ImageStatus
     TooLarge,
     UnspportedFormat,
     Corrupted,
+    InputMemoryEmpty,
     UnknownError
 };
 
@@ -134,6 +143,8 @@ enum class ImageStatus
 
 namespace Sage
 {
+    using SageEventHookFunc = bool(*)(HWND hwnd,void * pData,int64_t ullExtra);
+
     class CBitmap; 
     class CSlider;
     class CButton;
@@ -414,6 +425,7 @@ enum class BorderType
 {
 	Line,
 	Depressed,
+	None,
 }; 
 enum class LabelJust
 {
@@ -438,13 +450,14 @@ enum class ThumbType
 	};	
 enum class ResizeType
 	{
-		BestFit		   ,
-		BestExactFit   ,
-		ExactWidth	   ,
-		ExactHeight	   ,
-		Percentage	   ,
-		MaxWidth	   ,
-		MaxHeight	   ,
+		Exact		   ,        // Sizes to exact size specified
+		BestFit		   ,        // Sets size to whichever proportional dimension fits within max width/height given, but will only shrink the image (will not enlarge)
+		BestExactFit   ,        // Sets size to whichever proportional dimension fits within max width/height given; this will enlarge or shrink the image to fit.
+		ExactWidth     ,        // Sets image to the width specified, keeping the image proportions (width is ignored)
+		ExactHeight	   ,        // Sets image to the height specified, keeping the image proportions (width is ignored)
+		Percentage	   ,        // Sets the image to the percentage specified (specified in the Width parameter)
+		MaxWidth	   ,        // Sets image to the height width, keeping the image proportions (width is ignored), but will only shrink the image (it won't enlarge it)
+		MaxHeight	   ,        // Sets image to the height specified, keeping the image proportions (width is ignored), but will only shrink the image (it won't enlarge it)
 	};	
 struct Deleter_t
 {
@@ -499,6 +512,9 @@ public:
 	};
 
 	struct RGBColor_t;
+	struct RGBColorA_t;
+    class CRgb; 
+
 	enum class WidgetMsg
 	{
 		LButtonDown			,
@@ -659,6 +675,7 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * Horz              = "Horz";   
         static constexpr const char * Vert              = "Vert";   
         static constexpr const char * NoClose           = "NoClose";   
+        static constexpr const char * Label             = "Label";   
         static constexpr const char * NoCancel          = "NoCancel";   
         static constexpr const char * NoAutoHide        = "NoAutoHide";   
         static constexpr const char * NoSizing          = "NoSizing";   
@@ -680,6 +697,14 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * MinValue          = "MinValue";
         static constexpr const char * MaxValue          = "MaxValue";
         static constexpr const char * Checked           = "Checked";
+        static constexpr const char * Width             = "Width";
+        static constexpr const char * Height            = "Height";
+        static constexpr const char * Columns           = "Columns";
+        static constexpr const char * Rows              = "Rows";
+        static constexpr const char * Hidden            = "Hidden";
+        static constexpr const char * Style             = "Style";
+        static constexpr const char * fgColor           = "fgColor";
+        static constexpr const char * bgColor           = "bgColor";
         static constexpr const char * _DefaultTitle     = "_DefaultTitle";      // Internal use
 
 
@@ -732,6 +757,7 @@ public:
 	bool Undefined() { return fH < 0 || fH > 1 || fS < 0 || fS > 1 || fL < 0 || fL > 1; }
 };
 using RgbColor = RGBColor_t;
+using RgbColorA = RGBColorA_t;
 
 struct RGBColor_t
 {
@@ -741,14 +767,24 @@ public:
 	int iBlue;
 public:
 	__forceinline RGBColor_t operator * (const RGBColor_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline RGBColor_t operator + (const RGBColor_t & r2) { return { iRed + r2.iRed, iGreen + r2.iGreen, iBlue + r2.iBlue }; }
+	__forceinline RGBColor_t operator - (const RGBColor_t & r2) { return { iRed +- r2.iRed, iGreen - r2.iGreen, iBlue - r2.iBlue }; }
 	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
 	__forceinline RGBColor_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
+	__forceinline RGBColor_t operator * (double fValue) { return { (int) ((double)iRed*fValue),  (int) ((double)iGreen*fValue),  (int) ((double)iBlue*fValue) }; }
     __forceinline RGBColor_t & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
 	__forceinline RGBColor_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
     __forceinline RGBColor_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
 
 	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
 	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+   	operator RGBColorA_t ();
+
+#ifdef SupportGDI
+   	__forceinline operator  Gdiplus::Color () { return Gdiplus::Color(iRed,iGreen,iBlue); }
+    operator CRgb (); 
+
+#endif
 
 	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
 	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
@@ -783,6 +819,81 @@ public:
 
 	__forceinline void Clip() { iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
 };
+
+struct RGBColorA_t
+{
+public:
+	int iRed;
+	int iGreen;
+	int iBlue;
+	int iAlpha;
+public:
+	__forceinline RGBColorA_t operator * (const RGBColorA_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline RGBColorA_t & operator *= (const RGBColorA_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
+	__forceinline RGBColorA_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
+    __forceinline RGBColorA_t & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
+	__forceinline RGBColorA_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
+    __forceinline RGBColorA_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
+
+	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
+	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+    __forceinline operator RGBColor_t () { return RGBColor_t{iRed,iGreen,iBlue}; }
+
+#ifdef SupportGDI
+   	__forceinline operator  Gdiplus::Color () { return Gdiplus::Color(iAlpha,iRed,iGreen,iBlue); }
+#endif
+
+	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
+	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
+	__forceinline RGBColorA_t & fromRGB(DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
+	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
+	__forceinline RGBColorA_t & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
+	
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
+	RGBColorA_t & Init();
+
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
+	RGBColorA_t & SetUndefined();
+	bool Undefined();
+    __forceinline RGBColorA_t fromGray(int iGray) { return { iGray,iGray,iGray,iAlpha }; }
+    __forceinline RGBColorA_t fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray, iAlpha }; }
+    __forceinline RGBColorA_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
+    __forceinline RGBColorA_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
+	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
+	__forceinline double Gray() { return (double) ((int)(iRed+iGreen+iBlue))/3.0; }
+	double LabGray();
+
+
+	__forceinline void Clip() { iAlpha = max(0,min(255,iAlpha)); iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
+};
+
+#ifdef SupportGDI
+
+class CRgb : public Gdiplus::Color
+{
+
+    bool m_bUndefined = false;
+public:
+    static const CRgb EmptyColor;     // Empty color for undefined references (i.e. defaults)
+    CRgb(int iRed,int iGreen,int iBlue) : Color(iRed,iGreen,iBlue) {};
+    CRgb(int iRed,int iGreen,int iBlue,int iAlpha) : Color(iAlpha,iRed,iGreen,iBlue) {};
+    CRgb(Gdiplus::ARGB argb) : Color(argb) {};
+    __forceinline operator  RgbColor () const { return RgbColor{ (int) GetR(),(int) GetG(),(int) GetB() }; }
+    __forceinline operator  RgbColorA () const { return RgbColorA{ (int) GetR(),(int) GetG(),(int) GetB(),(int) GetA() }; }
+    CRgb() { m_bUndefined = true; }
+    bool isUndefined()const { return m_bUndefined; }
+};
+#endif
 	// Gradient -- used two store two colors to form a gradient
 	//
 	struct Gradient
@@ -870,6 +981,16 @@ public:
 		bool ApplyMaskColor(RGBColor_t rgbColor,Sage::RawBitmap_t stMask,POINT pDestStart);
 		bool ApplyMaskColorR(RGBColor_t rgbColor,Sage::RawBitmap_t stMask,POINT pDestStart);
 
+        /// <summary>
+        /// Swaps red and blue channels.  This supports BGR uses, such as GPU uses or libraries and other routines that may  look for BGRA
+        /// <para></para>
+        /// The CBitmap (and RawBitmap32) types are RGB in memory, unless converted with this function to BGR.
+        /// <para></para>
+        /// --> Note: Once converted, all bitmap functions will still work, with the RED and BLUE channels reversed.
+        /// </summary>
+        /// <returns>true of successful, false if not successful (i.e. invalid bitmap, etc.)</returns>
+        bool SwapRedBlueInline();
+
 		bool CopyFrom(RawBitmap_t & stSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0});
 	//	bool Copyto(RawBitmap_t & stDest);
 		bool Copyto(RawBitmap_t & stDest, POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 });
@@ -936,11 +1057,27 @@ public:
 		int iTotalSize;
 		unsigned char * stMem;
 		Sage::RGBColor32 * stRGB;	// This is a map to sData in RGB form that can be referred to more easily.
+		RawBitmap32_t operator - ();      // Return RawBitmap32_t with -Height (for displaying bitmap upside-down)
+        unsigned char * operator * ();
+        SIZE GetSize();
+        bool isEmpty();
+        bool isInvalid() const;
+        bool isValid();
+        /// <summary>
+        /// Swaps red and blue channels.  This supports BGRA uses, such as GPU uses or libraries and other routines that may  look for BGRA
+        /// <para></para>
+        /// The CBitmap32 (and RawBitmap32_t) types are RGBA in memory, unless converted with this function to BGR.
+        /// <para></para>
+        /// --> Note: Once converted, all bitmap functions will still work, with the RED and BLUE channels reversed.
+        /// </summary>
+        /// <returns>true of successful, false if not successful (i.e. invalid bitmap, etc.)</returns>
+        bool SwapRedBlueInline();
 
 		void Delete();
 		void Clean();	// Use carefully
 		bool ClearBitmap();
 		int Init();
+        static RawBitmap32_t CreateFrom(CBitmap & cBitmap);
 	};
 	enum class ButtonType
 	{
@@ -1241,6 +1378,7 @@ enum class ControlSubStyles
 	[[nodiscard]] RawBitmap_t CreateBitmap(SIZE szSize,bool * bError = nullptr);
 	[[nodiscard]] RawBitmap32_t CreateBitmap32(unsigned char * sBitmapMem,int iWidth,int iHeight);
 	[[nodiscard]] RawBitmap32_t CreateBitmap32(int iWidth,int iHeight,bool * bError = nullptr);
+	[[nodiscard]] RawBitmap32_t CreateBitmap32(SIZE szSize,bool * bError = nullptr);
 	bool CreateBitmap(int iWidth,int iHeight,RawBitmap_t & stBitmap);
 	bool CreateBitmap(RawBitmap_t & stSource,RawBitmap_t & stBitmap);
 	[[nodiscard]] RawBitmap_t CreateBitmap(RawBitmap_t & stSource,bool * bSuccess = nullptr);
@@ -1313,6 +1451,12 @@ enum class ControlSubStyles
     // In a Console Mode program, the error message is written to the console window.
     //
     void ErrorExit(const char * sErrMsg,int iExitCode = -1);
+
+    /// <summary>
+    /// Local function to return integer converted to ascii in decimal (base 10) format. 
+    /// </summary>
+    /// <returns></returns>
+    const char * itoadec(int iNumber, char * sOutput); 
 
     // ErrorExit() -- Used to exit program quickly with an optional message.
     //
@@ -1470,6 +1614,14 @@ enum class ControlSubStyles
     //
     struct WinConio
     {
+        WinConio & operator << (const char * x)        ;
+        WinConio & operator << (char x)                ;
+        WinConio & operator << (std::string & cs)      ;
+        WinConio & operator << (CString & cs)          ;
+        WinConio & operator << (int x)                 ;
+        WinConio & operator << (unsigned int x)        ;
+        WinConio & operator << (float x)               ;
+        WinConio & operator << (double x)              ;
         /// <summary>
         /// Write text to the console window.  "{}"-style modifiers may be used, such as conio.Write("This {r}{u}word{/}{/} is red and underlined"); 
         /// <para></para>&#160;&#160;&#160;You can also specify X,Y coordinates beforehand, such as:
@@ -1960,6 +2112,8 @@ enum class ControlSubStyles
 
     extern SageboxInit m_stSageInit;       // Set the default.
 
+
 }	// namespace Sage
+#include "SageColors.h"     // Must be included after Sage.H 
 #pragma warning(pop)
 #endif // __CSage_H__

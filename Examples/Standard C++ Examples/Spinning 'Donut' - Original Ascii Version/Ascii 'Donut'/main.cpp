@@ -85,7 +85,7 @@ QuickSandbox(AsciiDonut)        // Create AsciiDonut class
 
 void AsciiDonut::Main()
 {
-    Cls("skyBluedark","skyblue");                               // Clear screen with a gradient, using stock colors. 
+    Cls(SageColor::SkyBlueDark,SageColor::SkyBlue);             // Clear screen with a gradient, using stock colors. 
 
     const char * sFont = "Courier New,14";                      // Set the Ascii Font we want to use (i.e. non-proportional font)
     CPoint pTermSize = CPoint( 80, 25 ) * getCharSize(sFont);   // Get an (80x25) window for our terminal, sized to our font
@@ -99,7 +99,7 @@ void AsciiDonut::Main()
     // Font() Sets the font we've chosen
 
     auto& AsciiWindow = ChildWindow(0,40,pTermSize.x,pTermSize.y,CenterX() | AddBorder() | Font(sFont));
-    AsciiWindow.Cls("black");       // Clear the window to black
+    AsciiWindow.Cls(SageColor::Black);     
 
     // Set the background to Opaque since we're not clearing the screen and overwriting previous characters.
     // The default is that characters are transparent and won't fill in the background.
@@ -118,7 +118,7 @@ void AsciiDonut::Main()
     // Create another text widget.  This updates the count, and also redraws the parent's background (which is a gradient),
     // so we don't have to worry about any of it. (the 00000000 is to reserve needed space)
 
-    auto& cText = TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor("yellow") | Font("Arial,14") | Transparent());
+    auto& cText = TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor(SageColor::Yellow) | Font("Arial,14") | Transparent());
     
     int iCount = 0;
 
@@ -175,6 +175,7 @@ void AsciiDonut::Main()
         // See if the close button was pressed or the window is closing.
 
         if (CloseButton.Pressed() || WindowClosing()) break;
+        // CSagebox::VsyncWait(); // Add this line to slow down the display to 60fps (or whatever the monitor refresh rate)
     }
 }
 

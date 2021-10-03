@@ -91,6 +91,10 @@ public:
 
 	CComboBox();
 
+    CComboBox(CComboBox && p) noexcept
+    {
+        int gg = 1;
+    }
 	// Show the List Box Window (i.e. make it visible)
 	//
 	bool Show(bool bShow = true);
@@ -264,6 +268,7 @@ public:
 	bool SetSelection(int iSelection);
 	bool AddItem(const char * sItem);
     bool AddItems(const char * * sItems); 
+    bool AddItems(const char * sItems); 
     bool AddItems(int iNumItems,const char * * sItems); 
 
 	bool ItemSelected(int & iItem,bool bPeek = true);
