@@ -45,7 +45,7 @@
 //
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 
 // We want to include the Dial Widget.  Rather than including the library in the project
 // configuration, we can just include it here.  The Project configuration already has the correct
@@ -66,7 +66,7 @@
 
 int main()
 {    
-   auto & cWin = CSagebox::AutoWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+   auto & cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
                                            
     // Create a Dial Widget and put it at (25,25) in the window.
     // Normally, I wouldn't use magic numbers and assign these values,

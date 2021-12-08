@@ -196,6 +196,9 @@ template <class _t>
         //
         // **** Use this function BEFORE accessing the next pointer to ensure memory is available ****
         //
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
         // Input:  iEval        --> Current place to evaluate (i.e. an index into the array)
         //         iThreshold   --> Threshold within the current block that should cause a reallocation.
         //                          if iThreshold is omitted, it iBlockSize is used in its place.
@@ -280,7 +283,13 @@ template <class _t>
         //
         //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
         //
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
         __forceinline _t * SetMaxBlock(int iEval,int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlock(iEval,iBlockSize,iBlockSize,bClearNewBlock); }
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
         __forceinline _t * SetMaxBlock(int iBlockSize,bool bClearNewBlock = false) { return SetMaxBlock(GetNumitems(),iBlockSize,iBlockSize,bClearNewBlock); }
 
         // SetMaxBlockFast() -- Inlined version of SetMaxBlock() for when speed is an issue
@@ -315,6 +324,9 @@ template <class _t>
         //
         //           If the current memory exceeds the current place + the memory needed, no memory will be allocated.
         //
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
       __forceinline _t * SetMaxBlockFast(int iEval,int iThreshold,int iBlockSize,bool bClearNewBlock = false)
         {
            int iEvalMod = iEval % iBlockSize; 
@@ -384,6 +396,9 @@ template <class _t>
 		//
 		// ResizeMax() returns the current pointer to the allocated memory, or nullptr if the allocation failed.
 		//
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
         // Note:  if the re-allocation fails, all memory is invalid and a nullptr is returned.  Check the return value for success or failure.
         //
 		__forceinline _t * ResizeMax(int iNumElements)
@@ -411,9 +426,12 @@ template <class _t>
         // 
         // This function will set the memory required, reducing or growing stored memory.  ResizeMax() will only size upwards and will not reduce memory.
         //
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
+        // 
 		__forceinline _t * SetMemSize(int iNumElements)
 		{
-            if (iNumElements <= 0) return pMem;
+             if (iNumElements <= 0) return pMem;
             if (pMem) free(pMem);
 			pMem = (_t *) malloc(iNumElements*sizeof(_t)); 
             iSize = pMem ? iNumElements : 0;
@@ -423,6 +441,9 @@ template <class _t>
        // This will perform a new allocation and will not re-allocate data, but will only grow memory, and will not reduce the size of the current memory.
        // This is useful in establishing a maximum buffer size that can vary, without reducing the maximum value seen.
         // Any current data is lost when using this function.  Use ResizeMax() to reallocate memory and keep the same memory. 
+        // 
+        // --> This sets the number of elements of the type in Mem<>, not the actual memory size.
+        // --> Memory size is <size of type>*number of elements requested
         // 
         // Use SetMemSize() to set a specific memory size, which will grow or shrink memory used. 
         //

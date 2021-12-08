@@ -11,7 +11,7 @@
 // Note: This program works as a Console Mode or Pure Windows program, depending on the Build Configuration.
 //
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include "CVisualSort.h"
 
 int main(int argc,char * argv[])
@@ -27,7 +27,7 @@ int main(int argc,char * argv[])
     // that we can determine this before we create the CSagebox object, whichis createed
     // in CVisualSort::main().
 
-    bool bConsoleApp = CSageBox::isConsoleApp();
+    bool bConsoleApp = SageBox::isConsoleApp();
 
     CVisualSort cSort;
     cSort.main(bConsoleApp);    

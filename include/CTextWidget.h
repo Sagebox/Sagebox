@@ -83,12 +83,14 @@ private:
 		None,
 	};
 private:
+    static constexpr    int kMaxPrintfStringSize = 2048;    // Max size of supported printf() strings.
+    Mem<char>           m_sPrintfString;                    // Used for printf(); allocated on demand.
 	bool				m_bWriteShadow = false;
 	static int			m_iRegistryValue;
 	static CTextWidget	m_cEmpty;
 
 	CString			* m_csString;
-	CBitmap		* m_cParentBg		= nullptr;
+	CBitmap		    * m_cParentBg		= nullptr;
 	void			* m_pOrgObject		= nullptr;
 	bool			  m_bTransparent	= false;
 	WinJustX		  m_eWinJustX		= WinJustX::None;
@@ -177,6 +179,19 @@ public:
     POINT GetLocation();
 	Sage::CWidget * GetWidgetObj() { return m_cWidget; }
 	static CTextWidget & GetEmptyObject() { return m_cEmpty; }
+
+    /// <summary>
+    /// Prints to the Text window in the same manner as printf(). 
+    /// </summary>
+    void printf(const char * Format,...);
+
+    /// <summary>
+    /// Prints to the Text window in the same manner as printf(). 
+    /// <para></para>
+    /// --> __printf() is the same as printf() and is currently used for test code.  Use printf() instead.
+    /// </summary>
+     void __printf(const char * Format,...) ;
+
 	// Basic functions that all Widgets need.  These are TBD and will probably
 	// be moved to a separate class such as CWidget so processes can get the information
 	// without explicitly knowing the type of control.

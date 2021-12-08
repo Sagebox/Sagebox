@@ -16,10 +16,10 @@
 #if !defined(_Point3D_h_)
 #define _Point3D_h_ 
 
-#include "CDavinci.h"		// Include Davinci references
+#include "Sage.h"		// Include Davinci references
 #include <cmath>
 #include "SimdClass.h"
-
+#include "CPoint.h"
 using namespace std;
 //using namespace SageWin;
 

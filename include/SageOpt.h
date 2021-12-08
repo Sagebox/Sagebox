@@ -243,9 +243,13 @@ public:
 	optRet IconStop()		;
 	optRet IconNone()		;
 	optRet NoCancel();
+	optRet EmptyOk();
+	optRet NoBlanks();
 	optRet CancelOk();
 	optRet Modal();
 	optRet NoAutoUpdate();
+    optRet QuickCpp();
+    optRet DebugMode();
 	optRet AutoUpdate(int iAutoUpdate);
 	optRet CenterWin();
 	optRet CenterDesktop();
@@ -890,6 +894,8 @@ namespace opt
 	/// <returns></returns>
 	static optRet NoCancel() { return defOpt.NoCancel(); }  ;	
 
+    static optRet EmptyOk() { return defOpt.EmptyOk(); };
+    static optRet NoBlanks() { return defOpt.NoBlanks(); } 
 	// This allows the user to Cancel certain controls.  
 	// This used when creating a PleaseWaitWindow() to allow the user to cancel, which can then be 
 	// detected by polling the please wait window.
@@ -905,6 +911,32 @@ namespace opt
 	//
 	static optRet Modal() { return defOpt.Modal(); }  ;	
 
+	/// <summary>
+	/// Sets Quick C++ mode for Sagebox, for easier development and more automatic processes, such as updating windows. 
+    /// <para></para>
+    /// --> See Sagebox::SetQuickCpp() for more information
+    /// <para></para>
+    /// This mode initializes the debug window as hidden, so that the program can be terminated easier (moving the mouse to the upper-right corner activates the debug window),
+    /// sets timer-based updates for all windows (every 20ms), turns on the word-wrap and
+    /// allows control-C to terminate the program in any window.
+    /// <para></para>
+    /// --> Note this is a global setting and is meant to be used only once in the initial Sagebox::NewWindow() creation.  Sagebox::SetQuickCpp() can be called directly to perform the same function.
+	/// </summary>
+	/// <returns></returns>
+	static optRet QuickCpp() { return defOpt.QuickCpp(); }  ;	
+
+	/// <summary>
+	/// Sets Debug mode for Sagebox, for easier development and debugging, such as updating windows. 
+    /// <para></para>
+    /// --> See Sagebox::SetDebugMode() for more information
+    /// <para></para>
+    /// This mode initializes the debug window as hidden  (moving the mouse to the upper-right corner activates the debug window), and allows control-C to terminate the program in any window.
+    /// <para></para>
+    /// --> Note this is a global setting and is meant to be used only once in the initial Sagebox::NewWindow() creation.  Sagebox::SetDebugMode() can be called directly to perform the same function.
+	/// </summary>
+	/// <returns></returns>
+    static optRet DebugMode() { return defOpt.DebugMode(); }  ;	
+    
 	// Sets AutoUpdate to False when creating a Window.  When AutoUpdate = False, you must
 	// update the window when appropriate.  
 	//
@@ -919,6 +951,16 @@ namespace opt
     /// <param name="eUpdateType"> = Auto Update Type</param>
     /// <returns></returns>
     static optRet AutoUpdate(Sage::AutoUpdateType eUpdateType) { return defOpt.AutoUpdate((int) eUpdateType); };
+
+    /// <summary>
+    /// Sets the AutoUpdate Type to update on a timer so that the update for the window is automatic (i.e. Update() does not need to be called)
+    /// <para></para>
+    /// This is the same as AutoUpdate(AutoUpdateType::OnTime), which will update the screen every 20ms or so.
+    /// <para></para>
+    /// --> Timer-based updates are for general-purpose usage. Update() can also be used for faster/immediate updates() when desired, even when the window is being updated via a timer.
+    /// </summary>
+    /// <returns></returns>
+    static optRet WinTimerUpdate() { return defOpt.AutoUpdate((int) Sage::AutoUpdateType::OnTime); };
 
 	// When Creating a Dialog (i.e. dialog.Info(), etc.) or Dialog Window, CenterWindow()
 	// causes the newly created window to be centered in the parent window creating it. 

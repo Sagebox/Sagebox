@@ -2,7 +2,7 @@
 // File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // -------------------------
 // 10-Line Lissajous Program
@@ -27,7 +27,7 @@
 //
 int main()
 {
-    auto& cWin = CSagebox::AutoWindow(CSize(850,850), Title("10-Line Liassjous")); 
+    auto& cWin = Sagebox::NewWindow(SIZE{850,850}, "Sagebox - 10-Line Liassjous",InnerSize()); 
 
     double fFreq = 3.01;               // Get initial frequency multiplier
 
@@ -44,7 +44,7 @@ int main()
             // Use the CfPoint structure for some easy point-based math.
 
             CfPoint pLoc = { cos(-1.57+i/100*fFreq), sin(-1.57+i/100) };
-            auto rgbColor = CTools::HSLtoRGB({fmod(i/315,1),1,.5});
+            auto rgbColor = SageTools::HSLtoRGB({fmod(i/315,1),1,.5});
             cWin.DrawCircle(pLoc*400+425,2,rgbColor);
         }
     }

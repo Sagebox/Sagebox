@@ -31,12 +31,12 @@
 // This is a pure Windows program without a Console Mode. 
 //
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 #include <iostream>     // needed for std::cout
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,_In_ LPSTR lpCmdLineA,_In_ int nCmdShow)
 {
-    auto& cWin = CSagebox::AutoWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+    auto& cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Set Window title. This is optional. Here, it is helpful to have a display of
     // the differences with version.  CString() is used in Sagebox as stack-and-heap-based
@@ -62,7 +62,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // Draw a red circle to show how we can do it.  Instead of GetColor("Red)", rgb value
     // {255,0,0}, a Windows COLORREF, or RgbColor type value may also be used. 
 
-    cWin.DrawCircle(300,200,100,SageColor::Red);  
+    cWin.DrawCircle(300,200,100,PanColor::Red);  
 
     return cWin.ExitButton();   // We use the exit button (or win.WaitforClose()) to prevent the program from 
                                 // terminating and destroying the window since we don't have any other user input.

@@ -73,7 +73,7 @@
 // SageBox is free for personal use. 
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // Class Declaration
 //
@@ -211,8 +211,7 @@ int CMandelbrot::main()
 {
     // Create Sagebox and Main Mandelbrot Window
 
-    CSageBox cSageBox("SageBox: Mandelbrot Smooth Color and 3-D Depth");                        // Create SageBox and program title
-    cWin = &cSageBox.NewWindow(100,100,szWinSize.cx,szWinSize.cy,InnerSize() | Resizeable());   // Create Mandelbrot window
+    cWin = &Sagebox::NewWindow(100,100,szWinSize.cx,szWinSize.cy,"SageBox: Mandelbrot Smooth Color and 3-D Depth",InnerSize() | Resizeable());   // Create Mandelbrot window
                                                                                                 // Resizeable() allows the user to resize it with the mouse/maximize
     // Set the canvas size so we can resize the window with the mouse.
     // Otherwise, the window cannot be resized -- resizing can be turned off by adding "false" to
@@ -277,7 +276,7 @@ int CMandelbrot::main()
      //
      // This can also be extended to abort on any control movement that would require a redraw, speeding up the program.
 
-     bool bAbortSignal;
+     bool bAbortSignal{};
 
      cWin->SetSignal(SignalEvents::WindowClose,bAbortSignal); 
 

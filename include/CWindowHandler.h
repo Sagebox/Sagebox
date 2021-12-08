@@ -60,7 +60,14 @@ protected:
     static bool       m_bHandlerTimeout;        // Used for debugging to see if we have any case where the destructor encountered a lengthy wait 
                                                 // to come out of the handler (i.e. m_bInHandler == true).  This looks for bugs, but also 
                                                 // a potential case where some unseen lock issue occurs. 
-    CWindow        * m_cWin;
+    CWindow        * m_cWin;                    // $$ Warning -- (This is an internal Sagebox development) note, and not applicable to creating Window Handlers):
+                                                //   Use this carefully in CWindow or as a <Window)>->m_cWin reference, as this appears as a value in CWindow as CWindow::m_cWin, which can 
+                                                //    easily be accidentally used as a self-reference, when it can be nullptr at any time. 
+                                                //    $$ Look at changing this to a function call (i.e. GetWindow()) to avoid problems. 
+                                                //    $$ Note/Warning: This issue can easily pass testing because it is not always nullptr, so anything that uses it
+                                                //       must be checked against a case where a window handler has not been installed.
+                                                //    $$ That, or initialize this in CWindow with its own reference; however, this is TBD since the effect of doing so is
+                                                //       unknown in terms of how it may affect a situation where a Window handler is being installed by the user.  This *should* be ok, but it needs to be tested.
     virtual void HandlerTimeOut() { };          // This is just for debugging to see if there is ever a timeout.  Used for testing.
 public:
     virtual void Init(void * pClassInfo)                                { } // Set info to your class type, i.e. MyClassPtr = (MyClass *) pClassInfo, or MyClassRef = & (MyCLass *) pClassInfo

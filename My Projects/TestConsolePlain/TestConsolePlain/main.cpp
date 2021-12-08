@@ -20,21 +20,21 @@
 
 // Change paths to where Sagebox is located (the paths used are the ones on my system)
 
-#include "c:\SageBox\git\include\CSagebox.h"
+#include "c:\SageBox\git\include\Sagebox.h"
 #include <iostream>
 
 #pragma comment(lib,"c:\\Sagebox\\git\\lib\\x32\\Sagebox.lib")
 
 int main()
 {
-   auto& cWin = CSagebox::AutoWindow();
+   auto& cWin = Sagebox::NewWindow();
 
-    cWin.DrawCircle(400,400,100,SageColor::Red);
+    cWin.DrawCircle(400,400,100,PanColor::Red);
 
-    int iValue = cWin.GetInteger("Enter a Number...",Range(50,100) | NoCancel());
+    int iValue = cWin.GetInteger("Enter a Number...",Range(50,500) | NoCancel());
     
     std::cout << "Number is " << iValue << "\n";
 
-    cWin.ExitButton();
+    return cWin.ExitButton();   // ExitButton() returns 0
 
 }

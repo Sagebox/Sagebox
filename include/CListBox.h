@@ -266,6 +266,19 @@ public:
 	bool ItemSelected(bool bPeek = true);
 	int GetItemSelected();
 
+    /// <summary>
+    /// Returns item highlighted in the listbox (for listboxes that do not allow multiple items to be selected).
+    /// <para></para>
+    /// This may not be the same value as the GetItemSelected(), which returns the item what was double-clicked.  The 
+    /// Highlighted item may have changed since the clicke occurred.
+    /// <para></para>
+    /// --> If no value is highlighted, -1 is returned, except for Quick Dialog Listboxes, where 0 is returned when no value is highlighted.
+    /// <para></para>
+    /// --> Use GetItemSelected() to obtain the value the user clicked -- use ItemSelected() to first determine if the user has selected the item.
+    /// </summary>
+    /// <returns>Currently highlighted selection (-1 if no value is highlighted, or 0 for Quick Dialog listboxes).</returns>
+    int GetItemHighlighted();
+
 	// virtual destructor -- allows overloaded objects cast as CListBox to delete properly.
 	//
 	virtual ~CListBox();

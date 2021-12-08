@@ -33,11 +33,11 @@
 // 
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 
 int main()
 {
-   auto& cWin = CSagebox::AutoWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+   auto& cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Print a message out to the window.  
 
@@ -73,7 +73,7 @@ int main()
         // win.GetColor() is used, but an RGB color can also be put in place, either directly, with 
         // Windows COLORREF type of RgbColor type. -- for example, using "{255,0,0}" is the same as win.GetColor("Red");
 
-        if (cWin.MouseClicked(pMouse)) cWin.DrawRectangle(pMouse.x-50,pMouse.y-50,100,100,SageColor::Red);
+        if (cWin.MouseClicked(pMouse)) cWin.DrawRectangle(pMouse.x-50,pMouse.y-50,100,100,PanColor::Red);
     }
 
     // We don't need to hold up the exit, since the user closed the window manually.

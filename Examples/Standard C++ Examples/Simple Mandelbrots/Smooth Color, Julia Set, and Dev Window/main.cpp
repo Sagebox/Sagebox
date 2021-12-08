@@ -76,7 +76,7 @@
 // SageBox is free for personal use. 
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // Color Table based on Wikipedia Mandelbrot Colors
 
@@ -237,11 +237,8 @@ void DrawMandelbrot()
 
 int main()
 {
-    // Create SageBox and SageBox Window
-
-    CSageBox cSageBox("SageBox: Mandelbrot Smooth Color and 3-D Depth");
     
-    cWin = &cSageBox.NewWindow(100,100,cWinSize.x,cWinSize.y,InnerSize());
+    cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"SageBox: Mandelbrot Smooth Color and 3-D Depth",InnerSize());
 
     CreateColorTable();     // Initialize Color Table used for smooth coloring
     DrawMandelbrot();       // Draw initial Mandelbrot before entering event loop

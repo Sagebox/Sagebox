@@ -51,19 +51,17 @@
 //      and updating ourselves makes the update much more uniform and avoids flashing and shearing when updates hit while we're drawing the
 //      window.
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CColorWheelWidget.h"
 
 int main()
 {
-    CSageBox cSageBox("Multiple Color Widget Example with the Color Wheel Widget #2"); 
-
     // Create our Window.  Use NoAutoUpdate() to turn off auto updates of the window, and InnerSize()
     // to get create the window 1080x800 on the canvas (otherwise the window would be 1080x800, including the frame)
 
-    auto& cWin = cSageBox.NewWindow(100,100,1080,800,NoAutoUpdate() | InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,1080,800,"Multiple Color Widget Example with the Color Wheel Widget #2",NoAutoUpdate() | InnerSize());
     
-    cWin.Cls(SageColor::Black,SageColor::DarkBlue);        // Set an initial background gradient from black to blue
+    cWin.Cls(PanColor::RoyalBlue,PanColor::DarkBlue);        // Set an initial background gradient from black to blue
 
 
     constexpr int iX = 0;            // Set initial points (we don't really need these, but they are leftover
@@ -91,9 +89,9 @@ int main()
     // Set some initial values for each rectangle (and backdrop).  
     // These are basically chosen at random
 
-    cColor1.SetRGBValue(SageColor::Blue);    
+    cColor1.SetRGBValue(PanColor::Blue);    
     cColor2.SetRGBValue({15,200,60});               // Kind of a green -- shows we can use RGB values as well as known text-based values
-    cColor3.SetRGBValue(SageColor::Purple);
+    cColor3.SetRGBValue(PanColor::Purple);
 
 
     constexpr RGBColor_t rgbBlack = { 0,0,0 };      // Get an easy way to refer to an RGB black color

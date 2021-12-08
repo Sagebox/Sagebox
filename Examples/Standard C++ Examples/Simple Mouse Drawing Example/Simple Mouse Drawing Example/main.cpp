@@ -24,7 +24,7 @@
 //    Just draw on the screen!  The colors change automatically.  Right-Click the mouse to clear the screen, and use the Mouse Wheel to increase the
 //    thickness of the lines drawn.
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 int main()
 {
@@ -32,8 +32,6 @@ int main()
     auto& cWin = cSageBox.NewWindow();
 
     // Cycle through colors for each time the mouse is lifted and then pressed again.
-
-    RgbColor rgbColors[6] = { SageColor::White, SageColor::Red, SageColor::Green, SageColor::Cyan, SageColor::LightPurple, SageColor::Yellow };
     
     int iColorIndex     = 0;    // Initial Color Index
     int iPenThickness   = 4;    // Initial Pen Thickness
@@ -42,7 +40,7 @@ int main()
 
     cWin.SetPenThickness(iPenThickness);    // Set the initial pen thickness. 
 
-    cWin.Cls(SageColor::Black,SageColor::DarkBlue);            // Clear the screen with a gradient 
+    cWin.Cls(PanColor::Black,PanColor::DarkBlue);            // Clear the screen with a gradient 
 
     // Create a text Widget to display information and the pen thickness.
     //
@@ -70,13 +68,9 @@ int main()
 
     while(cWin.GetEvent())
     {
-        POINT pMouse,pLastMouse;  
-
         // If the mouse is clicked, consider this the starting point for the mouse, since it was previously not pressed.
 
-        if (cWin.MouseClicked(pLastMouse))
-            rgbCurColor = rgbColors[iColorIndex++ % 6];    // Get the next color in the index
-
+        if (cWin.MouseClicked()) rgbCurColor = RgbColor::fromHSL(rand() % 360);   // Get a random color at full saturation
         if (cWin.MouseRButtonClicked()) cWin.Cls();         // If the Right Mouse Buttton was clicked, clear the screen
 
         // If the MouseWheel was moved, then increase or decrease the pen thickness depending on the direction.
@@ -94,11 +88,7 @@ int main()
         // If the mouse was moved and the mouse button is down, draw a line from the last mouse
         // position to the current one.
 
-        if (cWin.MouseMoved(pMouse) && cWin.MouseButtonDown())
-        {
-            cWin.DrawLine(pLastMouse.x,pLastMouse.y,pMouse.x,pMouse.y,rgbCurColor);
-            pLastMouse = pMouse;    // Set the new last mouse position
-        }
+        if (cWin.MouseDragEvent(true)) cWin.DrawLine(cWin.MouseDragPrev(),cWin.MouseDragLast(),rgbCurColor);
     }
     return 0;
 }

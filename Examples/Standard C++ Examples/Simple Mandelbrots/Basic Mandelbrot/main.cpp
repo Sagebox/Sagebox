@@ -72,7 +72,7 @@
 // SageBox is free for personal use. 
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include <ccomplex>
 
 int main()
@@ -102,11 +102,8 @@ int main()
         { 255, 170, 0   }, { 204, 128, 0   }, { 153, 87, 0    }, { 106, 52, 3    },
     }; 
 
-    // Create SageBox and SageBox Window
-
-    CSageBox cSageBox("Basic Mandelbrot (basic, no frills, standard C++ version)");
     
-    auto cWin = &cSageBox.NewWindow(100,100,cWinSize.x,cWinSize.y,InnerSize());
+    auto cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"Basic Mandelbrot (basic, no frills, standard C++ version)",InnerSize());
 
     // note: AutoUpdate is on, so the window updates automatically every 10-20ms. When ExitButton() is called, it 
     // performs any pending updates finishing any part of the Mandelbrot output that may not have updated to the window

@@ -114,12 +114,37 @@ public:
 	__forceinline CString & operator >> (double x2)			    { iPlace = 0; AddDouble(x2); return((CString &) *this); }
 
 	__forceinline char * operator * () const { return (char *) s; };
+    
+	/// <summary>
+	/// Returns the const char * address of the CString Data.
+    /// <para></para>
+    /// This is always guaranteed to return a valid address.  If there is not data in the string, the address
+    /// returns a nullptr.
+	/// </summary>
+	/// <returns>const char * address of the CString Data</returns>
 	__forceinline const char * str() { return s; };
+
+	/// <summary>
+	/// Returns the  char * address of the CString Data. Se cc_str() to return const char * data
+    /// <para></para>
+    /// This is always guaranteed to return a valid address.  If there is not data in the string, the address
+    /// returns a nullptr.
+	/// </summary>
+	/// <returns> char * address of the CString Data</returns>
 	__forceinline char * c_str() { return s; };
+
+	/// <summary>
+	/// Returns the const char * address of the CString Data.
+    /// <para></para>
+    /// This is always guaranteed to return a valid address.  If there is not data in the string, the address
+    /// returns a nullptr.
+	/// </summary>
+	/// <returns>const char * address of the CString Data</returns>
 	__forceinline const char * cc_str() { return (const char *)  s; };
   // CStringW w_str();
 	__forceinline char * GetBuffer() { return s; };
 	__forceinline bool isEmpty(){ return  s && *s ? false : true; };
+    __forceinline std::string toStdString() { return (std::string) *this; };
 
     /// <summary>
     /// Returns whether CString object is valid or not.  If a memory allocation error occurs, the string will be reset to 

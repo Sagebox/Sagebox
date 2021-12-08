@@ -38,13 +38,13 @@
 //  The source code for the Dial Widget will be released at a later date.
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "Widgets\include\CDialWidget.h"
 
 int main()
 {
-    CSageBox cSageBox("SageBox - Dial Widget Example");
-    auto& cWin = cSageBox.NewWindow(100,100,550,270,InnerSize());
+    
+    auto& cWin = Sagebox::NewWindow(100,100,550,270,"Sagebox - Dial Widget Example",InnerSize());
     cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                              // Clear screen with a gradient of two stock colors
 
     CDialWidget cDial(&cWin,10,30);                                // Give the dial our parent window and location to put it
@@ -70,7 +70,7 @@ int main()
     //        Transparent()         -- This allows the background of the Text widget to blend with the window's background, since it is a 
     //                                 gradient and not a solid color (i.e. it copies the parent window's background)
 
-    cWin.TextWidget(0,0,"Right-Click Mouse on Dial Face for Development Window and Options",Font("arial,12,bold") | TextColor(SageColor::Black) | JustTopCenter() | OffsetY(5)| Transparent());
+    cWin.TextWidget(0,0,"Right-Click Mouse on Dial Face for Development Window and Options",Font("arial,12,bold") | TextColor(PanColor::Cyan) | JustTopCenter() | OffsetY(5)| Transparent());
 
     // A Lambda to write the value, since we use it more than once (and it's too small to create a function),
     // once before we enter the main event loop, and then again when we get new dial values. 

@@ -21,18 +21,17 @@
 // In this case (spawning from the "Console Mode and Windows Only" project), you can run a Console Mode or Window mode program
 // in Win32 or Win64. Look at Build->Build Configurations to set the project configuration
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 
 // Use int main(int argc, char * argv[]) for canonical approach.  
 // When used as a Windows app, WinMain() transfers in these arguments.
 //
 int main()
 {
-    CSageBox cSageBox("Sagebox - Square Program");  // Open SageBox, titling program cSageBox() may also be used for no title 
-    auto &cWin = cSageBox.NewWindow(NoClose());     // Open a sample Window
-                                                    // NoClose() -- disallows window closing if the user presses the "X"/Windows close
-                                                    // button in the upper-right.  This allows us to put the Exit Button out (otherwise it would fall
-                                                    // through).  If we didn't do this we could also call cWin.ResetWindowClosing()
+    auto &cWin = Sagebox::NewWindow("Sagebox - Square Program",NoClose());      // Open a sample Window
+                                                                                // NoClose() -- disallows window closing if the user presses the "X"/Windows close
+                                                                                // button in the upper-right.  This allows us to put the Exit Button out (otherwise it would fall
+                                                                                // through).  If we didn't do this we could also call cWin.ResetWindowClosing()
 
     cWin.Cls(SageColor::SkyBlueDark,SageColor::SkyBlueLight);         // We can also do Cls({100,200,100}) (or similar) for RGB values rather than stock colors
 
@@ -71,9 +70,10 @@ int main()
     {
         // Put event-related things here, or use an event-driven system by subclassing the window to get events directly.
 
-        if (cWin.MouseClicked() || cWin.MouseDragEvent()) DrawRect(cWin.GetMousePos());
+        if (cWin.MouseDragEvent(true)) DrawRect(cWin.GetMousePos());
     }
 
-    cWin.ExitButton();      // Put a button at the bottom of the screen to inform the user we're done.
-                            // We could just exit, but its nice to know the program got our close-button click.
+    return cWin.ExitButton();       // Put a button at the bottom of the screen to inform the user we're done.
+                                    // We could just exit, but its nice to know the program got our close-button click.
+                                    // Exit Button() returns 0
 }

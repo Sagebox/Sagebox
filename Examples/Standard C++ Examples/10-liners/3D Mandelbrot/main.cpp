@@ -2,7 +2,7 @@
 // File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // ---------------------
 // 10-Line 3D-Mandelbrot
@@ -31,7 +31,7 @@ int main()
     // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
-    auto& cWin = CSagebox::AutoWindow(CSize(1300,1000)); 
+    auto& cWin = Sagebox::NewWindow(SIZE{1300,1000},"Sagebox - 3-D Mandelbrot",InnerSize()); 
     
     for (int i=-500;i<500;i++)
         for (int j=-900;j<400;j++)

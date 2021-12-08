@@ -121,7 +121,7 @@
 //      CSimpleDoc() is still under development.
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CCounter.h"
 #include "nn-texture.pgr2.h"
 #include "AboutSevenBitCounter.pgr2.h"
@@ -483,21 +483,17 @@ void CCounterNN::Go(CWindow & cWin)
 //
 int CCounterNN::main()
 {
-    // Create the main SageBox Object.
-    // Also add a program name to display in the window titles.
-    // Otherwise, we can juse use CSageBox cSageBox; for no title
-
-    CSageBox cSageBox("SageBox Neural Network Example: 7-Bit Counter");
+  
 
     // Get quick bitmap from a PGR container file (in this case stored as a .JPEG)
     // This can be used instead of opening the PGR container and extracting 
     // the file manually.
 
-    auto cBitmap = cSageBox.ReadPgrBitmap("Texture",sCounterTexture); 
+    auto cBitmap = Sagebox::ReadPgrBitmap("Texture",sCounterTexture); 
 
     // Create the Main Window for the 7-bit counter within the window that was passed to this function.
 
-    auto& cWin = cSageBox.NewWindow(10,10,1200,690,opt::InnerSize());
+    auto& cWin = SageBox::NewWindow(10,10,1200,690,"SageBox - Neural Network Example: 7-Bit Counter",opt::InnerSize());
 
     // ------------
     // Add the menu

@@ -44,10 +44,10 @@
 
 int main()
 {
-    auto & cWin = CSagebox::AutoWindow();                           // Since its a small app, create static Sagebox and Window at the same time.
+    auto & cWin = Sagebox::NewWindow();                            // Since its a small app, create static Sagebox and Window at the same time.
 
     SIZE RectSize = { 200,200 };                                    // Rectangle Size
-    auto RectPos  = ((CPoint) cWin.GetWindowSize() - RectSize)/2;    // Put Rectangle in center of window 
+    auto RectPos  = ((CPoint) cWin.GetWindowSize() - RectSize)/2;   // Put Rectangle in center of window 
                                                                     // Uses CPoint (a class-based version of POINT) to calculate placement.
   
     // Create a text Widget to give the user some information

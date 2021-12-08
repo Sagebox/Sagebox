@@ -41,12 +41,12 @@
 
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 #include "CColorSelector.h"
 
 int main()
 {
-    auto & cWin = CSagebox::AutoWindow(50,50,800,500,InnerSize());   // Since its a small app, create static Sagebox and Window at the same time.
+    auto & cWin = Sagebox::NewWindow(50,50,800,500,InnerSize());   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Start the color selector. Our Window object is passed in as the parent.
     //

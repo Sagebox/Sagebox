@@ -18,7 +18,7 @@
 #if !defined(_Calculator_H_)
 #define _Calculator_H_
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // Main Calculator Class
 //
@@ -53,8 +53,6 @@ private:
         About,
     };
 private:
-    CSageBox    * m_cSageBox    = nullptr;      // SageBox object.  Usually it isn't needed because a window is passed in, but 
-                                                // we want so we can create the main window ourselves.
     CWindow        * m_cWin     = nullptr;      // Window passed in to place the calculator
     CEditBox    * m_cEditBox    = nullptr;      // Edit Box for number entry
 
@@ -97,7 +95,7 @@ private:
     bool InitWindow();                                  // Set up Window, controls, buttons, etc.
     void Execute();                                     // Execute a function in a two-value operation (i.e. X * Y, etc.)
 public:
-    Calculator(CSageBox & cSageBox) { m_cSageBox = &cSageBox; }
+    Calculator() {}
     void Run();                                         // Run the calculator, returning when the user closes the window.
 };
 

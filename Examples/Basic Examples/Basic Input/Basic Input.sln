@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "4. 2-Item Dialog", "4. 2-It
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "5. 2 Items + Checkbox", "5. 2 Items + Checkbox\5. 2 Items + Checkbox.vcxproj", "{DAB9AF79-08E8-4EF4-94A0-C34026CD6055}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7. Console Mode + Validation", "7. Console Mode + Validation\7. Console Mode + Validation.vcxproj", "{5948148C-4A33-4EC3-99BD-EEA86B969E17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug Optimized|x64 = Debug Optimized|x64
@@ -105,6 +107,22 @@ Global
 		{DAB9AF79-08E8-4EF4-94A0-C34026CD6055}.Windows Debug|x64.Build.0 = Windows Debug|x64
 		{DAB9AF79-08E8-4EF4-94A0-C34026CD6055}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
 		{DAB9AF79-08E8-4EF4-94A0-C34026CD6055}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug|x64.ActiveCfg = Debug|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug|x64.Build.0 = Debug|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug|x86.ActiveCfg = Debug|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Debug|x86.Build.0 = Debug|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
+		{5948148C-4A33-4EC3-99BD-EEA86B969E17}.Windows Debug|x86.Build.0 = Windows Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

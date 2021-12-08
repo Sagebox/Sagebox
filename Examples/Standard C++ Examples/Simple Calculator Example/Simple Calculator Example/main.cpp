@@ -10,7 +10,7 @@
 // See Calculator.cpp for more information and documentation
 //
 // 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "Calculator.h"
 
 int main()
@@ -29,9 +29,8 @@ int main()
 	// between the Window Menu and Display graphic -- See notes in Calculator::InitWindow() for 
 	// more information
 
-	CSageBox cSageBox("SageBox -- Simple Calculator Example"); 
-	Calculator calc(cSageBox);		// Instantiate Calculator
-	calc.Run();						// Run it (i.e. it's main() function)
+	Calculator calc;		// Instantiate Calculator
+	calc.Run();				// Run it (i.e. it's main() function)
 	return 0;
 
 }

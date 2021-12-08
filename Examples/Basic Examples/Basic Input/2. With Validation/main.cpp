@@ -37,18 +37,18 @@
 //      5.     Sagebox-Based Two Items and a Checkbox       -- Adds a checkbox to the previous example to select filled/non-filled ellipse. 
 //
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 
 // ** Try entering values out of range (i.e. -10, 500, etc.)
 
 int main()
 {   
-    auto &cWin = CSageBox::AutoWindow();    // It's a simple app so we can just create Sagebox and the Window together.
+    auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
                            
     constexpr int iRadiusMin = 1;
-    constexpr int iRadiusMax = 100;
+    constexpr int iRadiusMax = 400;
 
-    RgbColor rgbColor = SageColor::Red; // We could use { 255,0,0 }
+    RgbColor rgbColor = PanColor::Red; // We could use { 255,0,0 }
                                         // We can also use a standard Windows COLORREF RGB(255,0,0); 
 
     int iRadius1, iRadius2;
@@ -76,3 +76,4 @@ int main()
     cWin.ExitButton();   // Now we really need an ExitButton() or WaitforClose() (or some method to pause exit),
                         // because the program is done, and everything will close on exit. 
 }
+

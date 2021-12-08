@@ -31,27 +31,23 @@
 //
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
-#include "CSagebox.h"
+#include "Sagebox.h"
 #include "..\Widgets\include\CLCDDisplayWidget.h"     // Include the LCD Widget file
 
 int main()
 {
-    auto & cWin = CSagebox::AutoWindow();   // Since its a small app, create static Sagebox and Window at the same time. 
+    auto & cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time. 
 
     // Bring up the LCD Widget.  Send in our Window (&cWin as the parent)
     //
     // Put it at (50,50) with a value of 1234
    
-    CLcdDisplayWidget cLcd(&cWin,50,50,1234); 
+    CLcdDisplayWidget cLcd(&cWin,50,50); 
 
     // Count until the user presses a dev button to stop the program.
 
     auto& cStopButton   = cWin.DevButton("Stop Counting");      // A quick way of creating development controls
                                                                 // with just one line of code.
-
-    cWin.Show();     // We need to show the window here because it is initially hidden, and we haven't done any output to it, 
-                    // and it won't show until we do.  The LCD widget doesn't need the window to be showing when it is used. 
-
     int iCount = 0;
 
     while (!cStopButton.Pressed() && !cWin.WindowClosing())
@@ -64,5 +60,5 @@ int main()
 
     // Put cLcd.UpdateLast() when cLcd.FastMode() is used.
 
-    cWin.ExitButton();   // Put up a button on the bottom of the window so we know we got the stop button message.
+    return cWin.ExitButton();   // Put up a button on the bottom of the window so we know we got the stop button message.
 }

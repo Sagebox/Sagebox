@@ -6,7 +6,7 @@
 // <functional> is included for the std::function reference, since I couldn't use auto because DrawTree is recursive
 //
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include <functional>
 
 // ------------------------------
@@ -54,7 +54,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len)
     fDrawTree DrawTree = [&](Point3D_t & sp, double line_len, double a,  double rg,double fDepth)
     {
         auto r = Point3D_t{0,-line_len}.RotateZ(a += rg *_ang) + sp;
-        cWin.DrawLine(sp,r,CTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
+        cWin.DrawLine(sp,r,SageTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
 	    for (int i=0;i<2;i++) if (fDepth < 12) DrawTree(r, line_len*.75, a, i*2-1,fDepth+1 );
     };
 
@@ -71,7 +71,7 @@ int main( int argc, char* argv[] )
     // we don't use it, we can just get a window.  The CSagebox object can be retreived with 
     // CSagbox::GetStaticSagebox()
     //
-    auto& cWin = CSagebox::AutoWindow(CSize(1300,900),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::DarkBlue)); 
+    auto& cWin = Sagebox::NewWindow(SIZE{1300,900},"Sagebox - Fractal Tree",bgGradient(PanColor::Black,PanColor::DarkBlue)); 
     FractalTree(cWin,cWin.GetWindowSize(),24*3.14159/180,130.0f*1.45);
     return cWin.WaitforClose(); // Wait for user to close the window
 

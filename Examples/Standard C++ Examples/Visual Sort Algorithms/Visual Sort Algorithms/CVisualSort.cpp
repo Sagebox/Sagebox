@@ -288,7 +288,7 @@ void CVisualSort::Go()
 // InitWindow() -- Create the Main and GraphWindows, load textures (or clear the window with a gradient), create controls, etc -- 
 //                 All the things needed to set up the GUI part of the program.
 //
-bool CVisualSort::InitWindow(CSageBox & cSageBox)
+bool CVisualSort::InitWindow()
 {
     // Create our main window.  This (and the Graph Window) will scale to the size of kSortSize. 
     // However, the textures are set for a kSortSize of 1000.  
@@ -298,7 +298,7 @@ bool CVisualSort::InitWindow(CSageBox & cSageBox)
     // Note: InnerSize() tells SageBox to create the window at the size specified in the client area (i.e. the display canvas)
     // otherwise, the default is to make the entire window (including the non-client/top bar, etc.) the size specified.
 
-    m_cWin = &cSageBox.NewWindow(600,100,kSortSize+100,kSortSize/2+100,"SageBox -- Sorting Algorithms Visualization",InnerSize());    
+    m_cWin = &Sagebox::NewWindow(600,100,kSortSize+100,kSortSize/2+100,"Sagebox -- Sorting Algorithms Visualization",InnerSize());    
 
     auto cMenu = m_cWin->CreateMenu();                                                  // Create a menu object
     cMenu.AddMenuItem("&Exit",(int) MenuItems::Exit);
@@ -349,7 +349,7 @@ bool CVisualSort::InitWindow(CSageBox & cSageBox)
 
     m_cGraphWin->SetClsBitmap(m_cWin->ReadPgrBitmap("Texture2",sSortTexture));    // Set the texture for the Graph Window.  Remove line to remove the texture.
 
-    m_cGraphWin->Cls("black");    // Clear the screen to black so we can use this if we don't use the texture. 
+    m_cGraphWin->Cls(PanColor::Black);    // Clear the screen to black so we can use this if we don't use the texture. 
 
     // Write some text explaining the threshold slider.  "{cyan}" is used twice because the color, when set, is active until the end of the line, 
     // so the next line needs to specify the color again.
@@ -424,14 +424,7 @@ bool CVisualSort::InitMem()
 }
 bool CVisualSort::main(bool bConsoleApp)
 {
-    // Get SageBox here -- we only allocated it once, so it's either do it here or put it on as a class member, which we really don't
-    // need to do -- we can just pass it to InitWindow, and we don't need it once we create the main window.  We could even do a static
-    // variable in InitWindow(), but doing it here is more in plain sight.
-    //
-    // SageBox will go out of scope and delete all Windows, controls, etc. after this function exits, which is why we do it in the main() function.
-
-    CSageBox cSageBox;
-
+ 
     // Use asserts for unreasonable errors, such as InitWindow() or InitMem() failing.
     // Neither of these happen here, but this can be good to know on a larger system doing more
     //
@@ -445,7 +438,7 @@ bool CVisualSort::main(bool bConsoleApp)
 
     stdTry;
 
-    stdAssert(InitWindow(cSageBox),"InitWindow() failed");      // We don't really use these messages, but we can if we want to.
+    stdAssert(InitWindow(),"InitWindow() failed");      // We don't really use these messages, but we can if we want to.
     stdAssert(InitMem(),"InitMem() failed");                    // "stdNoMsg" can also be used in the place of a message.
 
 

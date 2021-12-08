@@ -2,7 +2,7 @@
 // File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // -----------------------
 // 10-Line Julia Output #2
@@ -35,7 +35,10 @@ int main()
     // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
-    auto& cWin = CSageBox::AutoWindow(CSize(1200,1000));
+    auto& cWin = SageBox::NewWindow(SIZE{1200,1000},"Sagebox - Julia Set 2",InnerSize());
+
+    cWin.TextWidget(0,10,"Julia Set (-.4, .6)",Font("Arial,50") | JustCenterX() | Transparent());
+
     for (int i=-500;i<500;i++)
         for (int j=-600;j<600;j++)
         { 
@@ -50,7 +53,6 @@ int main()
         // Since we have an extra line to keep within 10 lines of code, add a Label the image. 
         // Transparent() blends Background, JustCenterX() centers the message
 
-        cWin.TextWidget(0,10,"Julia Set (-.4, .6)",Font("Arial,50") | JustCenterX() | Transparent());
     return cWin.WaitforClose();
 }
  

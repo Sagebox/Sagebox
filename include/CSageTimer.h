@@ -151,6 +151,40 @@ public:
     /// --> Example: CSageTimer MyTimer;   // Starts timer.  Use ElapsedMs(), ElapsedUs(), etc. to read time since start. 
     /// </summary>
     __forceinline void Reset() { Start(); };
+
+    /// <summary>
+    /// Returns TRUE and resets the timer only if the current timer has met or exceeded the value in lTestValue in milliseconds. 
+    /// <para></para>
+    /// Otherwise FALSE is returned and the timer is not reset.
+    /// <param name="lTestValue">Timer value to test.  Timer resets if the timer exceeds the lTestValue given</param>
+    /// </summary>
+    __forceinline bool ResetMs(long long lTestValue) { if (ElapsedMs() >= lTestValue) { Reset(); return true; } return false; };
+
+   /// <summary>
+    /// Returns TRUE and resets the timer only if the current timer has met or exceeded the value in lTestValue in microseconds. 
+    /// <para></para>
+    /// Otherwise FALSE is returned and the timer is not reset.
+    /// <param name="lTestValue">Timer value to test.  Timer resets if the timer exceeds the lTestValue given</param>
+    /// </summary>
+    __forceinline bool ResetUs(long long lTestValue) { if (ElapsedUs() >= lTestValue) { Reset(); return true; } return false; };
+
+    /// <summary>
+    /// Returns TRUE and resets the timer only if the current timer has met or exceeded the value in lTestValue in nanoseconds. 
+    /// <para></para>
+    /// Otherwise FALSE is returned and the timer is not reset.
+    /// <param name="lTestValue">Timer value to test.  Timer resets if the timer exceeds the lTestValue given</param>
+    /// </summary>
+    __forceinline bool ResetNs(long long lTestValue)
+        { 
+            if (ElapsedNs() >= lTestValue) 
+            { 
+              //  printf("Elapsed = %d\n",(int) ElapsedNs());
+                Reset(); 
+                return true; 
+            } 
+            return false; 
+        }
+
     CSageTimer()
     {
         QueryPerformanceFrequency(&liFreq); 

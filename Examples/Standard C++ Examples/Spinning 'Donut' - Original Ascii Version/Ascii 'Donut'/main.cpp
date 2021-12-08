@@ -1,4 +1,26 @@
 
+    // **************************************** DEPRECATED *****************************************
+    // 
+    // ** Note: This program is a prototype of using a subclassed window, as well as creating a Sagebox object 
+    //          vs. calling using static functions
+    //
+    // ** Mostly, this has been deprecated and is not a good example of how to use Sagebox, but it does 
+    //    show an approach where you can:
+    //
+    //       1. Control when Sagebox gets insantiated and when it gets deleted (it gets deleted when you delete the object created, vs. 
+    //          an unknown order when using funcition statically).  As long as the Sagebox object is created before any Sagebox global functions are used,
+    //          Sagebox will be deleted when the object is deleted vs. at program termination.
+    //
+    //       2. Using a sub-classed window.  In this case, the window functions are used as regular functions (which is really deprecated at this point).
+    //          This example was left in as most windowing packages tend to work within the subclassed window.  For various reasons, I don't think
+    //          this is a good approach in today's programming world.
+    //
+    // ** This example will probably be changed to the current format of working with static Sagebox functions and the Window as a separate object.
+
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>> Original Notes Follow <<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
 // ***********************
 // Ascii Donut Source Code
 // ***********************
@@ -80,8 +102,8 @@
 //      See the code for more details.
 //
 
-#include "CSageBox.h"
-QuickSandbox(AsciiDonut)        // Create AsciiDonut class 
+#include "SageBox.h"
+QuickSandbox(AsciiDonut)        // **** Horribly, Horribly deprecated! --  Create AsciiDonut class 
 
 void AsciiDonut::Main()
 {
@@ -181,6 +203,27 @@ void AsciiDonut::Main()
 
 int main()
 {
+    // **************************************** DEPRECATED *****************************************
+    // 
+    // ** Note: This program is a prototype of using a subclassed window, as well as creating a Sagebox object 
+    //          vs. calling using static functions
+    //
+    // ** Mostly, this has been deprecated and is not a good example of how to use Sagebox, but it does 
+    //    show an approach where you can:
+    //
+    //       1. Control when Sagebox gets insantiated and when it gets deleted (it gets deleted when you delete the object created, vs. 
+    //          an unknown order when using funcition statically).  As long as the Sagebox object is created before any Sagebox global functions are used,
+    //          Sagebox will be deleted when the object is deleted vs. at program termination.
+    //
+    //       2. Using a sub-classed window.  In this case, the window functions are used as regular functions (which is really deprecated at this point).
+    //          This example was left in as most windowing packages tend to work within the subclassed window.  For various reasons, I don't think
+    //          this is a good approach in today's programming world.
+    //
+    // ** This example will probably be changed to the current format of working with static Sagebox functions and the Window as a separate object.
+
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>> Original Notes Follow <<<<<<<<<<<<<<<<<<<<<<<<<<
+
     CSageBox cSageBox("SageBox - Ascii Donut by Andy Sloan");
     cSageBox.Main(new AsciiDonut);
     return 0;

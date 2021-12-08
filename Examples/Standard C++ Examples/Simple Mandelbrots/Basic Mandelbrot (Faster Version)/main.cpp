@@ -88,7 +88,7 @@
 // SageBox is free for personal use. 
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 int main()
 
@@ -117,11 +117,7 @@ int main()
         { 255, 170, 0   }, { 204, 128, 0   }, { 153, 87, 0    }, { 106, 52, 3    },
     }; 
 
-    // Create SageBox and SageBox Window
-
-    CSageBox cSageBox("Basic Mandelbrot Plus (Faster Mandelbrot using CCompled and CSageBitmap)");
-    
-    auto cWin = &cSageBox.NewWindow(100,100,cWinSize.x,cWinSize.y,InnerSize());
+    auto cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"Basic Mandelbrot Plus (Faster Mandelbrot using CCompled and CSageBitmap)",InnerSize());
 
     auto cBitmap = cWin->CreateBitmap(cWinSize.x);       // Create bitmap of (Width,1) --> Returns a CSageBitmap object
 

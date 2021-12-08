@@ -86,23 +86,21 @@
 //    to main()
 //
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include "CColorSelector.h"
 
 int main()
 {
-    CSageBox cSageBox("SageBox Color Selector Example - Simple Image Processing (Multiply)"); 
-
-    cSageBox.HideConsole(); // We don't need the console window, so let's hide it -- it comes back when the program is done and is a nice
+    Sagebox::HideConsole(); // We don't need the console window, so let's hide it -- it comes back when the program is done and is a nice
                             // assurance that the program exited properly.  So we get a consoel mode program that acts exactly like a Windows
                             // program. 
                             // We can change this to a full Windows program (with no console window) with a project setting. 
 
-    auto& cWin = cSageBox.NewWindow(Hidden());          // Create a new window, but keep it hidden so we can resize it before showing it.
+    auto& cWin = Sagebox::NewWindow("SageBox Color Selector Example - Simple Image Processing (Multiply)",Hidden());          // Create a new window, but keep it hidden so we can resize it before showing it.
 
     stdTry;
 
-    CString cs        = cWin.GetOpenFile("*.jpg");      // Get a .JPG file
+    CString cs      = cWin.GetOpenFile("*.jpg");      // Get a .JPG file
     auto cBitmap    = cWin.ReadJpegFile(cs);            // Read the file in -- if it doesn't exist or it is an empty string, it 
                                                         // just returns
 

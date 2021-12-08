@@ -38,7 +38,7 @@
 // documentation for that function will appear on the screen.
 //
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 
 // A simple assert to exit back to the Command Window on error 
 // That's the nice thing about using a console mode program, it's easy to just abort.
@@ -48,7 +48,6 @@
 
 int Sobel()
 {
-    CSageBox cSageBox("Sagebox Sobel Color Example");        // Initial Sagebox with a window title
 
     // Get a file from the user. If the file comes back blank, it was aborted.
     // an stFileOpenStruct_t can be used for more control, such as labels.
@@ -56,14 +55,14 @@ int Sobel()
     // Alternatively, since this is a console-mode application, we could also just send in a file name from the command line, 
     // but this is nice because the user can browse thumbnails.
 
-    auto csFile = cSageBox.GetOpenFile("*.jpg");                // Get the file from the user, listing only jpegs
+    auto csFile = Sagebox::GetOpenFile("*.jpg");                // Get the file from the user, listing only jpegs
     conAssert(!csFile.isEmpty(),"No File Specified.");          // Error-out if the user entered no file.
 
     // Read the JPEG.  if it comes back invalid or empty, then it either was not a JPEG, not found, or there
     // was an error reading it.  You can get the specific Jpeg error by calling  GetJpegError() -- in this case we don't 
     // care about the actual error, just that we didn't get a bitmap in memory from loading the file.
 
-    auto cBitmap = cSageBox.ReadJpegFile(csFile);                                   // Get the JPEG
+    auto cBitmap = Sagebox::ReadJpegFile(csFile);                                   // Get the JPEG
     conAssert(cBitmap.isValid(),"JPEG not found or not a valid JPEG file.");        // Error-out if something didn't happen correctly
 
     printf("FileName: %s\nOriginal Size = %dx%d\nResizing...",*csFile,cBitmap.GetWidth(),cBitmap.GetHeight());
@@ -74,15 +73,15 @@ int Sobel()
     // "ExactBestFit" will resize the image to the lowest Width/Height value (keeping the image the same proportion), even of the image is smaller.
     // There are also a number of other options.
 
-    cSageBox.QuickThumbnail(cBitmap,350,350,ThumbType::BestFit);            // Get a Best Fit thumbnail and display it on the screen
-    auto cNewBitmap = cSageBox.QuickResize(cBitmap,1200,800);               // Get a best fit, no more than 1200X, 800Y, if the image is larger than this.
+    Sagebox::QuickThumbnail(cBitmap,350,350);                       // Get a Best Fit thumbnail and display it on the screen
+    auto cNewBitmap = Sagebox::QuickResize(cBitmap,1200,800);       // Get a best fit, no more than 1200X, 800Y, if the image is larger than this.
 
     printf("\nDone Resizing.\n");
 
     int iWidth  = cNewBitmap.GetWidth();
     int iHeight = cNewBitmap.GetHeight();
      
-    auto cBitmapOut = cSageBox.CreateBitmap(cNewBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
+    auto cBitmapOut = Sagebox::CreateBitmap(cNewBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
 
     // ** Note: There is no error-checking on the bitmap.  If it is assumed there are no memory allocation errors in their creation.  This is safe, since 
     //           we've already verified we have a valid bitmap (i.e. we errored-out back to the command window if we didn't get a valid bitmap in memory
@@ -149,12 +148,11 @@ int Sobel()
         }
     }
 
-    auto & cWin = cSageBox.BitmapWindow(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
+    auto & cWin = Sagebox::BitmapWindow(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
     
-    cSageBox.ExitButton("Sobel Color Edge Detection Completed");        // Tell the user we've completed the sobel process. 
-                                                                        // The menu was added first so it just didn't "pop up" after the user clicked the 
-                                                                        // OK button in the info dialog.
-    return 0; 
+    return Sagebox::ExitButton("Sobel Color Edge Detection Completed");     // Tell the user we've completed the sobel process. 
+                                                                            // The menu was added first so it just didn't "pop up" after the user clicked the 
+                                                                            // OK button in the info dialog. (ExitButton() always returns 0)
 }
 
 int main()

@@ -13,7 +13,7 @@
 #if !defined(_DrawCube_h_)
 #define _DrawCube_h_
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 class DrawCube
 {

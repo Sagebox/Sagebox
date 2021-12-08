@@ -5,14 +5,12 @@
 // See notes in CDrawCube.cpp for more information
 //
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CDrawCube.h"
 
 int main()
 {
-    CSageBox cSageBox("SageBox -- 3-D Cube");
-    auto& cWin = cSageBox.NewWindow(NoAutoUpdate());
-    
+    auto& cWin = Sagebox::NewWindow("Sagebox -- 3-D Cube",NoAutoUpdate());
     DrawCube cDrawCube(&cWin);
     cDrawCube.Main();
 }

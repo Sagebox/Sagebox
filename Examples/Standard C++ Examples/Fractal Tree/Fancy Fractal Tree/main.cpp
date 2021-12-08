@@ -28,7 +28,7 @@
 //
 // <functional> is included for the std::function reference, since I couldn't use auto because DrawTree is recursive
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CAviFile.h"
 #include <functional>
 
@@ -75,7 +75,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
         // Draw a line in the window. Get an RGB value from a HUE, Saturation, and luminance value
         // CSageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
-        cWin.DrawLine(sp,r,rgbColors[(int)++iDepth]);
+        cWin.DrawLine(sp,r,rgbColors[(int)++iDepth]);   // MSVC green squiggly is wrong here.
 
 	    DrawTree(r, line_len*fMul, a, -1 );
 	    DrawTree(r, line_len*fMul, a, 1 );
@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = CSagebox::AutoWindow(CSize(1000,700),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
+    auto& cWin = Sagebox::NewWindow(SIZE{1000,700},"Sagebox - Fractal Tree", InnerSize() | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
 
     // These values can be changed for a different effect. 
   

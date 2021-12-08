@@ -44,19 +44,17 @@
 //    and updating ourselves makes the update much more uniform and avoids flashing and shearing when updates hit while we're drawing the
 //    window.
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include "CColorWheelWidget.h"
 
 int main()
 {
-    CSageBox cSageBox("Multiple Color Widget Example with the Color Wheel Widget");
-
     // Create our Window.  Use NoAutoUpdate() to turn off auto updates of the window, and InnerSize()
     // to get create the window 1080x800 on the canvas (otherwise the window would be 1080x800, including the frame)
 
-    auto& cWin = cSageBox.NewWindow(100,100,880,700,NoAutoUpdate() | InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,880,700,"Multiple Color Widget Example with the Color Wheel Widget",NoAutoUpdate() | InnerSize());
 
-    cWin.Cls(SageColor::DarkBlue);       // Set an initial background color to blue
+    cWin.Cls(PanColor::DodgerBlue);       // Set an initial background color to blue
     
     constexpr int iX = 50;      // Starting point of outer-most rectangle
     constexpr int iY = 50;
@@ -71,8 +69,8 @@ int main()
 
     // Set a coule random colors for each rectangle
 
-    cColor1.SetRGBValue(SageColor::Blue);    
-    cColor2.SetRGBValue(SageColor::Red);            
+    cColor1.SetRGBValue(PanColor::Blue);    
+    cColor2.SetRGBValue(PanColor::Red);            
     
     // Wait until we get an event (or the window closes, in which case it returns FALSE and exits
     // Usually, GetEvent() won't return until there is an event (or a Window Close).  In this case,

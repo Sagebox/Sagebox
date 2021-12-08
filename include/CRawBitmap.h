@@ -62,8 +62,24 @@ public:
 		fBitmap.Delete(); 
 	};
     float * * GetMemPtr() { return fBitmap.f; }
+
+	/// <summary>
+	/// Returns the Width and Height dimensions of the bitmap in memory. 
+    /// <para></para> {0,0} is returned if the bitmap is not valid or does not exist.
+	/// </summary>
+	/// <returns>SIZE structure with the Width and Height dimensions of the bitmap</returns>
 	__forceinline SIZE GetSize() { return {fBitmap.iWidth, fBitmap.iHeight };}
+
+	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
 	__forceinline int GetWidth() { return fBitmap.iWidth; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
 	__forceinline int GetHeight() { return fBitmap.iHeight; }
 	operator FloatBitmap_t & () const { return (FloatBitmap_t &) fBitmap; };
 
@@ -116,9 +132,24 @@ public:
 	void Delete() { fBitmap.Delete(); };
 
     float * GetMem() { return fBitmap.fPixels; }
+	/// <summary>
+	/// Returns the Width and Height dimensions of the bitmap in memory. 
+    /// <para></para> {0,0} is returned if the bitmap is not valid or does not exist.
+	/// </summary>
+	/// <returns>SIZE structure with the Width and Height dimensions of the bitmap</returns>
 	__forceinline SIZE GetSize() { return {fBitmap.iWidth, fBitmap.iHeight };}
-	__forceinline int GetWidth() { return fBitmap.iWidth; }
-	__forceinline int GetHeight() { return fBitmap.iHeight; }
+
+	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int GetWidth() { return fBitmap.iWidth; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int GetHeight() { return fBitmap.iHeight; }
 	operator FloatBitmap_t & () const { return (FloatBitmap_t &) fBitmap; };
 
 };
@@ -352,14 +383,50 @@ public:
     /// <returns>true of successful, false if not successful (i.e. invalid bitmap, etc.)</returns>
     bool SwapBlueRedInline();
 
+	/// <summary>
+	/// Returns the Width and Height dimensions of the bitmap in memory. 
+    /// <para></para> {0,0} is returned if the bitmap is not valid or does not exist.
+	/// </summary>
+	/// <returns>SIZE structure with the Width and Height dimensions of the bitmap</returns>
 	__forceinline SIZE GetSize() { return { stBitmap.iWidth, stBitmap.iHeight }; }
     __forceinline int GetTotalPixels() { return stBitmap.iWidth*stBitmap.iHeight; };
+	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
 	__forceinline int GetWidth() { return stBitmap.iWidth; }
-	__forceinline int GetHeight() { return stBitmap.iHeight; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int GetHeight() { return stBitmap.iHeight; }
 	__forceinline int GetWidthBytes() { return stBitmap.iWidthBytes; }
 	__forceinline int GetOverhang() { return stBitmap.iOverHang; }
 
-    unsigned char * GetMem() { return stBitmap.stMem; }
+    /// <summary>
+    /// Returns the (unsigned char *) memory pointer to the RGB bitmap in memory.
+    /// <para></para>
+    /// --> You can also use "**Bitmap" or simply use the Bitmap name for automatic conversion.
+    /// <para></para>
+    /// --> nullptr is returned if there is no bitmap.
+    /// <para></para>
+    /// --> CBitmap is a standard RGB bitmap with each row aligned by 4 bytes.
+    /// <para></para>
+    /// --> Use GetMaskMem() to get the mask memory, when a mask exists.
+    /// </summary>
+    /// <returns>(unsigned char *) memory pointer to the bitmap in memory</returns>
+    __forceinline unsigned char * GetMem() { return stBitmap.stMem; }
+
+    /// <summary>
+    /// Returns the (unsigned char *) memory pointer to mask in bitmap memory
+    /// <para></para>
+    /// --> You can also use (*Bitmap).sMask to retrieve the mask memory.
+    /// <para></para>
+    /// --> nullptr is returned if there is no mask.
+    /// </summary>
+    /// <returns>(unsigned char *) memory pointer to the bitmap in memory</returns>
+    __forceinline unsigned char * GetMaskMem() { return stBitmap.sMask; }
 
     // ReverseBitmapInline() -- Turns the bitmap upside-down inline (i.e. the same bitmap).  This is helpful for many operations, since
     // Windows bitmaps are upside-down in memory.  This makes the bitmap right-side up and easier to deal with. 

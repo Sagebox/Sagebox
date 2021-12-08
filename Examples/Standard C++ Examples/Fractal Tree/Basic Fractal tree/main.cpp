@@ -20,7 +20,7 @@
 //
 // <functional> is included for the std::function reference, since I couldn't use auto because DrawTree is recursive
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CAviFile.h"
 #include <functional>
 
@@ -87,7 +87,7 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = CSagebox::AutoWindow(CSize(1000,700),Title("Basic Fractal Tree") | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
+    auto& cWin = Sagebox::NewWindow(CSize(1000,700),"Basic Fractal Tree",InnerSize() | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
 
     // These values can be changed for a different effect. 
   

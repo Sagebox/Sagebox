@@ -53,10 +53,10 @@ void DrawCube::Main()
     double fStartAngleZ;
     double fStartAngleX;
 
-    int iUpdateCount = 0;                       // Updated every time we print a cube, just for general info
+    int iUpdateCount = 0;                                           // Updated every time we print a cube, just for general info
 
-    m_cWin->SetWindowSize(850,650,true);        // Whatever the window size we were given, resize it so 850,650
-    m_cWin->Cls(SageColor::DarkBlue,SageColor::Black);            // Clear screen from a dark blue to black gradient. 
+    m_cWin->SetWindowSize(850,650,true);                          // Whatever the window size we were given, resize it so 850,650
+    m_cWin->Cls(PanColor::DarkBlue,PanColor::Black);            // Clear screen from a dark blue to black gradient. 
 
     // We don't need to clear the screen (above) since we're loading a texture.
     // The Cls() above was kept in so that the cTexture can be removed to show a non-textured version, with 
@@ -69,8 +69,8 @@ void DrawCube::Main()
 
     // Put a textWidget -- the object is kept so we can update the background if the cube is underneath it.
 
-    auto& cText = m_cWin->TextWidget(0,10,"Use the mouse to rotate the cube and Mouse Wheel to Zoom In and Out",Font("Arial,20") | opt::CenterX() | Transparent() | fgColor("red"));
-    auto& cCheckboxWire = m_cWin->NewCheckbox(5,200,"Wireframe",Transparent()); 
+    auto& cText             = m_cWin->TextWidget(0,10,"Use the mouse to rotate the cube and Mouse Wheel to Zoom In and Out",Font("Arial,20") | opt::CenterX() | Transparent() | fgColor("red"));
+    auto& cCheckboxWire     = m_cWin->NewCheckbox(5,200,"Wireframe",Transparent()); 
     cCheckboxWire.SetHoverMsg("Click to show Wire Frame version of Box");
     bool bWireframe = false;
 

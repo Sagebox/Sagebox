@@ -43,7 +43,7 @@
 //  This allows for expandability and overloading of functions for true emulation where desired. 
 //  The virtual functions can be overloaded and work with real hardware.
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "Widgets\include\CDialWidget.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
@@ -73,7 +73,7 @@ class CTwoWidgets
     CDialWidget         * m_cDial;              // Dial Widget
 
     void LoadTextureData();                     // Loads texture image and control/window locations for display
-    void InitWindow(CSageBox & cSageBox);    
+    void InitWindow();    
     void InitDebugWindow();
     void CheckEvents();                         // Check events in which we're interested 
     void DrawAboutBox();
@@ -188,7 +188,7 @@ void CTwoWidgets::InitDebugWindow()
     m_cDebugWin->printf("{g}Emulator Debug Window Ready (OO Version)\n");   // Print a message so the user knows its operating. "{g}" sets the text color to green.
 }
 
-void CTwoWidgets::InitWindow(CSageBox & cSageBox)
+void CTwoWidgets::InitWindow()
 {
     LoadTextureData();
 
@@ -196,7 +196,7 @@ void CTwoWidgets::InitWindow(CSageBox & cSageBox)
     // 
     // NoBorder() -- Specifies no title bar (i.e. client area only) for popup windows. 
 
-    m_cWin = &cSageBox.NewWindow(100,100,m_cBitmap.GetWidth(),m_cBitmap.GetHeight(),NoBorder());
+    m_cWin = &Sagebox::NewWindow(100,100,m_cBitmap.GetWidth(),m_cBitmap.GetHeight(),NoBorder());
 
     m_cWin->DisplayBitmap(m_cBitmap);        // Display the background image.
 
@@ -222,8 +222,7 @@ void CTwoWidgets::DrawAboutBox()
 }
 int CTwoWidgets::main()
 {
-    CSageBox cSageBox("SageBox -- Using two Widgets / Simple Emulation Example"); 
-    InitWindow(cSageBox);
+    InitWindow();
 
     // Create a couple buttons.  Since I didn't put a menu, I put an about button here. 
 

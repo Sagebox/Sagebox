@@ -161,7 +161,7 @@ bool Calculator::InitWindow()
     // Get our backdrop.  We could also just use a cls() to clear the screen to a preferred color or backdrop, but
     // a textured background is nicer and just as easy to put in the window.
 
-    auto cBitmap = m_cSageBox->ReadPgrBitmap("Texture",sCalcTexture);       // Grab the .JPG file from the .PGR file in memory.
+    auto cBitmap = Sagebox::ReadPgrBitmap("Texture",sCalcTexture);       // Grab the .JPG file from the .PGR file in memory.
                                                                             // We can also use file paths, as well as .JPG or .BMP
                                                                             // files or memory.  In this case, we can use the 
                                                                             // .PGR file as a container, perhaps using it in the future
@@ -174,7 +174,7 @@ bool Calculator::InitWindow()
     // Try removing the "ReadPgrBitmap" line -- it will run the program but not have a client area because the Width & Height
     // if the bitmap are both now 0. 
 
-    m_cWin = &m_cSageBox->NewWindow(50,50,cBitmap.GetWidth(),cBitmap.GetHeight(),InnerSize() | Hidden());
+    m_cWin = &Sagebox::NewWindow(50,50,cBitmap.GetWidth(),cBitmap.GetHeight(),"SageBox -- Simple Calculator Example",InnerSize() | Hidden());
 
     m_cWin->DisplayBitmap(cBitmap);                         // Now display the bitmap before we create the controls, so any 
                                                             // controls with transparencies can copy the background.

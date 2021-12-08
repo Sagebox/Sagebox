@@ -50,7 +50,7 @@
 //  functions to actual hardware, emulation, debugging, etc. without modifying core emulator code. 
 //  (though in a pure 'C' environment function pointers can work just as well, too, though not as readable)
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "Widgets\include\CDialWidget.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
@@ -61,8 +61,6 @@
 
 int main()
 {
-    CSageBox cSageBox("SageBox -- Using two Widgets / Simple Emulation Example"); 
-
     // Open up the PGR file -- it has the main bitmap but also specified where
     // control objects and the text window need to be placed. 
 
@@ -82,7 +80,7 @@ int main()
     // 
     // NoBorder() -- Specifies no title bar (i.e. client area only) for popup windows. 
 
-    auto& cWin = cSageBox.NewWindow(100,100,cBitmap.GetWidth(),cBitmap.GetHeight(),NoBorder());
+    auto& cWin = Sagebox::NewWindow(100,100,cBitmap.GetWidth(),cBitmap.GetHeight(),"SageBox -- Using two Widgets / Simple Emulation Example",NoBorder());
 
     cWin.DisplayBitmap(cBitmap);        // Display the background image.
 

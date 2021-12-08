@@ -2,7 +2,7 @@
 // File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
-#include "CSageBox.h"
+#include "SageBox.h"
 
 // -----------------------
 // 10-Line Circles Program
@@ -29,7 +29,7 @@ int main()
     //
     // bgGradient() -- Clears the window using a gradient from the first color to the second.
 
-    auto& cWin = CSagebox::AutoWindow(bgGradient(SageColor::Black,SageColor::DarkBlue));
+    auto& cWin = Sagebox::NewWindow(bgGradient(PanColor::Black,PanColor::DarkBlue));
 
     double fR = 150;        // Set a radius. 
 
@@ -40,11 +40,13 @@ int main()
     {
         double fAngle = (double) i*3.14159/25;
 
+        cWin.SetPenSize(2); 
+
         // Use a floating-point structure so we can do some math with it. 
         // Similar to MSVC Point but a floating-pointer version
 
         CfPoint pLoc = pWinSize/2 + CfPoint{ sin(fAngle), cos(fAngle) }*fR;
-        cWin.DrawOpenCircle(pLoc,(int) fR,{255,255,255},2); 
+        cWin.DrawOpenCircle(pLoc,(int) fR,RgbColor::fromHSL(rand() % 360)); 
     }
     return cWin.ExitButton();       // Change to cwin.WaitforClose() to remove button but wait for window close
 }

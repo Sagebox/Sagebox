@@ -13,7 +13,7 @@
 #if !defined(_CVisualSort_h_)
 #define _CVisualSort_h_
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include "SortAlgorithms.h"
 
 class CVisualSort;
@@ -88,12 +88,12 @@ class CVisualSort
     void ShellSort()        { m_ShellSort.ShellSort(m_ipArray,kSortSize); }
 
 private:
-    void InitDataArray();                    // Initialize the array with random data
-    void DrawGraph(int a =0 ,int b = 0);    // DrawGraph with Left and Right for the triangle on the bottom
-    void Go();                                // Run the sort program until someone closes the window
-    bool RunSort(const SortType & stSort);    // Run an individual sort. 
-    bool InitWindow(CSageBox & cSageBox);    // Initialize thw Window, Controls, etc.
-    bool InitMem();                            // Allocate the initial memory.
+    void InitDataArray();                       // Initialize the array with random data
+    void DrawGraph(int a =0 ,int b = 0);        // DrawGraph with Left and Right for the triangle on the bottom
+    void Go();                                  // Run the sort program until someone closes the window
+    bool RunSort(const SortType & stSort);      // Run an individual sort. 
+    bool InitWindow();                          // Initialize thw Window, Controls, etc.
+    bool InitMem();                             // Allocate the initial memory.
 public:
     bool main(bool bConsoleApp);                            // same as C++ main(), just here in our class.
 

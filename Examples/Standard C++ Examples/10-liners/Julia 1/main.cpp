@@ -2,7 +2,7 @@
 // File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 
 // -----------------------
 // 10-Line Julia Output #1
@@ -35,7 +35,7 @@ int main()
     // Create a window of a specifix size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
     
-    auto& cWin = CSagebox::AutoWindow(CSize(800,1000));
+    auto& cWin = Sagebox::NewWindow(SIZE{800,1000},"Sagebox - Julia Set 1",InnerSize());
 
     for (int i=-500;i<500;i++)
         for (int j=-400;j<400;j++)

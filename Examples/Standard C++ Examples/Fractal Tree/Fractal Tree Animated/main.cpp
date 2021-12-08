@@ -58,11 +58,11 @@
 // a project switch, but was left as a console-mode program because console-mode programs are relatively easy
 // to end prematurely (with a Control-C), and is a good development method to use before converting it to Windows.
 
-// Include the main CSagebox.h file.  This includes most typical C++ .h files, as well. 
+// Include the main Sagebox.h file.  This includes most typical C++ .h files, as well. 
 //
 // <functional> is included for the std::function reference, since I couldn't use auto because DrawTree is recursive
 
-#include "CSageBox.h"
+#include "SageBox.h"
 #include "CAviFile.h"
 #include <functional>
 
@@ -122,7 +122,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
         auto r = Point3D_t{0,-line_len}.RotateZ(a += rg *_ang) + sp;
 
         // Draw a line in the window. Get an RGB value from a HUE, Saturation, and luminance value
-        // CSageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
+        // SageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
         cWin.SetPenSize((15-iDepth)/7);  
         cWin.DrawLine(sp,r,rgbColors[(int)++iDepth]);
@@ -183,11 +183,13 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
 int main( int argc, char* argv[] )
 { 
 
-    // Create a window and CSagebox object together.  This is useful when you only want to create a Window
-    // and don't need a cSagebox object.  You can obtain the CSagebox object created if necessary.
+    // Create a window and Sagebox object together.  This is useful when you only want to create a Window
+    // and don't need a cSagebox object.  You can obtain the Sagebox object created if necessary.
     //
     // Title()          - sets the name of the window
     // bgGradient()     - clears the background of the window in a gradient with the colors used.
+    //                    This is used here rather than a subsequent Cls() to avoid a flicker; otherwise we'd have to 
+    //                    create the window as hidden and show it after the Cls() to avoid a potential fast flicker on window creation
     // NoAutoUpdate()   - Specifies that the window should not update on its own (wait for an Update() call)
     // NoClose()        - Don't send a window-close message when the user presses the window close. 
     //                    (lets us check it ourselves)
@@ -203,7 +205,7 @@ int main( int argc, char* argv[] )
     // can send to controls and other functions.
     // 
 
-    auto& cWin = CSagebox::AutoWindow(CSize(650,450+50),Title("Fractal Tree") | bgGradient(SageColor::Black,SageColor::DarkBlue) | NoAutoUpdate() | opt::NoClose()); 
+    auto& cWin = Sagebox::NewWindow(CSize(650,450+50),"Sagebox - Fractal Tree",InnerSize() | bgGradient(SageColor::Black,SageColor::DarkBlue) | NoAutoUpdate() | NoClose()); 
 
     // Put a Text Widget with the title.  We can just print it out if we want, but the TextWidget is easy
     // to use.  In this case, the returned object isn't saved because we don't need it once we displayed it.
@@ -289,7 +291,7 @@ int main( int argc, char* argv[] )
 
         // Put some data out to the DevWindow we created.
 
-        cTextWin.printf("Angle = {g}%g{/}, Line Length = {g}%g{/}, Line Mult = {g}%g{/}\n",fAngle,fLineLen,fLineMult);
+        cTextWin.printf("Angle = {g}%g{/}, {x=110}Line Length = {g}%g{/}, {x=250}Line Mult = {g}%g{/}\n",fAngle,fLineLen,fLineMult);
 
         // Update the background of the two text widgets, since they need to blend with the background we just created.
 

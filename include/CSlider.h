@@ -100,6 +100,16 @@ public:
     bool SetRange(int iMin,int iMax);
 	bool Moved(bool bPeek = false);
 	bool Moved(int & iPosition,bool bPeek = false);
+
+    /// <summary>
+    /// Cause Moved() event status to come back true (just once) to force or fake a slider movement.
+    /// <para></para>
+    /// This is useful when wanting to enter a slider event code section based on the a TRUE return for the
+    /// move event without changing the slider value.
+    /// </summary>
+    /// <returns></returns>
+    bool ForceMove(); 
+
 	bool EndScroll(bool bPeek = false);
 
    // void SetPos(int iPos) { gcPasWindow->Slider_SetPos(m_iControl,iPos); }
@@ -166,8 +176,58 @@ public:
 	bool SetMessageHandler(CSliderHandler * cHandler,void * pClassInfo = nullptr);
 	bool SetMessageHandler(CSliderHandler & cHandler,void * pClassInfo = nullptr);
 
-	bool SetSignal(bool * bSignal,int * iSignalPos);
+	bool SetSignal(bool * bSignal,int * iSignalPos = nullptr);
 	bool SetSignal(SliderSignal & stSignal);
+
+    /// <summary>
+    /// Sets the display output based on the position of the Slider.  This allows you to automatically display a wide range of options to display the
+    /// value as the basic slider positon or through some other formula.
+    /// <para></para>
+    /// Example: SetValueDisplay(0,1/100,true);  Display 0-1.0 for a generic slider, rather than 0-100
+    /// </summary>
+    /// <param name="sPreText">Text to add before the value is printed (nullptr for no text)</param>
+    /// <param name="sPostText">Text to add after the value is printed (nullptr for no text)</param>
+    /// <param name="fAdd">Value to add to the value after it is multiplied by fMult</param>
+    /// <param name="fMult">Value by which to multiply the slider position</param>
+    /// <param name="bAsFloatingPoint">TRUE sets the value as a float-point value.  FALSE (default) displays it as integer</param>
+    /// <returns></returns>
+    bool SetValueDisplay(const char * sPreText, const char * sPostText,double fMinValue,double fMaxValue,bool bAsFloatingPoint = false); 
+ 
+    /// <summary>
+    /// Sets the display output based on the position of the Slider.  This allows you to automatically display a wide range of options to display the
+    /// value as the basic slider positon or through some other formula.
+    /// <para></para>
+    /// Example: SetValueDisplay(0,1/100,true);  Display 0-1.0 for a generic slider, rather than 0-100
+    /// </summary>
+    /// <param name="sPreText">- Text to add before the value is printed (nullptr for no text)</param>
+    /// <param name="sPostText">- Text to add after the value is printed (nullptr for no text)</param>
+    /// <param name="fAdd">- Value to add to the value after it is multiplied by fMult</param>
+    /// <param name="fMult">- Value by which to multiply the slider position</param>
+    /// <param name="bAsFloatingPoint">- TRUE sets the value as a float-point value.  FALSE (default) displays it as integer</param>
+    /// <returns></returns>
+     bool SetValueDisplay(double fMinValue,double fMaxValue,bool bAsFloatingPoint = false); 
+
+    /// <summary>
+    /// Returns the value calculated for the display if SetValueDisplay() was used.  This allows an easy way to obtain the displayed Slider Value as an integer
+    /// value without having to relculate it yourself.
+    /// <para></para>
+    /// --> Use GetPos() to get the slider position between 0 and the Range set initially.
+    /// <para></para>
+    /// --> If SetValueDisplay() has not been called, the slider position is returned (which corresponds to the displayed value)
+    /// </summary>
+    /// <returns>int value of displayed slider value</returns>
+    int GetValueDisplay();
+
+    /// <summary>
+    /// Returns the value calculated for the display if SetValueDisplay() was used.  This allows an easy way to obtain the displayed Slider Value as float-point
+    /// value without having to relculate it yourself.
+    /// --> Use GetPos() to get the slider position between 0 and the Range set initially.
+    /// <para></para>
+    /// --> If SetValueDisplay() has not been called, the slider position is returned (which corresponds to the displayed value)
+    /// </summary>
+    /// <returns>double value of displayed slider value</returns>
+    double GetValueDisplayf();
+
 
     // signal -- this is used to access Sliider data and events without using the normal CSlider call process.
     //           This makes getting presses and status changes much quicker. 

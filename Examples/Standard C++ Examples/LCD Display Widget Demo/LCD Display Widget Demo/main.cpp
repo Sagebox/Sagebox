@@ -107,17 +107,16 @@
 //    flexibility and brevity to code using the CPoint structure.  CPoint translates automatically to a POINT (and vice-versa) as necessary.
 //
 
-#include "CSageBox.h"
+#include "Sagebox.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
 int main()
 {
-    CSageBox cSageBox("SageBox - LCD Widget example");
 
     // Create the window sized to our needs.  InnerSize() is Opt::InnerSize() telling Sagebox we want the interior size to be 320x320
     // (otherwise, the default is to create the window the Width x Height specified, including frame/border). 
 
-    auto& cWin = cSageBox.NewWindow(100,100,320,320,InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,320,320,"SageBox - LCD Widget example",InnerSize());
     cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                    // Clear screen with a gradient of two stock colors
     CPoint pLcdLoc = { 10,10 };                                             // Get Start X,Y of Lcd Widget
     CLcdDisplayWidget clcd(&cWin,pLcdLoc.x,pLcdLoc.y,0,Transparent());      // Create the LCD Widget
@@ -182,7 +181,7 @@ int main()
     //  3. Signals can be used effectively in routines that do not want to care or know about the interface -- they just want to check 
     //      a status -- in this case, the pointer to "bPressed" bool can be sent in as a parameter, or a boolean can be used instead of the Button Signal.
     
-    ButtonSignal bStop;            // This gets initialized when we setup the signal with SetSignal()
+    ButtonSignal bStop{};            // This gets initialized when we setup the signal with SetSignal()
 
     // The Main Event Loop -- Get events until the window is closed. 
     // 
