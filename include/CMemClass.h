@@ -660,12 +660,13 @@ template <class _t>
 				    iSize = iNumElements;
                     pMem = pNewMem;
                 } 
-			}
-			if (!pNewMem) 
-            {
-                iSize = 0;
-                if (pMem) _aligned_free(pMem);
-                pMem = nullptr;
+
+			    if (!pNewMem) 
+                {
+                    iSize = 0;
+                    if (pMem) _aligned_free(pMem);
+                    pMem = nullptr;
+                }
             }
 			return pMem;     // Return nullptr if we failed, even if old memory is still intact. 
 		}
