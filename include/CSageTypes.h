@@ -22,6 +22,7 @@
 // /D SageOptOnly       - is specified, Sage::opt functions can be referred to as opt:: diretly, i.e. opt::Transparent(), opt::fgColor(), etc. -- otherwise Sage::opt::fgColor(), etc. must be used.
 // /D SageOnly          - Sage namespace is defined, but opt:: must be used, i.e. opt::Transparent(), opt:: fgColor, etc.
 //
+
 #ifndef NoSageSpace
 
 using namespace Sage;

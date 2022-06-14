@@ -35,7 +35,7 @@ int main()
     // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
-    auto& cWin = SageBox::NewWindow(SIZE{1200,1000},"Sagebox - Julia Set 2",InnerSize());
+    auto& cWin = SageBox::NewWindow(SIZE{1200,1000},"Sagebox - Julia Set 2");
 
     cWin.TextWidget(0,10,"Julia Set (-.4, .6)",Font("Arial,50") | JustCenterX() | Transparent());
 

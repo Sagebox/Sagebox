@@ -3,7 +3,7 @@
 // Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
 #include "SageBox.h"
-#include <ccomplex>
+#include <complex>
 
 // ---------------------------
 // 3D-Mandelbrot Basic Example
@@ -41,7 +41,7 @@ int main()
     // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
-    auto& cWin = Sagebox::NewWindow(SIZE{866,665},"3-D Mandelbrot (Basic) Example",InnerSize());   // InnerSize() creates the canvas size 866x665 vs. the overall window
+    auto& cWin = Sagebox::NewWindow(SIZE{866,665},"3-D Mandelbrot (Basic) Example");   // InnerSize() creates the canvas size 866x665 vs. the overall window
     
     for (int i=-333;i<333;i++)
         for (int j=-600;j<266;j++)
@@ -53,8 +53,8 @@ int main()
             std::complex<double> cVec = (z/dz); ;     // Get the light angle 
             cVec /= abs(cVec);  // Normalize it. 
 
-            cWin.DrawPixel(j+600,i+333,iIter == 100 ? 0 :  
-                RGBColor_t().fromGray((int) (90*(cVec.real() + cVec.imag()) + 128)));   // Calculate the diffusion
+            cWin.DrawPixel(j+600,i+333,iIter == 100 ? SageColor::Black :  
+                RgbColor::fromGray((int) (90*(cVec.real() + cVec.imag()) + 128)));   // Calculate the diffusion
         }
 
     return cWin.ExitButton(); // Wait for the user to press a button or close the window

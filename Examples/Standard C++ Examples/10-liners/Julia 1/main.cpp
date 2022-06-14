@@ -35,7 +35,7 @@ int main()
     // Create a window of a specifix size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
     
-    auto& cWin = Sagebox::NewWindow(SIZE{800,1000},"Sagebox - Julia Set 1",InnerSize());
+    auto& cWin = Sagebox::NewWindow(SIZE{800,1000},"Sagebox - Julia Set 1");
 
     for (int i=-500;i<500;i++)
         for (int j=-400;j<400;j++)

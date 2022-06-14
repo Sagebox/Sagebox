@@ -69,9 +69,11 @@ void DrawCube::Main()
 
     // Put a textWidget -- the object is kept so we can update the background if the cube is underneath it.
 
-    auto& cText             = m_cWin->TextWidget(0,10,"Use the mouse to rotate the cube and Mouse Wheel to Zoom In and Out",Font("Arial,20") | opt::CenterX() | Transparent() | fgColor("red"));
-    auto& cCheckboxWire     = m_cWin->NewCheckbox(5,200,"Wireframe",Transparent()); 
+    auto& cText              = m_cWin->TextWidget(0,10,"Use the mouse to rotate the cube and Mouse Wheel to Zoom In and Out",Font("Arial,20") | opt::CenterX() | Transparent() | fgColor("red"));
+    auto& cCheckboxWire      = m_cWin->NewCheckbox(5,200,"Wireframe",Transparent()); 
+    auto& cCheckboxSemiTrans = m_cWin->NewCheckbox(5,225,"Semi-Transparent",Transparent()); 
     cCheckboxWire.SetHoverMsg("Click to show Wire Frame version of Box");
+    cCheckboxSemiTrans.SetHoverMsg("Makes the box semi-transparent (when not in Wireframe mode)");
     bool bWireframe = false;
 
     CString cs;
@@ -117,21 +119,23 @@ void DrawCube::Main()
         // There is a way to have Update() do this for us automatically, but we might as well do it here.
 
         cText.UpdateBg();                    // Update transparent background of the text Widget 
-        cCheckboxWire.UpdateBg();            // Update the transparent background of the Checkbox
+        cCheckboxWire.UpdateBg();            // Update the transparent background of the Checkboxes
+        cCheckboxSemiTrans.UpdateBg();           
         m_cWin->Update();                    // Update the window with the new cube.    };
     };
 
 
-   bool bUpdate = true;         // Set true so we will get an initial update (before any events)
+    bool bUpdate = true;         // Set true so we will get an initial update (before any events)
                                 // The first call to getEvent() returns true immediately just for this type of purpose
                                 // In this case, I moved the Display out to separate (i.e. decouple) the GetEvent loop with      
                                 // putting out the display (but left it in as a lambda), but in most cases, the display
                                 // starts off in the GetEvent() loop for initial prtotypying, then moves out later.
 
-   while(m_cWin->GetEvent())
+    while(m_cWin->GetEvent())
     {
         if (bUpdate) Update();        // Update if something changed or we're on our initial display
-        bUpdate |= cCheckboxWire.Pressed(bWireframe);        // Check the Wire Checkbox and set values accordingly.
+        bUpdate |= cCheckboxWire.Pressed(bWireframe);                   // Check the Wire Checkbox and set values accordingly.
+        bUpdate |= cCheckboxSemiTrans.Pressed(m_bSemiTransparent);        // Check the Wire Checkbox and set values accordingly.
 
         // Check if the mousewheel on the window has moved.  If so, set the zoom factor.
 
@@ -170,7 +174,6 @@ void DrawCube::Main()
                 }
                 else // This is the first mouse click, so set the starting angles and save the mouse position.
                 {
-                    printf("initial\n");
                     m_cWin->GetMouseClickPos(iStartMouseX,iStartMouseY); 
                     fStartAngleY = m_fRotY;
                     fStartAngleX = m_fRotX;
@@ -329,7 +332,7 @@ void DrawCube::RotatePoints()
 //
 void DrawCube::DrawWireframe()
 {
-    DWORD rgbColor = RGB(255,255,255); // White
+    auto rgbColor = SageColor::White;
 
     // Draw lines from each corner.
 
@@ -357,7 +360,8 @@ void DrawCube::DrawSurfaces()
 
     SortPolygons();        // Sort in z-order so we can just display them sequentially.
 
-    for (int i=0;i<6;i++) m_cWin->DrawPolygon(m_stAllPolys[i],4,m_stAllPolys[i].rgbColor);
+    m_cWin->SetDrawOpacity(m_bSemiTransparent ? 75 : 100);
+    for (int i=0;i<6;i++) m_cWin->FillPolygon(m_stAllPolys[i],4,m_stAllPolys[i].rgbColor);
 }
 
 // Constructor() -- just store the window we're given so we can use it. 

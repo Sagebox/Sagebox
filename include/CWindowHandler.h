@@ -49,6 +49,7 @@ public:
     };
 protected:
     friend CEControlAction_t;                   // Allow direct access for faster processing
+    friend CWindow;
     CPasWindow      * m_cWinCore    = nullptr;
     int               m_iControlID;
     void            * m_pClassInfo  = nullptr;  // Use for storing private data (such as an object pointer) for call passthrough
@@ -85,7 +86,12 @@ public:
     virtual MsgStatus OnMouseWheel(int iDelta,int iX,int iY)            { return MsgStatus::Ok; }    // Continue as normal
     virtual MsgStatus OnWidgetMessage(void * cWidget,int iMessage)      { return MsgStatus::Ok; }    // Continue as normal
     virtual MsgStatus OnSageEvent()                                     { return MsgStatus::Ok; }    // Continue as normal
+    virtual MsgStatus OnGlobalEvent(int iEvent)                         { return MsgStatus::Ok; }    // Continue as normal
     virtual MsgStatus OnMove(int iX,int iY)                             { return MsgStatus::Ok; }    // Continue as normal
+    virtual MsgStatus OnSizing(int iWidth,int iHeight)                  { return MsgStatus::Ok; }    // Continue as normal
+    virtual MsgStatus OnSysCommand(int iCommand)                        { return MsgStatus::Ok; }    // Continue as normal
+    virtual MsgStatus OnSysMenu(int iMenuItem)                          { return MsgStatus::Ok; }    // Continue as normal
+    virtual MsgStatus OnSize(int iWidth,int iHeight)                    { return MsgStatus::Ok; }    // Continue as normal
     virtual MsgStatus OnMenu(int iMenuID)                               { return MsgStatus::Ok; }    // Continue as normal
 
     virtual bool LockProcessBusy()                                      {   // This is used for development to trap when the process is locked, for timing, debugging, etc.

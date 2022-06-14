@@ -38,6 +38,7 @@ public:
 	CDevString & operator >> (DWORD x) {  StartString((unsigned int) x); return((CDevString &) *this); }
 
 	CDevString & operator << (double x2) { AddDouble(x2); return((CDevString &) *this); }
+	CDevString & operator >> (double x2) { StartString(x2); return((CDevString &) *this); }
 	char * operator * (int x) { return(Return(x)); }
 //	char * operator * (float x) { return(Return((int) x)); }
 	operator char * () { return (char *) s; }
@@ -48,6 +49,7 @@ public:
 	void StartString(const char * sString); 
 	void StartString(const wchar_t * sString); 
 	void StartString(int iValue); 
+	void StartString(double fValue); 
 	void StartString(unsigned int uiValue); 
 	void AddString(const char * sString); 
 	void AddString(const wchar_t * sString); 

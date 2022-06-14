@@ -11,15 +11,16 @@
 // This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
 //
 
-//#pragma once
+#pragma once
 
-#if !defined(_CDavSlider_H_)
-#define _CDavSlider_H_
 #include <windows.h>
 #include "Sage.h"
 #include "SageOpt.h"
 #include "CSliderHandler.h"
-
+#include "CSageTypes.h"
+#ifdef kCPP17Functions
+#include <optional>
+#endif
 namespace Sage
 {
 
@@ -79,8 +80,23 @@ public:
 	private:
 		CSlider * m_cSlider;
 	public:
+
+#ifdef kCPP17Functions
+        std::optional<int> Moved(Peek peek = Peek::No);
+#else
 		bool Moved(bool bPeek = false);
+#endif
 		bool Moved(int & iPosition,bool bPeek = false);
+
+        /// <summary>
+        /// Returns true if the handle was double clicked.
+        /// <para></para>
+        /// This is an EVENT value, which means the value is only true once (and will return FALSE henceforward) until the next doube click.
+        /// </summary>
+        /// <param name="peek">Set to Peek:Yes to avoid the event flag reset (i.e. will contiue to return TRUE without resetting the event status)</param>
+        /// <returns></returns>
+        bool HandleDoubleClicked(Sage::Peek peek = Sage::Peek::No); 
+
 		bool EndScroll(bool bPeek = false);
 		int GetPos(void);
 		
@@ -95,11 +111,36 @@ public:
 //	void SetControlID(int iControl);
     //void Close(void) { gcPasWindow->Slider_Close(m_iControl); }
     int GetPos(void);
+    double GetPosf(void);
+    float GetPosff(void);
 	bool SetPos(int iPos);
+	bool SetPosf(float fPos);
+	bool SetPosf(double fPos);
 
     bool SetRange(int iMin,int iMax);
+    bool SetRangef(double fMin,double fMax);
+    bool SetRangef(float fMin,float fMax);
+
+#ifdef kCPP17Functions
+    std::optional<int> Moved(Peek peek = Peek::No);
+    std::optional<double> Movedf(Peek peek = Peek::No);
+    std::optional<float> Movedff(Peek peek = Peek::No);
+
+#else
 	bool Moved(bool bPeek = false);
+#endif
 	bool Moved(int & iPosition,bool bPeek = false);
+	bool Movedf(double & fPosition,bool bPeek = false);
+	bool Movedff(float & fPosition,bool bPeek = false);
+
+    /// <summary>
+    /// Returns true if the handle was double clicked.
+    /// <para></para>
+    /// This is an EVENT value, which means the value is only true once (and will return FALSE henceforward) until the next doube click.
+    /// </summary>
+    /// <param name="peek">Set to Peek:Yes to avoid the event flag reset (i.e. will contiue to return TRUE without resetting the event status)</param>
+    /// <returns></returns>
+    bool HandleDoubleClicked(Sage::Peek peek = Sage::Peek::No); 
 
     /// <summary>
     /// Cause Moved() event status to come back true (just once) to force or fake a slider movement.
@@ -191,6 +232,20 @@ public:
     /// <param name="fMult">Value by which to multiply the slider position</param>
     /// <param name="bAsFloatingPoint">TRUE sets the value as a float-point value.  FALSE (default) displays it as integer</param>
     /// <returns></returns>
+    bool SetValueDisplay(const char * sPreText, const char * sPostText); 
+
+    /// <summary>
+    /// Sets the display output based on the position of the Slider.  This allows you to automatically display a wide range of options to display the
+    /// value as the basic slider positon or through some other formula.
+    /// <para></para>
+    /// Example: SetValueDisplay(0,1/100,true);  Display 0-1.0 for a generic slider, rather than 0-100
+    /// </summary>
+    /// <param name="sPreText">Text to add before the value is printed (nullptr for no text)</param>
+    /// <param name="sPostText">Text to add after the value is printed (nullptr for no text)</param>
+    /// <param name="fAdd">Value to add to the value after it is multiplied by fMult</param>
+    /// <param name="fMult">Value by which to multiply the slider position</param>
+    /// <param name="bAsFloatingPoint">TRUE sets the value as a float-point value.  FALSE (default) displays it as integer</param>
+    /// <returns></returns>
     bool SetValueDisplay(const char * sPreText, const char * sPostText,double fMinValue,double fMaxValue,bool bAsFloatingPoint = false); 
  
     /// <summary>
@@ -244,4 +299,3 @@ public:
     CSliderSignal signal;
 };
 }; // namespace Sage
-#endif _CDavSlider_H_

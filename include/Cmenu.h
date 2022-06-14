@@ -18,12 +18,16 @@
 
 #include "CWindow.h"
 #include <vector>
+#include <optional>
+
 namespace Sage
 {
 
 class CMenu
 {
 private:
+    friend CWindow;
+
 	CWindow			* m_cWin		= nullptr;
 	CPasWindow		* m_cWinCore	= nullptr;
 	bool m_bPopup = false;
@@ -41,6 +45,10 @@ private:
 		bool bValid;
 	};
 	std::vector<MenuItems_t> m_vMenuItems; 
+    static std::optional<CMenu> __CreateStringMenu(CWindow & cWin,const char * sMenuString,int & iAutoMenuNum);
+    static int __FindMenuItem(HMENU hMenu,const char * sSearchString,HMENU * hReturnMenu = nullptr);
+    static HMENU __FindMenu(HMENU hMenu,int iSearchID,HMENU * hParent = nullptr);
+    static void PrintMenuIDs(HMENU hMenu,const char * sStartString ="",int iDepth = 0,bool bPrinted = false);
 
 public:
 	CMenu();

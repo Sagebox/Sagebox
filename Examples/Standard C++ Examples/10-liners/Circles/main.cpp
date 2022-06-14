@@ -46,7 +46,7 @@ int main()
         // Similar to MSVC Point but a floating-pointer version
 
         CfPoint pLoc = pWinSize/2 + CfPoint{ sin(fAngle), cos(fAngle) }*fR;
-        cWin.DrawOpenCircle(pLoc,(int) fR,RgbColor::fromHSL(rand() % 360)); 
+        cWin.DrawCircle(pLoc,fR,RgbColor::fromHSL(rand() % 360)); 
     }
     return cWin.ExitButton();       // Change to cwin.WaitforClose() to remove button but wait for window close
 }

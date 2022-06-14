@@ -55,7 +55,7 @@ int main()
     //
     // The next example will show the use of "NoCancel()" to remove the cancel button.
   
-    cWin.DrawCircle(400,400,iRadius,rgbColor);       // If the user canceled, this will just fall through with iRadius = 0
+    cWin.FillCircle(400,400,iRadius,rgbColor);       // If the user canceled, this will just fall through with iRadius = 0
 
     // Only show the exit button if we haven't canceled.
 

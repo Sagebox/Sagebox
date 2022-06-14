@@ -17,6 +17,8 @@
 //#pragma warning( disable : 4996) 
 #include <Windows.h>
 #include <string>
+#include <iostream>
+#include <vector>
 
 namespace Sage
 {
@@ -38,18 +40,18 @@ private:
     // Since Init() is in the interface, this can be changed to set a different default style for all CString() usage.
     static constexpr const char * kDefaultFloatStyle = "%g";
     static constexpr const int kDefaultStackSize = 300;
+	char sStatic[kDefaultStackSize+1];
 	int m_iMaxSize		= kDefaultStackSize; 
 	int m_iMinAllocSize	= 1024;
 	int m_iAllocSize;
 	char * s;
-	char sStatic[kDefaultStackSize+1];
     char sFloatStyle[10];   // String for the float style, to override the default
                             // This allows the caller to set how floating-point values are output. 
 	char * sAlloc;
 	int iPlace;
     bool m_bInvalid = false;    // Gets set to true on memory allocation errors.  Use isValid() to check
     bool bDefaultFloatStyle;
-    void SetFloatStyle(csFloatType csStyle);
+    void _SetFloatStyle(csFloatType csStyle);
 	void _AddString(char * sString); 
 	void _AddString(wchar_t * sString); 
 	void StartString(char * sString); 
@@ -62,10 +64,59 @@ private:
 	void AddChar(char x); 
     void AddDouble(double x2);
     int GetNextAllocSize(int iMemNeeded,int iBlockSize);
-
+    void ClearMem() { if (sAlloc) free(sAlloc); sAlloc = nullptr; m_iAllocSize = 0; s = (char *) sStatic; }
+    void FreeMem() { if (sAlloc) free(sAlloc); sAlloc = nullptr; m_iAllocSize = 0;  }
 public:
 	char * Return(int x);
 
+    const char * Find(const char * sFind);
+    const char * Findi(const char * sFind); 
+
+
+    const char * FindChar(char cChar,bool bReturnEndOnFail = false);
+    const char * FindChar(const char * sSearch,bool bReturnEndOnFail = false);
+
+    static const char * FindChar(const char * sString,char cChar,bool bReturnEndOnFail = false);
+    static const char * FindChar(const char * sString,const char * sSearch,bool bReturnEndOnFail = false);
+
+    std::string FindCharStr(char cChar,bool bEmptyOnFail = true);
+    std::string FindCharStr(const char * sSearch,int & iPosFound,bool bEmptyOnFail = true);
+    std::string FindCharStr(const char * sSearch,bool bEmptyOnFail = true);
+
+    static std::string FindCharStr(const char * sString,char cChar,bool bEmptyOnFail = true);
+    static std::string FindCharStr(const char * sString,const char * sSearch,int & iPosFound,bool bEmptyOnFail = true);
+    static std::string FindCharStr(const char * sString,const char * sSearch,bool bEmptyOnFail = true);
+
+    std::vector<std::string> Split(char cSplit);
+    std::vector<std::string> Split(const char * sSplit);
+
+    static std::vector<std::string> Split(const char * sString,char cSplit);
+    static std::vector<std::string> Split(const char * sString,const char * sSplit);
+
+    CString & Replacei(const char * sSearch,const char * sNewString);
+    CString & Replace(const char * sSearch,const char * sNewString);
+    CString & MakeUpperCase();
+    CString & MakeLowerCase();
+    static const char * SkipWhiteSpace(const char * sString,bool bIncludeNewLine = true);
+    static const char * SkipAlphaNumeric(const char * sString);
+    CString & StripWhiteSpace(); 
+    CString & StripQuotes(bool bIncludeSingleQuotes = false); 
+    CString & StripSingleQuotes(); 
+
+    static CString StripQuotes(const char * sString,bool bIncludeSingleQuotes = false); 
+    static CString StripSingleQuotes(const char * sString); 
+
+    __forceinline char operator [](int i) const
+    {
+       if(!s || !*s || i < 0) return 0; 
+       int iLength = 0;
+       auto sTemp = s;
+       while (*sTemp++) iLength++;
+       if (i > iLength-1) return 0; 
+       return s[i];
+    }
+  
+  //  CString & StripSingleQuotes(bool bIncludeSingleQuotes = false); 
     // CString::fs() -- Set the floating-point output style. 
     //
     // This can be used via streaming, i.e. CString() << "This is a number " << fs("%.10f") << MyNumber; 
@@ -78,7 +129,7 @@ public:
     //
     // Use fs() to restore the default style. 
     //
-    CString & fs(const char * sStyle = nullptr) { SetFloatStyle({sStyle}); return *this; }
+    CString & SetFloatStyle(const char * sStyle = nullptr) { _SetFloatStyle({sStyle}); return *this; }
 
 
     // GetDefaultFloatStyle() -- returns the default floating-point style for CString floating-point output.
@@ -88,7 +139,8 @@ public:
 
 //    __forceinline CString & FloatStyle(const char * sStyle) { return _fsX(sStyle); } // Inlined so we don't do a double call
 
-	__forceinline CString & operator << (std::string & x)		{ _AddString((char *) x.c_str()); return((CString &) *this); }
+	CString & operator << (const CString & x);
+	__forceinline CString & operator << (const std::string & x)	{ _AddString((char *) x.c_str()); return((CString &) *this); }
 //	__forceinline CString & operator << (char * x)			    { AddString(x); return((CString &) *this); }
 	__forceinline CString & operator << (const char * x)		{ _AddString((char *) x); return((CString &) *this); }
 	__forceinline CString & operator << (wchar_t * x)			{ _AddString(x); return((CString &) *this); }
@@ -99,7 +151,20 @@ public:
 	__forceinline CString & operator << (unsigned int x)		{ AddNumber((int) x); return((CString &) *this); }
 	__forceinline CString & operator << (DWORD x)				{ AddNumber((unsigned int) x); return((CString &) *this); }
 	__forceinline CString & operator << (double x2)			    { AddDouble(x2); return((CString &) *this); }
-	__forceinline CString & operator << (csFloatType csft)	    { SetFloatStyle(csft); return *this; }
+	__forceinline CString & operator << (csFloatType csft)	    { _SetFloatStyle(csft); return *this; }
+
+	__forceinline CString & operator += (const std::string & x)	{ _AddString((char *) x.c_str()); return((CString &) *this); }
+//	__forceinline CString & operator += (char * x)			    { AddString(x); return((CString &) *this); }
+	__forceinline CString & operator += (const char * x)		{ _AddString((char *) x); return((CString &) *this); }
+	__forceinline CString & operator += (wchar_t * x)			{ _AddString(x); return((CString &) *this); }
+	__forceinline CString & operator += (const wchar_t * x)	    { _AddString((wchar_t *) x); return((CString &) *this); }
+	__forceinline CString & operator += (char x)				{ AddChar(x); return((CString &) *this); }
+	__forceinline CString & operator += (int x)				    { AddNumber(x); return((CString &) *this); }
+	__forceinline CString & operator += (long x)				{ AddNumber((int) x); return((CString &) *this); }
+	__forceinline CString & operator += (unsigned int x)		{ AddNumber((int) x); return((CString &) *this); }
+	__forceinline CString & operator += (DWORD x)				{ AddNumber((unsigned int) x); return((CString &) *this); }
+	__forceinline CString & operator += (double x2)			    { AddDouble(x2); return((CString &) *this); }
+	__forceinline CString & operator += (csFloatType csft)	    { _SetFloatStyle(csft); return *this; }
 
 	__forceinline CString & operator >> (std::string & x)		{ StartString((char *) x.c_str()); return((CString &) *this); }
 	__forceinline CString & operator >> (char * x)			    { StartString(x); return((CString &) *this); }
@@ -111,7 +176,7 @@ public:
 	__forceinline CString & operator >> (long x)				{ StartString((int) x); return((CString &) *this); }
 	__forceinline CString & operator >> (unsigned int x)		{ StartString((int) x); return((CString &) *this); }
 	__forceinline CString & operator >> (DWORD x)				{ StartString((unsigned int) x); return((CString &) *this); }
-	__forceinline CString & operator >> (double x2)			    { iPlace = 0; AddDouble(x2); return((CString &) *this); }
+	__forceinline CString & operator >> (double x2)			    { iPlace = 0; if (s) *s = 0; AddDouble(x2); return((CString &) *this); }
 
 	__forceinline char * operator * () const { return (char *) s; };
     
@@ -122,7 +187,7 @@ public:
     /// returns a nullptr.
 	/// </summary>
 	/// <returns>const char * address of the CString Data</returns>
-	__forceinline const char * str() { return s; };
+	__forceinline const char * str() const { return s; };
 
 	/// <summary>
 	/// Returns the  char * address of the CString Data. Se cc_str() to return const char * data
@@ -131,7 +196,7 @@ public:
     /// returns a nullptr.
 	/// </summary>
 	/// <returns> char * address of the CString Data</returns>
-	__forceinline char * c_str() { return s; };
+	__forceinline char * c_str() const { return s; };
 
 	/// <summary>
 	/// Returns the const char * address of the CString Data.
@@ -140,11 +205,11 @@ public:
     /// returns a nullptr.
 	/// </summary>
 	/// <returns>const char * address of the CString Data</returns>
-	__forceinline const char * cc_str() { return (const char *)  s; };
+	__forceinline const char * cc_str() const { return (const char *)  s; };
   // CStringW w_str();
-	__forceinline char * GetBuffer() { return s; };
-	__forceinline bool isEmpty(){ return  s && *s ? false : true; };
-    __forceinline std::string toStdString() { return (std::string) *this; };
+	__forceinline char * GetBuffer() const { return s; };
+	__forceinline bool isEmpty() const { return  s && *s ? false : true; };
+    __forceinline std::string toStdString() const { return (std::string) *this; };
 
     /// <summary>
     /// Returns whether CString object is valid or not.  If a memory allocation error occurs, the string will be reset to 
@@ -165,6 +230,18 @@ public:
 	CString & operator = (unsigned int x)	{	ClearString(); return *this << x; }
 	CString & operator = (DWORD x)			{	ClearString(); return *this << x; }
 
+    bool operator == (const char * str)
+    {
+        if (!str || !*str) return (!s || !*s); 
+        if (!s || !*s) return false;
+        return strcmp(s,str) == 0;
+    }
+    bool operator == (char * str)
+    {
+        if (!str || !*str) return (!s || !*s); 
+        if (!s || !*s) return false;
+        return strcmp(s,str) == 0;
+    }
 //	operator const char * () const { return (const char *) s; }
 	operator char * () const { return (char *) s; }
 	
@@ -259,21 +336,30 @@ public:
 
 	~CString()
 	{
-		if (sAlloc) free(sAlloc);
+		ClearMem(); 
 	}
 	CString() 
 	{ 
 		Init();
 	}
-	CString(int iMem)
-	{
-		AllocateMem(iMem);
-	}
+    CString(int iValue) { Init();  *this << iValue; }
+    CString(long iValue) { Init();  *this << iValue; }
+    CString(float iValue) { Init();  *this << iValue; }
+    CString(double iValue) { Init();  *this << iValue; }
+
+	__forceinline operator const char *() const { return (const char *) s; }   // for print %s
+//	__forceinline operator bool () const { return this && s != nullptr && s[0]; }     // for testing empty string
+    friend std::ostream& operator<<(std::ostream& os, const CString & cs);;
 
 	CString(const char * sString) 
 	{
 		Init();
 		_AddString((char *) sString);  
+	}
+	CString(const std::string sString) 
+	{
+		Init();
+		_AddString((char *) sString.c_str());  
 	}
 	CString(const wchar_t * sString)
 	{
@@ -285,7 +371,8 @@ public:
 	CString(const CString &p2);
 
     CString(CString && p2) noexcept;
-  
+    CString & operator = (CString && p2) noexcept;
+ 
     /// <summary>
     /// Returns pointer to start of char * memory.  Memory is not allocated until the string in memory is greater than 300 bytes (kDefaultStackSize). 
     /// <para></para>&#160;&#160;&#160;
@@ -339,6 +426,7 @@ public:
 	/// <param name="bResetMem">= when TRUE (default), sets a zero at the beginning of memory.  When FALSE, allocate mem acts as a reallocation for string additions, not resetting the memory.</param>
 	/// <returns></returns>
 	bool AllocateMem(int iMemSize,bool bResetMem = true);
+	bool AllocateMin(int iMemSize,bool bResetMem = true);
 	void ClearString()
 	{
 		iPlace = 0; 
@@ -443,7 +531,7 @@ public:
 
 	CStringW & operator << (double x2) {  AddDouble(x2); return((CStringW &) *this); }
 	CStringW & operator << (csFloatType csft)	{ SetFloatStyle(csft); return *this; }
-	CStringW & operator >> (double x2) { iPlace = 0; AddDouble(x2); return((CStringW &) *this); }
+	CStringW & operator >> (double x2) { iPlace = 0; if (s) *s = 0; AddDouble(x2); return((CStringW &) *this); }
 	wchar_t * operator * (int x) { return(Return(x)); }
 //	char * operator * (float x) { return(Return((int) x)); }
 	CStringW & operator = (wchar_t * x)			{ if (x == s) return *this;	ClearString();	return *this << x; }

@@ -28,8 +28,7 @@
 
 int main()
 {
-    CSageBox cSageBox; 
-    auto& cWin = cSageBox.NewWindow();
+    auto& cWin = Sagebox::NewWindow();
 
     // Cycle through colors for each time the mouse is lifted and then pressed again.
     
@@ -88,7 +87,7 @@ int main()
         // If the mouse was moved and the mouse button is down, draw a line from the last mouse
         // position to the current one.
 
-        if (cWin.MouseDragEvent(true)) cWin.DrawLine(cWin.MouseDragPrev(),cWin.MouseDragLast(),rgbCurColor);
+        if (cWin.MouseDragEvent(true)) cWin.DrawLine(cWin.MouseDragPrev(),cWin.MouseDragPos(),rgbCurColor);
     }
     return 0;
 }

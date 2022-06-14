@@ -22,7 +22,7 @@ namespace Sage
 
 class CDialog;
 
-class CTextWidget : CWindow
+class CTextWidget : protected CWindow
 {
 	class CWidget : public Sage::CWidget
 	{
@@ -110,6 +110,8 @@ private:
 	int					m_iY				= 0;
 	int					m_iOrgX				= 0;
 	int					m_iOrgY				= 0;
+	int					m_iPadX				= 0;    // Amount to adjust the window placement left or right (-value for left)
+	int					m_iPadY				= 0;    // Amount to adjust the window placement up or down (-value for up)
 	int					m_iUpdateMS			= 0;
 	bool				m_bHide				= false;
 	bool				m_bUpdatesDisabled	= false;
@@ -164,8 +166,8 @@ public:
 	void SetFont(HFONT hFont);
 	void SetBgColor(Sage::RGBColor_t rgbColor);
 	void SetFgColor(Sage::RGBColor_t rgbColor);
-	void SetBgColor(DWORD dwColor);
-	void SetFgColor(DWORD dwColor);
+	//void SetBgColor(DWORD dwColor);
+	//void SetFgColor(DWORD dwColor);
 	void SetFastMode(bool bFastMode=true);
 	void EnableUpdate(bool bEnable);
 	void DisableUpdate();
@@ -176,6 +178,8 @@ public:
 	int Width();
 	int Height();
 	SIZE GetWindowSize(); 
+    bool SetWindowSize(int iWidth,int iHeight);
+    bool SetWindowSize(SIZE szSize);
     POINT GetLocation();
 	Sage::CWidget * GetWidgetObj() { return m_cWidget; }
 	static CTextWidget & GetEmptyObject() { return m_cEmpty; }

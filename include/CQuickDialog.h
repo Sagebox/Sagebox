@@ -179,8 +179,8 @@ private:
     static constexpr int          m_iIndentYBot         = 5; //10;
     static constexpr int          m_iMaxWidth           = 1200;
     static constexpr RgbColor     m_rgbDefaultBg        = {30,80,160}; //{ 0, 55, 155 }; //{ 0, 60, 170 };
-    static constexpr RgbColor     m_rgbDefaultBg1        = { 35, 76, 172 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
-    static constexpr RgbColor     m_rgbDefaultBg2        = { 11, 43, 120 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg1        = { 16, 65, 175 }; //{ 35, 107, 197 }; //, { 35, 76, 172 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg2        = { 20, 95, 205 }; //{ 37, 102, 206 }; //{ 11, 43, 120 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
     static constexpr int          m_iHeaderFontSizes[m_iMaxHeaderLines+1] = { 17,14,13,12,12,12 };  // This follows H1 (+blank), not number of lines. 
     static constexpr const char * m_sListboxTitleFont   = "Arial,13";
     static constexpr const char * m_sListboxItemFont    = "Arial,13";

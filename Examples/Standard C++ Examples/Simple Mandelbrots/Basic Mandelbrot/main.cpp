@@ -73,7 +73,7 @@
 //
 
 #include "SageBox.h"
-#include <ccomplex>
+#include <complex>
 
 int main()
 
@@ -103,7 +103,7 @@ int main()
     }; 
 
     
-    auto cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"Basic Mandelbrot (basic, no frills, standard C++ version)",InnerSize());
+    auto cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"Basic Mandelbrot (basic, no frills, standard C++ version)");
 
     // note: AutoUpdate is on, so the window updates automatically every 10-20ms. When ExitButton() is called, it 
     // performs any pending updates finishing any part of the Mandelbrot output that may not have updated to the window

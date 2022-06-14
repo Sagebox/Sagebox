@@ -147,17 +147,27 @@ public:
 	static cwfOpt * GetEmptyObj() { return &m_cEmpty; };	// This should only be used for default Empty on prototypes or in case of allocation error.
 	const char * s();
 
-	char * GetString() { return spOpt; }
+	const char * GetString()const { return spOpt ? spOpt : &sOpt[0]; }
 	void SetMemNull() { spOpt = nullptr; }
-	optRet literal(const char * sString);
+	optRet literal(const char * sString,const char * sDefintion = nullptr);
+	optRet Bool(const char * sString,bool bValue = true);
+	optRet Int(const char * sString,int iValue);
+	optRet Long(const char * sString,long iValue);
+	optRet Float(const char * sString,double fValue);
+//	optRet StrStr(const char * sString,const char * sDefinition);
     optRet NoOpt();
-	optRet str(const char * sString);
+	optRet Str(const char * sString,const char * sDefintion = nullptr);
+	optRet S(const char * sString,const char * sDefintion = nullptr);
 	optRet Name(const char * sName);
 	optRet Border();
 	optRet ThickBorder();
+	optRet Recessed();
+	optRet RecessedBorder();
 	optRet Title(const char * sTitle);
-	optRet cbTitleCell(const char * sTitle);
-	optRet Label(const char * sLabel);
+//    optRet TitleFont(const char * sFont);
+
+    optRet cbTitleCell(const char * sTitle);
+	optRet Label(const char * sLabel,int just);
 	optRet LabelX(const char * sLabel,int iPos);
 	optRet LabelTop(const char * sLabel)	;
 	optRet LabelBottom(const char * sLabel)	;
@@ -167,6 +177,8 @@ public:
 	optRet LabelColor(const char * sFgColor);
 	optRet LabelColor(DWORD dwFgColor);
 	optRet LabelColor(Sage::RGBColor_t rgbColor);
+	optRet SetIcon(CBitmap & cBitmap,int just);
+    optRet SageIcon(int iIcon,int just); 
 	optRet BorderColor(const char * sFgColor);
 	optRet BorderColor(DWORD dwFgColor);
 	optRet BorderColor(Sage::RGBColor_t rgbColor);
@@ -181,6 +193,7 @@ public:
 	optRet Group_ID(const char * sName,int iControlID);
 	optRet GroupID_ID(int iGroupID,int iControlID);
 	optRet ColorsBW();
+    optRet AsFloat();
 	optRet Horz();
 	optRet Vert();
 	optRet Horizontal();
@@ -232,12 +245,18 @@ public:
 	optRet Rows(int iRows);
 	optRet Columns(int iColumns);
 	optRet AllowScroll();
-	optRet WinColors();
+	optRet WinColors(bool bValue);
+	optRet VScroll(bool bValue);
+	optRet HScroll(bool bValue);
+	optRet MultiLine(bool bValue);
+	optRet WantReturn(bool bValue);
 	optRet Newline();
 	optRet Newline(int iLines);
 	optRet GroupID(int iGroupID);
 	optRet ControlID(int iControlID);
 	optRet UseLast();
+	optRet UseEventThread();
+    optRet Fullscreen();
 	optRet IconInfo()		;
 	optRet IconWarning()	;
 	optRet IconStop()		;
@@ -248,6 +267,8 @@ public:
 	optRet CancelOk();
 	optRet Modal();
 	optRet NoAutoUpdate();
+	optRet DirectDraw();
+	optRet RealTime();
     optRet QuickCpp();
     optRet DebugMode();
 	optRet AutoUpdate(int iAutoUpdate);
@@ -268,8 +289,13 @@ public:
 	optRet CenterY();
 	optRet CenterY(int iRange);
 	optRet AddBorder();
+    optRet NoResize();
+    optRet ResizeOk();
+    optRet Reversed();
 	optRet InnerSize();
 	optRet Resizeable();
+	optRet SetSize(int iWidth,int iHeight);
+	optRet MaxSize(int iWidth,int iHeight);
 	optRet NoBorder();
 	optRet NoScrollbar();
 	optRet PadX(int iPad)		;
@@ -291,6 +317,7 @@ public:
 	optRet TextTop();
 	optRet TextBottom();
 
+    optRet Embed();
 	optRet Popup();
 	optRet NoClose();
     optRet NoSizing();
@@ -330,6 +357,7 @@ public:
 	optRet ValidateGroup(const char * sGroup);
 	optRet ValidateGroup(ControlGroup & cGroup);
 	optRet Group(ControlGroup & cGroup,int iID = INT_MAX);
+	optRet _NonPrimary();
 
 	cwfOpt & operator + (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
 	cwfOpt & operator << (const cwfOpt & Opt) { AddOpt(Opt); return((cwfOpt &) *this); }
@@ -353,7 +381,6 @@ public:
 	void AddOpt(const cwfOpt & wfOpt);
 	cwfOpt() { sOpt[0] = 0; sOpt[1] = 0; spOpt = nullptr; ipLength=0; }
 };
-
 
 namespace opt
 {
@@ -596,10 +623,44 @@ namespace opt
 	//
 	static optRet Border() { return defOpt.Border(); }  ;	
 
+	// Disable the control or window from being resized by the user by grabbing the edges of the window/control.
+	// Windows and some controls are resizeable by default.   Using NoResize() disables this when using the mouse. 
+    // The Window or Control can still be resized programmatically via the SetWindowSize() function for the specific window/control.
+	//
+	static optRet NoResize() { return defOpt.NoResize(); }  ;	
+
+	// Disable the control or window from being resized by the user by grabbing the edges of the window/control.
+	// Windows and some controls are resizeable by default.   Using NoResize() disables this when using the mouse. 
+    // The Window or Control can still be resized programmatically via the SetWindowSize() function for the specific window/control.
+	//
+	static optRet ResizeOk() { return defOpt.ResizeOk(); }  ;	
+
+	// This will reverse the bitmap (i.e. display it upside-down) in functions, widgets, and created windows that display a bitmap as part 
+    // of its initialization.   
+    // 
+	// Windows bitmap standard is to bring in the bitmap upside-down, which causes Sagebox to reverse the bitmap to show it right-side-up.
+    // for bitmaps than come in right-side-up, adding the Reversed() option will cause Sagebox to display the bitmap correctly.
+    //
+    // With most functions, you can attach an R on the end to do this automatically, i.e. DisplayBitmap() vs. DisplayBitmapR()
+    //
+	static optRet Reversed() { return defOpt.Reversed(); }  ;	
+
 	// Adds a thick border to the control, such as a Window or Input Control (i.e. string, integer, etc.). 
 	// This is deprecated and will be changed to AddBorder()
 	//
 	static optRet ThickBorder() { return defOpt.ThickBorder(); }  ;	
+
+	// Adds a recessed border to the control, such as a Window or Input Control (i.e. string, integer, etc.). 
+	// This is deprecated and will be changed to AddBorder()
+	//
+    // Note: Recessed() and RecessedBorder() are the same function.  Recessed() is provided as a shorter option name.
+	static optRet Recessed() { return defOpt.Recessed(); }  ;	
+
+	// Adds a recessed border to the control, such as a Window or Input Control (i.e. string, integer, etc.). 
+	// This is deprecated and will be changed to AddBorder()
+	//
+    // Note: Recessed() and RecessedBorder() are the same function.  Recessed() is provided as a shorter option name.
+	static optRet RecessedBorder() { return defOpt.Recessed(); }  ;	
 
 	// Adds a title to a control, such as a slider, input dialog title bard, and other controls.
 	//
@@ -619,13 +680,23 @@ namespace opt
 	//
 	// Title() and Label() are the same.
 	//
-	static optRet Label(const char * sLabel)			{ return defOpt.Label(sLabel);			}  ;	
+	static optRet Label(const char * sLabel,LabelJust just = LabelJust::Default)			{ return defOpt.Label(sLabel,(int) just);			}  ;	
 	static optRet LabelX(const char * sLabel,int iPos)	{ return defOpt.LabelX(sLabel,iPos);		}  ;	
 	static optRet LabelTop(const char * sLabel)			{ return defOpt.LabelTop(sLabel);		}  ;	
 	static optRet LabelBottom(const char * sLabel)		{ return defOpt.LabelBottom(sLabel);	}  ;	
 	static optRet LabelLeft(const char * sLabel,int iSpacing = 0)		{ return defOpt.LabelLeft(sLabel,iSpacing);		}  ;	
 	static optRet LabelRight(const char * sLabel,int iSpacing =0 )		{ return defOpt.LabelRight(sLabel,iSpacing);		}  ;	
 	static optRet LabelFont(const char * sFont)			{ return defOpt.LabelFont(sFont);			}  ;	
+	static optRet LabelFont(int iFontSize) { char sTemp[20]; itoadec(iFontSize > 0 ? iFontSize : 2,sTemp); return defOpt.LabelFont(sTemp); }  ;
+
+	static optRet SetIcon(CBitmap & cBitmap,TextJust just = TextJust::Default)			{ return defOpt.SetIcon(cBitmap,(int) just);			}  ;	
+
+//	static optRet TitleFont(const char * sFont)			{ return defOpt.TitleFont(sFont);			}  ;	
+//	static optRet TitleFont(int iFontSize) { char sTemp[20]; itoadec(iFontSize > 0 ? iFontSize : 2,sTemp); return defOpt.TitleFont(sTemp); }  ;
+
+    // Sets Sagebox icon rather than a specified bitmap for various demos and displays. 
+    //
+    static optRet SageIcon(Sage::SageIconType Icon = Sage::SageIconType::Green32,TextJust just = TextJust::Default) { return defOpt.SageIcon((int) Icon,(int) just); } 
 
 	static optRet LabelColor(const char * sColor) { return defOpt.LabelColor(sColor); }  ;	
 	static optRet LabelColor(DWORD dwColor) { return defOpt.LabelColor(dwColor); }  ;	
@@ -756,7 +827,34 @@ namespace opt
 	// See the individual control (or just try it) for more information
 	// This will be addressed in a future update. 
 	//
-	static optRet WinColors() { return defOpt.WinColors(); }  ;
+	static optRet WinColors(bool bWinColors = true) { return defOpt.WinColors(bWinColors); }  ;
+
+	/// <summary>
+	/// Sets a vertical scroll bar on an applicable control (i.e. an edit box)
+	/// </summary>
+    static optRet VScroll(bool bScroll = true)          { return defOpt.VScroll(bScroll); };
+
+	/// <summary>
+	/// Sets a horizontal scroll bar on an applicable control (i.e. an edit box)
+	/// </summary>
+	static optRet HScroll(bool bScroll = true)          { return defOpt.HScroll(bScroll); };
+
+	/// <summary>
+	/// Sets an edit box to accept multiple lines (the defualt is one line).
+    /// <para></para>
+    /// When multiple lines are used, a button or some other method must be used to determine when the user has signaled sending (or finishing) with the edit box.
+	/// </summary>
+	/// <returns></returns>
+	static optRet MultiLine(bool bMultiLine = true)     { return defOpt.MultiLine(bMultiLine); };
+
+	/// <summary>
+	/// In a multi-line edit box (where the "MultiLine" option has been used), this tells the edit box to send a PressReturned() message when the 
+    /// Return Key is pressed.  Othewise, the multi-line edit box will accept the return key as input and start a new line in the edit box.
+	/// </summary>
+	/// <param name="bWantReturn"></param>
+	/// <returns></returns>
+	static optRet WantReturn(bool bWantReturn = true)   { return defOpt.WantReturn(bWantReturn); };
+
 
 	// This is deprecated and will be removed.
 	static optRet Newline() { return defOpt.Newline(); }  ;
@@ -845,12 +943,51 @@ namespace opt
 	//
 	static optRet UseLast() { return defOpt.UseLast(); }  ;	
 
+	// Sets the floating-point range of an input box for integers or floats, to the range specified.
+	// If the range is exceeded, an error message comes up and prompts the user to enter a value in the range.
+	// 
+	// Example: GetFloat(Range(-5,5)) -- gets a floating point value in the range of -5 to 5.
+	// Use Min() or Max() for ranges on the end, such as GetFloat(Min(0)) to prohibit negative values
+	// while allowing any positive value.
+	//
+	static optRet Rangef(double fMin,double fMax) { return defOpt.MinMax(fMin,fMax); }  ;		
+
+	// Sets the floating-point range of an input box for integers or floats, to the range specified.
+	// If the range is exceeded, an error message comes up and prompts the user to enter a value in the range.
+	// 
+	// Example: GetFloat(Range(-5,5)) -- gets a floating point value in the range of -5 to 5.
+	// Use Min() or Max() for ranges on the end, such as GetFloat(Min(0)) to prohibit negative values
+	// while allowing any positive value.
+	//
+	static optRet Rangef(float fMin,float fMax) { return defOpt.MinMax(fMin,fMax); }  ;		
+
+	/// <summary>
+	/// Tells the widget or process to use the Windows/OS Event Thread rather than pumping the 
+    /// widget through the procedural GetEvent() loop. 
+	/// </summary>
+	/// <returns></returns>
+	static optRet UseEventThread() { return defOpt.UseEventThread(); }  ;	
+
+	/// <summary>
+	/// Causes the Widget, Window, or other control/item to create a fullscreen window
+    /// rather than a window with a border. 
+    /// 
+    /// This window will use the entire desktop, and you should provide a way to close the window
+    /// since the 'X' button and other menu items will not be present.
+    /// 
+	/// </summary>
+	/// <returns></returns>
+	static optRet Fullscreen() { return defOpt.Fullscreen(); }  ;	
+
 	// Apply the Info Icon to the dialog box -- currently not functional
 	//
 	static optRet IconInfo()	{ return defOpt.IconInfo();		}		;
 	// Apply the Info Icon to the dialog box -- currently not functional
 	//
 	static optRet IconWarning()	{ return defOpt.IconWarning();	}		;
+	// Apply the Info Icon to the dialog box -- currently not functional
+	//
+	static optRet IconStop()	{ return defOpt.IconStop();	}		;
 
 	// Apply the No Icon to the dialog box -- currently not functional
 	//
@@ -945,6 +1082,37 @@ namespace opt
 	//
 	static optRet NoAutoUpdate() { return defOpt.NoAutoUpdate(); }  ;	
     
+	/// <summary>
+	/// Sets the window for direct output to the display bitmap rather than buffer the output to a separate bitmap,
+    /// which then displays when an update occurs -- this will not paint direfctly to the window, making the program responsible for PAINT messages from the OS
+    /// 
+    /// This also Signals that a window will be used for Real Time drawing, typically based on the vertical retrace. 
+    /// <para></para> 
+    /// <para>.</para> 
+    /// --> sets AutoUpdate off for the Window (Window must be automatically updated) <para></para>
+    /// --> Creates memory and sets other environmental factors more suitable to real-time graphics display <para></para>
+    /// --> Also see RealTime() option to set up a RealTime display status without setting a direct output to the window.<para></para>
+    /// <para>.</para> 
+    /// Note: This function is still TBD and is meant to work with real-time graphics as well as the GPU. 
+    /// When this option is used, Auto Updating of the window is also turned off. 
+	/// </summary>
+	/// <returns></returns>	
+    static optRet DirectDraw() { return defOpt.DirectDraw(); }  ;	
+  
+	/// <summary>
+	/// Signals that a window will be used for Real Time drawing, typically based on the vertical retrace. 
+    /// <para></para> 
+    /// <para>.</para> 
+    /// --> sets AutoUpdate off for the Window (Window must be automatically updated) <para></para>
+    /// --> Creates memory and sets other environmental factors more suitable to real-time graphics display <para></para>
+    /// --> Also see DirectDraw() option<para></para>
+    /// <para>.</para> 
+    /// Note: This function is still TBD and is meant to work with real-time graphics as well as the GPU. 
+    /// When this option is used, Auto Updating of the window is also turned off. 
+	/// </summary>
+	/// <returns></returns>
+	static optRet RealTime() { return defOpt.RealTime(); }  ;	
+
     /// <summary>
     /// Sets the AutoUpdate Type to the type specified, such as No Update, On, Immediate, OnTime, etc.
     /// </summary>
@@ -1385,6 +1553,40 @@ namespace opt
 	//
 	static optRet Resizeable() { return defOpt.Resizeable(); };
 
+	/// <summary>
+	/// Sets the size of the control, widget, or functional item. 
+    /// When available, this can be used when the Size is not parameter in the function call.
+	/// </summary>
+	/// <param name="iWidth"> - Width of element</param>
+	/// <param name="iHeight"> - Height of element</param>
+	/// <returns></returns>
+	static optRet SetSize(int iWidth,int iHeight)	{ return defOpt.SetSize(iWidth,iHeight);	}  ;		
+
+    /// <summary>
+	/// Sets the size of the control, widget, or functional item. 
+    /// When available, this can be used when the Size is not parameter in the function call.
+    /// </summary>
+    /// <param name="pSize"> - SIZE of element</param>
+    /// <returns></returns>
+    static optRet SetSize(SIZE pSize)	    { return defOpt.SetSize(pSize.cx,pSize.cy);	}  ;		
+
+	/// <summary>
+	/// Sets the maximum size of the control, widget, or functional item. 
+    /// When available, this can be used when the Size is not parameter in the function call.
+	/// </summary>
+	/// <param name="iWidth"> - Width of element</param>
+	/// <param name="iHeight"> - Height of element</param>
+	/// <returns></returns>
+	static optRet MaxSize(int iWidth,int iHeight)	{ return defOpt.SetSize(iWidth,iHeight);	}  ;		
+
+    /// <summary>
+	/// Sets the maximum size of the control, widget, or functional item. 
+    /// When available, this can be used when the Size is not parameter in the function call.
+    /// </summary>
+    /// <param name="pSize"> - SIZE of element</param>
+    /// <returns></returns>
+    static optRet MaxSize(SIZE pSize)	    { return defOpt.SetSize(pSize.cx,pSize.cy);	}  ;		
+
 
 	// Tells the Window, Control, input box, or Widget to no use a border even when it is the default
 	//
@@ -1431,6 +1633,12 @@ namespace opt
 	// Otherwise, the window is embedded in the current window at the (X,Y) position specified.
 	//
 	static optRet Popup()			{ return defOpt.Popup()			; }  ;	
+
+    /// <summary>
+    /// Tells a function that creates a window to embed the window into the parent window, rather than as its own popup-styyle window.
+    /// </summary>
+    /// <returns></returns>
+    static optRet Embed()            { return defOpt.Embed()        ; } ;
 
 	/// <summary>
 	/// Disallows sizing of a window (i.e. through NewWindow(), ChildWindow(), etc.).  By default, the user may resize the window up to the canvas size by dragging the window's edges. 
@@ -1643,11 +1851,28 @@ namespace opt
 	//
 	static optRet literal(const char * sString) { return defOpt.literal(sString); }  ;	
 
+    // Send a literal string to the optioins
+	// This is deprecated.  Use str() instead.
+	//
+	static optRet lit(const char * sString) { return defOpt.literal(sString); }  ;	
+
 	// Sends a literal string to the Window, Control, or Widget to set options that may not exist int the opt::namespace
 	// For example, MyWiget(100,200,opt::Transparent() | opt::str("WidgetOption=Value") can tell the widget to perform an action
 	// that cannot be done through opt() commands.
 	//
-	static optRet str(const char * sString) { return defOpt.literal(sString); }  ;	
+	static optRet Str(const char * sString,const char * sDefinition = nullptr) { return defOpt.literal(sString,sDefinition); }  ;	
+
+	// Sends a literal string to the Window, Control, or Widget to set options that may not exist int the opt::namespace
+	// For example, MyWiget(100,200,opt::Transparent() | opt::str("WidgetOption=Value") can tell the widget to perform an action
+	// that cannot be done through opt() commands.
+	//
+	static optRet S(const char * sString,const char * sDefinition = nullptr) { return defOpt.literal(sString,sDefinition); }  ;	
+
+    static optRet Bool(const char * sString,bool bValue = true) { return defOpt.Bool(sString,bValue); } 
+    static optRet Int(const char * sString,int iValue) { return defOpt.Int(sString,iValue); } 
+    static optRet Long(const char * sString,int iValue) { return defOpt.Long(sString,iValue); } 
+    static optRet Float(const char * sString,double fValue) { return defOpt.Float(sString,fValue); } 
+//    static optRet StrStr(const char * sString,const char * sDefinition) { return defOpt.StrStr(sString,sDefinition); } 
 
     // Returns a blank options object (cwfOpt) 
     //
@@ -1656,6 +1881,15 @@ namespace opt
 	// For Sliders, Horz() declares a horizontal slider.  This is the default.
 	//
 	static optRet Horz()			{ return defOpt.Horz();			};
+
+	/// <summary>
+	/// For Sliders, AsFloat() declares the Slider as a floating-point slider with a default range of 0.0-1.0. <para></para>
+    /// Use the slider funtions GetPosf(), SetPosf(), SetRangef() for floating-point functions. <para></para>
+    /// .<para></para>
+    /// NewSliderf() can be used instead of specifying AsFloat.   Use opt::SetRangef() to set floating point range.
+	/// </summary>
+	/// <returns></returns>
+	static optRet AsFloat()			{ return defOpt.AsFloat();			};
 
 	// For Sliders, Horizontal() declares a horizontal slider.  This is the default.
 	//
@@ -1690,7 +1924,77 @@ namespace opt
 	//
 	static optRet Disabled()		{ return defOpt.Disabled();		};
 
+    // A low-level options - sets a NewWindow() call to be a non-primary window (which means it isn't counted in the Primary/Main Window count and will
+    // allow GetEvent() and program end determination to not count this window.
+    //
+    // Otherwise, as a primary window, GetEvent() will not return if the window is open and visible.
+    //
+	static optRet _NonPrimary()				{ return defOpt._NonPrimary(); }  ;		
 
+
+};
+
+namespace imgOpt
+{
+    /// <summary>
+    /// Sets the size of the image viewer on the desktop.  For example, 50% will use half the width and height for the image view window.
+    /// <para></para>
+    /// --> This is an optional parameter.
+    /// <para></para>
+    /// Percent(100) will maximize the window, using the entire desktop.
+    /// <para></para>
+    /// Percent can be between 25% and 100%. The default is approximately 75% of the desktop space, depending on the function.
+    /// <para></para>
+    /// --> Example:  Sagebox::ViewImage("My Image.jpg",Percent(50));
+    /// </summary>
+    /// <param name="iPercent"></param>
+    /// <returns></returns>
+    cwfOpt Percent(int iPercent)            ;
+
+    /// <summary>
+    /// Sets the "after" title for the Before & After Image Viewer.
+    /// <para></para>
+    /// This is an optional parameter.  If not used, a default label or no label will be chosen. 
+    /// </summary>
+    /// <param name="sTitle">Title/Label for After (i.e. resultant image) Window</param>
+    /// <returns></returns>    cwfOpt BeforeTitle(const char * sTitle) ;
+    cwfOpt AfterTitle(const char * sTitle)  ;
+
+    /// <summary>
+    /// Sets the image view to maximized, using the entire desktop to show the image. 
+    /// </summary>
+    /// <param name="bMaximized">True (default) for maximized</param>
+    /// <returns></returns>
+    cwfOpt Maximize(bool bMaximize = true)       ;
+
+    /// <summary>
+    /// Adds a ZoomBox for the image viewer for images using ViewImage()
+    /// <para></para>
+    /// The Zoom Box makes it easy to navigate, and zoom in and out of an image.   
+    /// <para></para>
+    /// The Zoom Box will change to the new window when a different window using the ImageView() function gains the focus.
+    /// </summary>
+    /// <param name="bZoombox"></param>
+    /// <returns></returns>
+    cwfOpt ZoomBox(bool bZoombox = true)           ;
+
+    /// <summary>
+    /// Tells the ImageView() function to fill the image in the window if the image is size is less than the available space in the window.
+    /// </summary>
+    /// <param name="bFillZoom"></param>
+    /// <returns></returns>
+     cwfOpt FillZoom(bool bFillZoom = true)         ;
+
+     /// <summary>
+     /// When an ImgView/BeforeAfter window is created, WaitforWindowClose() will display the window
+     /// <para></para>
+     /// and wait for the user to close the window before returning. 
+     /// <para></para>--> This is the same as calling the object's WaitforClose() function just after creating the window.
+     /// <para></para>Using imgOpt::WaitforClose() allows display of the object, waiting for a close, without creating an object (i.e. fire-and-forget).
+     /// </summary>
+     /// <param name="bWaitforClose"></param>
+     /// <returns></returns>
+     cwfOpt WaitforClose(bool bWaitforClose = true); 
 };
 }; // namespace Sage
 

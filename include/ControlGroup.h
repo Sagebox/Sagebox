@@ -11,11 +11,9 @@
 // This file is still under construction and may not yet include specifics, awaiting proper testing and integration into Sagebox.
 //
 
-//#pragma once
-#if !defined(_ControlGroup_H_)
-#define _ControlGroup_H_
+#pragma once
 
-#include "SageOpt.h"
+
 #include "Sage.h"
 namespace Sage
 {
@@ -42,7 +40,9 @@ public:
 	~ControlGroup() { FreeOptString(); }
 	ControlGroup();
 //	int GetPressed(bool bRemove = false);	-- deprecated
-    
+#ifdef kCPP17Functions
+    std::optional<int> Pressed(Peek peek = Peek::No);
+#else
 	/// <summary>
 	/// When int iPressedID is given, isPressed(iPressedID) returns TRUE when one of the control buttons has been pressed, filling
     /// iPressedID with the value.
@@ -58,8 +58,8 @@ public:
 	/// <param name="iPressedID">- (optional) Integer value to fill with 0-based index of button pressed when an event is active (otherwise it is not changed)</param>
 	/// <param name="peek">- Use Peek::Yes to avoid resetting the event flag</param>
 	/// <returns>TRUE when button is pressed (when supplying the event reference, i.e. iPressedID); otherwise returns the button pressed or -1 when no event is active.</returns>
-	bool isPressed(Peek peek = Peek::No);
-
+	bool Pressed(Peek peek = Peek::No);
+#endif
 	/// <summary>
 	/// When int iPressedID is given, isPressed(iPressedID) returns TRUE when one of the control buttons has been pressed, filling
     /// iPressedID with the value.
@@ -75,18 +75,18 @@ public:
 	/// <param name="iPressedID">- (optional) Integer value to fill with 0-based index of button pressed when an event is active (otherwise it is not changed)</param>
 	/// <param name="peek">- Use Peek::Yes to avoid resetting the event flag</param>
 	/// <returns>TRUE when button is pressed (when supplying the event reference, i.e. iPressedID); otherwise returns the button pressed or -1 when no event is active.</returns>
-	bool isPressed(int & iPressedID,Peek peek = Peek::No);
+	bool Pressed(int & iPressedID,Peek peek = Peek::No);
     int GetCheckedButton();
     CButton & GetButton(int iPosition);
 
-    bool isChecked(int iCheckboxID);
+    bool Checked(int iCheckboxID);
     bool SetCheck(int iCheckboxID); 
 
 	bool Valid() { return m_iControlGroup != 0; }
 	inline int getGroupID() { return m_iControlGroup; }
 	char * getGroupName(); 
 	char * GetOptString() { return m_sOptString; }
-	bool SetOptions(char * sOpString);
+	bool SetOptions(const char * sOpString);
 	bool SetOptions(cwfOpt & cwOptions);
     static ControlGroup & GetEmptyGroup();
     CWindow & GetParentWindow();
@@ -104,4 +104,3 @@ public:
 };
 
 }; // namespace Sage
-#endif // _ControlGroup_H_

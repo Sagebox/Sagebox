@@ -41,10 +41,12 @@ private:
     double m_fMag       = 90;   // Current Magnification
     double m_fScreenZ   = 201;
 
+    bool m_bSemiTransparent = false;    // Box is Semi-Transparent (when not in Wireframe)
+
     stPoly_t m_stAllPolys[6];   // Storage for the output polygons
-    Point3D_t m_fCube[8];       // Out basic cube definition
-    Point3D_t m_fOut[8];        // Output points (rotate by whichever axes)
-    Point3D_t m_fRot[8];        // Output points (rotate by whichever axes)
+    Point3D_t m_fCube[8]{};     // Out basic cube definition
+    Point3D_t m_fOut[8]{};      // Output points (rotate by whichever axes)
+    Point3D_t m_fRot[8]{};      // Output points (rotate by whichever axes)
 
     double m_fRotX = 0;         // Rotation on X axis (i.e. Y & Z rotate around Z axis, X does not change)
     double m_fRotY = 0;         // Rotation on Y axis (i.e. X & Z rotate around Z axis, Y does not change)

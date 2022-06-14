@@ -35,6 +35,7 @@ private:
 	HDC m_hdc = (HDC) nullptr;
 	HDC m_horgDC = (HDC) nullptr;
 
+    HWND m_hWnd;
 	BITMAPINFOHEADER CreateBitmapInfoHeader32(int iWidth,int iHeight);
 	BITMAPINFOHEADER CreateBitmapInfoHeader24(int iWidth,int iHeight);
 	[[nodiscard]] Sage::RawBitmap32_t GetDCBitmap();
@@ -42,9 +43,9 @@ private:
 	void ClearBitmap();
 	bool WriteHDCText(int iX,int iY,char * sText,HDC hdc,Sage::RGBColor_t fgColor);
 	bool WriteHDCText(int iX,int iY,wchar_t * sText,HDC hdc,Sage::RGBColor_t fgColor);
-	void Init(CPasWindow * cMain,HDC hDC,int iWidth,int iHeight);
+	void Init(CPasWindow * cMain,HDC hDC,int iWidth,int iHeight,CWindow * cWin = nullptr);
 public:
-	COutDC(CPasWindow * cMain,HDC hdc,int iWidth=0,int iHeight=0);
+	COutDC(CPasWindow * cMain,HDC hdc,int iWidth=0,int iHeight=0,CWindow * cWin = nullptr);
 	COutDC(CWindow * cWin,int iWidth=0,int iHeight=0);
 	[[nodiscard]] Sage::RawBitmap32_t CreateTextPlate(wchar_t * sText,int iX,int iY,HFONT hMyFont);
 	[[nodiscard]] Sage::RawBitmap32_t CreateTextPlate(char  * sText,int iX,int iY,HFONT hMyFont);

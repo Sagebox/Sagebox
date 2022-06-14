@@ -103,16 +103,17 @@
 //
 
 #include "SageBox.h"
-QuickSandbox(AsciiDonut)        // **** Horribly, Horribly deprecated! --  Create AsciiDonut class 
 
-void AsciiDonut::Main()
+int main()
 {
-    Cls(SageColor::SkyBlueDark,SageColor::SkyBlue);             // Clear screen with a gradient, using stock colors. 
+    auto& cWin = Sagebox::NewWindow("SageBox - Ascii Donut by Andy Sloan"); 
+
+    cWin.Cls(SageColor::SkyBlueDark,SageColor::SkyBlue);             // Clear screen with a gradient, using stock colors. 
 
     const char * sFont = "Courier New,14";                      // Set the Ascii Font we want to use (i.e. non-proportional font)
-    CPoint pTermSize = CPoint( 80, 25 ) * getCharSize(sFont);   // Get an (80x25) window for our terminal, sized to our font
+    CPoint pTermSize = CPoint( 80, 25 ) * cWin.getCharSize(sFont);   // Get an (80x25) window for our terminal, sized to our font
     CPoint pWinSize = CPoint( 800,550 );                    
-    SetWindowSize(pWinSize,true);                               // Set our main window size (true == size the interior this size)
+    cWin.SetWindowSize(pWinSize,true);                               // Set our main window size (true == size the interior this size)
 
     // Get the window where we will print out the ascii characters. 
     //
@@ -120,7 +121,7 @@ void AsciiDonut::Main()
     // AddBorder() adds a small border around the window
     // Font() Sets the font we've chosen
 
-    auto& AsciiWindow = ChildWindow(0,40,pTermSize.x,pTermSize.y,CenterX() | AddBorder() | Font(sFont));
+    auto& AsciiWindow = cWin.ChildWindow(0,40,pTermSize.x,pTermSize.y,CenterX() | AddBorder() | Font(sFont));
     AsciiWindow.Cls(SageColor::Black);     
 
     // Set the background to Opaque since we're not clearing the screen and overwriting previous characters.
@@ -130,17 +131,17 @@ void AsciiDonut::Main()
 
     // Set a fire-and-forget message centered above the Ascii Window, giving credit to the original author
 
-    TextWidget(0,10,"Ascii Donut by Andy Sloan", Font("arial,18") | CenterX() | Transparent());
+    cWin.TextWidget(0,10,"Ascii Donut by Andy Sloan", Font("arial,18") | CenterX() | Transparent());
     
     // Create a close button so the user can stop the program -- the close window button also works
     // Center() Centers it in the X-dimension.
 
-    auto& CloseButton = NewButton(0,pWinSize.y-50,"    Press Button or Close Window to Exit    ",Center());
+    auto& CloseButton = cWin.NewButton(0,pWinSize.y-50,"    Press Button or Close Window to Exit    ",Center());
 
     // Create another text widget.  This updates the count, and also redraws the parent's background (which is a gradient),
     // so we don't have to worry about any of it. (the 00000000 is to reserve needed space)
 
-    auto& cText = TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor(SageColor::Yellow) | Font("Arial,14") | Transparent());
+    auto& cText = cWin.TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor(SageColor::Yellow) | Font("Arial,14") | Transparent());
     
     int iCount = 0;
 
@@ -154,7 +155,11 @@ void AsciiDonut::Main()
 
     double A = 0, B = 0, z[1760];
     char b[1760];
-    for (;;) {
+    
+    // This loop runs very fast. It could be set to wait for the vertical resync (with Sagebox::WaitVsync(), or just a Sleep(50) or so to sleep 50ms between loops
+
+    for (;;)        // original code, as opposed to a more canonical (these days) while(true)
+    {
         memset(b, 32, 1760); 
         memset(z, 0, sizeof(z));
         for (double j = 0; 6.28 > j; j += 0.07)
@@ -196,35 +201,8 @@ void AsciiDonut::Main()
 
         // See if the close button was pressed or the window is closing.
 
-        if (CloseButton.Pressed() || WindowClosing()) break;
+        if (CloseButton.Pressed() || cWin.WindowClosing()) break;
         // CSagebox::VsyncWait(); // Add this line to slow down the display to 60fps (or whatever the monitor refresh rate)
     }
-}
-
-int main()
-{
-    // **************************************** DEPRECATED *****************************************
-    // 
-    // ** Note: This program is a prototype of using a subclassed window, as well as creating a Sagebox object 
-    //          vs. calling using static functions
-    //
-    // ** Mostly, this has been deprecated and is not a good example of how to use Sagebox, but it does 
-    //    show an approach where you can:
-    //
-    //       1. Control when Sagebox gets insantiated and when it gets deleted (it gets deleted when you delete the object created, vs. 
-    //          an unknown order when using funcition statically).  As long as the Sagebox object is created before any Sagebox global functions are used,
-    //          Sagebox will be deleted when the object is deleted vs. at program termination.
-    //
-    //       2. Using a sub-classed window.  In this case, the window functions are used as regular functions (which is really deprecated at this point).
-    //          This example was left in as most windowing packages tend to work within the subclassed window.  For various reasons, I don't think
-    //          this is a good approach in today's programming world.
-    //
-    // ** This example will probably be changed to the current format of working with static Sagebox functions and the Window as a separate object.
-
-
-    // >>>>>>>>>>>>>>>>>>>>>>>>>> Original Notes Follow <<<<<<<<<<<<<<<<<<<<<<<<<<
-
-    CSageBox cSageBox("SageBox - Ascii Donut by Andy Sloan");
-    cSageBox.Main(new AsciiDonut);
     return 0;
 }

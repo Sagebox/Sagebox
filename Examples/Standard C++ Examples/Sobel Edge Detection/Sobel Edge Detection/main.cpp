@@ -133,7 +133,7 @@ int Sobel()
         }
     }
 
-    Sagebox::BitmapWindow(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
+    Sagebox::ImgView(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
 
     return Sagebox::ExitButton("Sobel Edge Detection Finished.");   // Get an input from the user so we don't exit the program
                                                                     // (which deallocates all memory and closes all windows)

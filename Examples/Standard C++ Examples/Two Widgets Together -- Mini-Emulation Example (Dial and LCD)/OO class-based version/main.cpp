@@ -15,7 +15,7 @@
 //
 //  The premise of the emulator is a simple local temperature dial and a remote, embedded device that receives the data (and has an LCD display).
 //
-//  The temperature dial could be for a wall heater, or a pool heater (a real situation where SageBox has been used), or another device.
+//  The temperature dial could be for a wall heater, or a pool heater (a real situation where Sagebox has been used), or another device.
 //  The LCD display can be a real LCD display across a yard or courtyard to the actual heater, displaying real-time data.
 //
 // Most emulators actually start off this small, expanding over time into something much larger.
@@ -24,7 +24,7 @@
 // The PGR File - Portable Graphics Resource
 // -----------------------------------------
 //
-//  The PGR file is used in many SageBox programs, mostly to provide a background texture.  In this program, it is used for more.
+//  The PGR file is used in many Sagebox programs, mostly to provide a background texture.  In this program, it is used for more.
 //  It contains the background, but also information where to put things. 
 //
 //  This allows the emulator to have many different configurations with different hardware without changing code: all controlled and defined
@@ -43,7 +43,7 @@
 //  This allows for expandability and overloading of functions for true emulation where desired. 
 //  The virtual functions can be overloaded and work with real hardware.
 
-#include "SageBox.h"
+#include "Sagebox.h"
 #include "Widgets\include\CDialWidget.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
@@ -185,7 +185,7 @@ void CTwoWidgets::InitDebugWindow()
     // guarentee the latest output until an Update() is called.
 
     m_cDebugWin->SetAutoUpdate(AutoUpdateType::Immediate);                  // Slow-but-sure updates (i.e. don't have to worry about updating)
-    m_cDebugWin->printf("{g}Emulator Debug Window Ready (OO Version)\n");   // Print a message so the user knows its operating. "{g}" sets the text color to green.
+    m_cDebugWin->printf("{g}Emulator Debug Window Ready (OO Version) - {y}Move the dial to see results.\n");   // Print a message so the user knows its operating. "{g}" sets the text color to green.
 }
 
 void CTwoWidgets::InitWindow()

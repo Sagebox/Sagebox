@@ -46,7 +46,7 @@ int main()
 {
     auto & cWin = Sagebox::NewWindow();                            // Since its a small app, create static Sagebox and Window at the same time.
 
-    SIZE RectSize = { 200,200 };                                    // Rectangle Size
+    SIZE RectSize = { 400,400 };                                    // Rectangle Size
     auto RectPos  = ((CPoint) cWin.GetWindowSize() - RectSize)/2;   // Put Rectangle in center of window 
                                                                     // Uses CPoint (a class-based version of POINT) to calculate placement.
   
@@ -73,7 +73,7 @@ int main()
     // Put up an initial rectangle until the color wheel is moved.
     // As a refactoring step, we could move this into a lambda since we duplicate the code below. 
 
-    cWin.DrawRectangle(RectPos,RectSize,cColorWheel.GetRGBValues());
+    cWin.FillRectangle(RectPos,RectSize,cColorWheel.GetRGBValues());
 
     // Wait for an event.  If the Window is closed, GetEvent() returns false so the loop can exit (this can be disabled).
     // While waiting for events (mouse movements, clicks, buttons, etc.), the code below is asleep and uses no processor time.
@@ -87,6 +87,6 @@ int main()
 
         // If the user changed the color, Color Wheel caused an event and set ValueChanged() to true. 
 
-        if (cColorWheel.ValueChanged(rgbColor)) cWin.DrawRectangle(RectPos,RectSize,rgbColor);
+        if (cColorWheel.ValueChanged(rgbColor)) cWin.FillRectangle(RectPos,RectSize,rgbColor);
     }
 }

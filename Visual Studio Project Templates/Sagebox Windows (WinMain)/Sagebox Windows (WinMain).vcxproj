@@ -94,15 +94,16 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SageboxRoot)\include;$(SageboxRoot)\;$(SolutionDir)..\..\include;$(SolutionDir)..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SageBox.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\debug\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\debug\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Debug Optimized|Win32'">
@@ -112,17 +113,18 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SageboxRoot)\include;$(SageboxRoot)\;$(SolutionDir)..\..\include;$(SolutionDir)..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <Optimization>MaxSpeed</Optimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SageBox.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\debug\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\debug\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Debug|x64'">
@@ -132,15 +134,16 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SageboxRoot)\include;$(SageboxRoot)\;$(SolutionDir)..\..\include;$(SolutionDir)..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SageBox.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\debug\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\debug\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Debug Optimized|x64'">
@@ -150,17 +153,18 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SageboxRoot)\include;$(SageboxRoot)\;$(SolutionDir)..\..\include;$(SolutionDir)..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <Optimization>MaxSpeed</Optimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SageBox.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SageboxRoot)\lib\debug\x$(PlatformArchitecture);$(SageboxRoot)\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\Widgets\lib\debug\x$(PlatformArchitecture);$(SolutionDir)..\..\lib\debug\x$(PlatformArchitecture)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

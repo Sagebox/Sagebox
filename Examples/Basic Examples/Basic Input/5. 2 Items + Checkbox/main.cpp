@@ -76,8 +76,8 @@ int main()
    
     // Draw open or filled ellipse, depending on the checkbox value.
 
-    bFilled ? cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor)
-            : cWin.DrawOpenEllipse(400,400,iRadius1,iRadius2,rgbColor);
+    bFilled ? cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor)
+            : cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor,2);
 
     cWin.ExitButton();               // Wait for user input so the whole program doesn't close down, since we have no input loop or event structure.
 }

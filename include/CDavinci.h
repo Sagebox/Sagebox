@@ -33,6 +33,7 @@
 #include "CComboBox.h"
 #include "CWindow.h"
 #include "CRawBitmap.h"
+#include "CRawBitmap32.h"
 #include <string>
 #include <vector>
 

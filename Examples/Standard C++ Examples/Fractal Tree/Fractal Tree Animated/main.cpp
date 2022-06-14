@@ -125,7 +125,10 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
         // SageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
         cWin.SetPenSize((15-iDepth)/7);  
-        cWin.DrawLine(sp,r,rgbColors[(int)++iDepth]);
+
+        // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
+
+        cWin.DrawLineFast((POINT) sp,(POINT) r,rgbColors[(int)++iDepth]);
 
 	    DrawTree(r, line_len*fMul, a, -1 );
 	    DrawTree(r, line_len*fMul, a, 1 );

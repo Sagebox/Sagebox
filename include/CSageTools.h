@@ -43,6 +43,7 @@ public:
 	static void HSLtoRGB(HSLColor_t stHSL,RGBColor_t & rgbColor);
 	static RGBColor_t HSLtoRGB(HSLColor_t stHSL);
     __forceinline static RGBColor_t HSLtoRGB(double fHue) { return HSLtoRGB({fHue,1,.5}); }
+    __forceinline static RGBColor_t HSVtoRGB(double fHue) { return HSVtoRGB({fHue,1,.5}); }
 	static void HSLtoRGB(double fH,double fS,double fL,int &iRed,int &iGreen,int &iBlue);
 	static void HSLtoRGB(double fH,double fS,double fL,RGBColor24 & rgbColor);
 	static void HSLtoRGB(double fH,double fS,double fL,RGBColor_t & rgbColor);

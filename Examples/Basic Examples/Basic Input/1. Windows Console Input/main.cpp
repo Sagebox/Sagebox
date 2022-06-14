@@ -50,6 +50,8 @@ int main()
     int iRadius1 = 0,iRadius2 = 0;          // We don't need to set them to 0, since we get a guaranteed numeric result. 
                                             // (which is 0 when the number is invalid, such as non-numeric entry)
 
+    cWin << "Let's Draw an Ellipse. Enter two radius values (somewhere between 5 and 300 or so).\n\n";
+
     // Use the window's console i/o versions for input/output.  If the user closes the window the entry falls through with 
     // a return of 0
 
@@ -59,7 +61,7 @@ int main()
     cWin << "Enter Radius 2: "; 
     cWin >> iRadius2; 
 
-    cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor); 
+    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor); 
 
     cWin.ExitButton();              // Get input (via the Exit Button) from the user so the program doesn't close down.
                                     // We can also use cWin.WaitforClose() to wait for the window to close, without the button.

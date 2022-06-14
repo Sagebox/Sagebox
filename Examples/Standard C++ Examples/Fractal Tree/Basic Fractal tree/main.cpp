@@ -51,7 +51,9 @@ void DrawTree(CWindow & cWin,Point3D_t & sp, double _ang,double fMul,double line
     // Draw a line in the window. Get an RGB value from a HUE, Saturation, and luminance value
     // CSageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
-    cWin.DrawLine(sp,r);
+    // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
+
+    cWin.DrawLineFast((CfPoint) sp,(CfPoint) r);
 
 	DrawTree(cWin,r, _ang,fMul, line_len*fMul, a, -1 );
 	DrawTree(cWin,r, _ang,fMul, line_len*fMul, a, 1 );

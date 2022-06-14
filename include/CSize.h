@@ -118,6 +118,7 @@ struct CSize
 	}
 
 	operator SIZE() const { SIZE p = { cx,cy }; return p; };
+    operator Point3D_t() const;
     CSize & operator = (const CSize & p2)
     {
         cx = p2.cx;

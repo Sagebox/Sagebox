@@ -21,7 +21,10 @@
 #include "CDavinci.h"
 #include "CComboBoxHandler.h"
 
-
+#include "CSageTypes.h"
+#ifdef kCPP17Functions
+#include <optional>
+#endif
 // --------------
 // CListBox Class
 // --------------
@@ -270,9 +273,14 @@ public:
     bool AddItems(const char * * sItems); 
     bool AddItems(const char * sItems); 
     bool AddItems(int iNumItems,const char * * sItems); 
+#ifdef kCPP17Functions
+    std::optional<int> ItemSelected(Peek peek = Peek::No);
 
-	bool ItemSelected(int & iItem,bool bPeek = true);
-	bool ItemSelected(bool bPeek = true);
+#else
+	bool ItemSelected(bool bPeek = false);
+#endif
+	bool ItemSelected(int & iItem,Peek peek = Peek::No);
+
 	int GetItemSelected();
     CString GetText(int iItem);
 	int GetNumItems();

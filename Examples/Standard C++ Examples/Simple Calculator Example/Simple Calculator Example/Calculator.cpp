@@ -174,7 +174,7 @@ bool Calculator::InitWindow()
     // Try removing the "ReadPgrBitmap" line -- it will run the program but not have a client area because the Width & Height
     // if the bitmap are both now 0. 
 
-    m_cWin = &Sagebox::NewWindow(50,50,cBitmap.GetWidth(),cBitmap.GetHeight(),"SageBox -- Simple Calculator Example",InnerSize() | Hidden());
+    m_cWin = &Sagebox::NewWindow(50,50,cBitmap.GetWidth(),cBitmap.GetHeight(),"Sagebox -- Simple Calculator Example",Hidden());
 
     m_cWin->DisplayBitmap(cBitmap);                         // Now display the bitmap before we create the controls, so any 
                                                             // controls with transparencies can copy the background.

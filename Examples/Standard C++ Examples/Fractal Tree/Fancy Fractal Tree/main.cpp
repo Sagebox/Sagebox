@@ -75,7 +75,9 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
         // Draw a line in the window. Get an RGB value from a HUE, Saturation, and luminance value
         // CSageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
-        cWin.DrawLine(sp,r,rgbColors[(int)++iDepth]);   // MSVC green squiggly is wrong here.
+        // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
+
+        cWin.DrawLineFast((CfPointf) sp,(CfPointf) r,rgbColors[(int)++iDepth]);   // MSVC green squiggly is wrong here.
 
 	    DrawTree(r, line_len*fMul, a, -1 );
 	    DrawTree(r, line_len*fMul, a, 1 );

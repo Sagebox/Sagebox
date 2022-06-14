@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sagebox Windows (WinMain) - release", "Sagebox Windows (WinMain) - release.vcxproj", "{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug Optimized|x64.ActiveCfg = release (optimized)|x64
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug Optimized|x64.Build.0 = release (optimized)|x64
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug Optimized|x86.ActiveCfg = release (optimized)|Win32
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug Optimized|x86.Build.0 = release (optimized)|Win32
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug|x64.ActiveCfg = release (debug)|x64
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug|x64.Build.0 = release (debug)|x64
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug|x86.ActiveCfg = release (debug)|Win32
+		{D45B8ADA-79FD-4B91-AAB3-0E4719CDA2BE}.Windows Debug|x86.Build.0 = release (debug)|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D5207872-466C-4821-8F86-29F3E4982CF9}
+	EndGlobalSection
+EndGlobal

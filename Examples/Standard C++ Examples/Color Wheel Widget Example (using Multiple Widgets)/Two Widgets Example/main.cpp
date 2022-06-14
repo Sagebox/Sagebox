@@ -52,7 +52,7 @@ int main()
     // Create our Window.  Use NoAutoUpdate() to turn off auto updates of the window, and InnerSize()
     // to get create the window 1080x800 on the canvas (otherwise the window would be 1080x800, including the frame)
 
-    auto& cWin = Sagebox::NewWindow(100,100,880,700,"Multiple Color Widget Example with the Color Wheel Widget",NoAutoUpdate() | InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,880,700,"Multiple Color Widget Example with the Color Wheel Widget",NoAutoUpdate());
 
     cWin.Cls(PanColor::DodgerBlue);       // Set an initial background color to blue
     

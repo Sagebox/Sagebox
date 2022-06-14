@@ -432,6 +432,7 @@ template <class _t>
 		__forceinline _t * SetMemSize(int iNumElements)
 		{
              if (iNumElements <= 0) return pMem;
+             if (iSize == iNumElements) return pMem;
             if (pMem) free(pMem);
 			pMem = (_t *) malloc(iNumElements*sizeof(_t)); 
             iSize = pMem ? iNumElements : 0;

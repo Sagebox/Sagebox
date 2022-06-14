@@ -233,7 +233,7 @@ void CVisualSort::DrawGraph(int a,int b)
         if (i == a || i == b) 
         {
             rgbColor = (i == a) ?  Sage::RGBColor_t() = { 255,255, 0 }: Sage::RGBColor_t() = { 0,255,255 };
-            m_cGraphWin->DrawTriangle(m_pTri[0] + pPoint, m_pTri[1] + pPoint, m_pTri[2] + pPoint,*rgbColor); 
+            m_cGraphWin->FillTriangleFast(m_pTri[0] + pPoint, m_pTri[1] + pPoint, m_pTri[2] + pPoint,rgbColor); 
         }
 
         // Draw the line color of HUE of the index we're at.  
@@ -241,7 +241,7 @@ void CVisualSort::DrawGraph(int a,int b)
         // kind of speed here. 
 
         CSageTools::HSLtoRGB((double) m_ipArray[i]/kSortSize,1.0,.5,rgbColor);
-        m_cGraphWin->DrawLine(i,kSortSize/2-m_ipArray[i]/2,i,kSortSize/2,rgbColor);
+        m_cGraphWin->DrawLineFast(i,kSortSize/2-m_ipArray[i]/2,i,kSortSize/2,rgbColor);
     }
     m_cGraphWin->Update();
 }
@@ -298,7 +298,7 @@ bool CVisualSort::InitWindow()
     // Note: InnerSize() tells SageBox to create the window at the size specified in the client area (i.e. the display canvas)
     // otherwise, the default is to make the entire window (including the non-client/top bar, etc.) the size specified.
 
-    m_cWin = &Sagebox::NewWindow(600,100,kSortSize+100,kSortSize/2+100,"Sagebox -- Sorting Algorithms Visualization",InnerSize());    
+    m_cWin = &Sagebox::NewWindow(600,100,kSortSize+100,kSortSize/2+100,"Sagebox -- Sorting Algorithms Visualization");    
 
     auto cMenu = m_cWin->CreateMenu();                                                  // Create a menu object
     cMenu.AddMenuItem("&Exit",(int) MenuItems::Exit);

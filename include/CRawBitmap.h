@@ -30,10 +30,11 @@ public:
 	FloatBitmap_t fBitmap;
 	FloatBitmap_t & operator *() { return fBitmap; }
 
-	CFloatBitmap(CBitmap & cBitmap);
+	CFloatBitmap(CBitmap & cBitmap,bool bInterlaced = false);
 	CFloatBitmap(RawBitmap_t & stBitmap);
 	CFloatBitmap(FloatBitmap_t & fBitmap) { this->fBitmap = fBitmap; };
-	CFloatBitmap(int iWidth,int iHeight) { fBitmap = CreateFloatBitmap(iWidth,iHeight); }
+	CFloatBitmap(int iWidth,int iHeight,bool bInterlaced = false) { fBitmap = CreateFloatBitmap(iWidth,iHeight); fBitmap.bInterlaced = bInterlaced; }
+	CFloatBitmap(SIZE szSize,bool bInterlaced = false) { fBitmap = CreateFloatBitmap(szSize.cx,szSize.cy); fBitmap.bInterlaced = bInterlaced; }
 
 	CFloatBitmap() 
 	{ 
@@ -44,44 +45,91 @@ public:
         fBitmap = p2.fBitmap;
         p2.fBitmap.Clean();
     }
+    CFloatBitmap& operator=(CFloatBitmap&& p2) noexcept
+    {
+        fBitmap = p2.fBitmap;
+        p2.fBitmap.Clean();
+        return *this;
+    }
 	[[nodiscard]] RawBitmap_t ConverttoBitmap() { return fBitmap.ConverttoBitmap(); }
 	[[nodiscard]] RawBitmap_t ConverttoBitmap(RawBitmap_t & stBitmap) { return fBitmap.ConverttoBitmap(stBitmap); }
-	CFloatBitmap & operator = (CBitmap stBitmap);
+//	CFloatBitmap & operator = (CBitmap & stBitmap);
 	CFloatBitmap & operator = (SIZE szSize) { fBitmap.Delete(); fBitmap = CreateFloatBitmap(szSize.cx,szSize.cy); return * this; };
 	CFloatBitmap & operator = (FloatBitmap_t fBitmap) { this->fBitmap.Delete(); this->fBitmap = fBitmap; return *this; }
-	CFloatBitmap & operator = (RawBitmap_t stBitmap) 
+	CFloatBitmap & operator = (RawBitmap_t & stBitmap) 
 	{ 
 		fBitmap.Delete(); this->fBitmap = stBitmap.ConverttoFloat(); return *this; 
 	}
+
+
 	bool isValid()
 	{
 		return (fBitmap.isValid());
 	}
+    bool isInterlaced() const { return fBitmap.bInterlaced; }
 	~CFloatBitmap() 
 	{ 
 		fBitmap.Delete(); 
 	};
-    float * * GetMemPtr() { return fBitmap.f; }
+    float * * GetMemPtr() const { return (float **) fBitmap.f; }
+    float * GetMem() const { return (float *) fBitmap.f[0]; }
+
+    __forceinline int GetRowStride() const { return this ? fBitmap.bInterlaced ? fBitmap.iWidth*3  : fBitmap.iWidth : 0; }
+    __forceinline int RowStride() const { return GetRowStride(); }
+
+    __forceinline int GetChannelStride() const { return this ? fBitmap.bInterlaced ? 3  : fBitmap.iWidth*fBitmap.iHeight : 0; }
+    __forceinline int ChannelStride() const { return GetChannelStride(); }
 
 	/// <summary>
 	/// Returns the Width and Height dimensions of the bitmap in memory. 
     /// <para></para> {0,0} is returned if the bitmap is not valid or does not exist.
 	/// </summary>
 	/// <returns>SIZE structure with the Width and Height dimensions of the bitmap</returns>
-	__forceinline SIZE GetSize() { return {fBitmap.iWidth, fBitmap.iHeight };}
+	__forceinline SIZE GetSize() const { return {fBitmap.iWidth, fBitmap.iHeight };}
 
 	/// <summary>
 	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
 	/// </summary>
 	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
-	__forceinline int GetWidth() { return fBitmap.iWidth; }
+	__forceinline int GetWidth() const { return fBitmap.iWidth; }
+
+	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+	__forceinline int Width() const { return fBitmap.iWidth; }
 
 	/// <summary>
 	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
 	/// </summary>
 	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
-	__forceinline int GetHeight() { return fBitmap.iHeight; }
-	operator FloatBitmap_t & () const { return (FloatBitmap_t &) fBitmap; };
+	__forceinline int GetHeight() const { return fBitmap.iHeight; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+	__forceinline int Height() const { return fBitmap.iHeight; }
+
+
+	CFloatBitmap & operator = (const CFloatBitmap & csBitmap) 
+	{ 
+        if (!fBitmap.isValid() || csBitmap.Width() != fBitmap.iWidth || csBitmap.GetHeight() != fBitmap.iHeight)
+            fBitmap.Delete();
+       
+        if (!fBitmap.isValid()) return *this; 
+
+        fBitmap = CreateFloatBitmap(csBitmap.GetSize());
+        if (fBitmap.isValid())
+        {
+            fBitmap.bInterlaced = csBitmap.isInterlaced();
+		    memcpy(fBitmap.f[0],csBitmap.GetMem(),fBitmap.iWidth*fBitmap.iHeight*sizeof(float)*3); 
+        }
+        return *this; 
+    }
+	CFloatBitmap & operator = (const CBitmap & csBitmap);
+
+    operator FloatBitmap_t & () const { return (FloatBitmap_t &) fBitmap; };
 
 };
 class CFloatBitmapM
@@ -146,10 +194,23 @@ public:
     __forceinline int GetWidth() { return fBitmap.iWidth; }
 
 	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int Width() { return fBitmap.iWidth; }
+
+	/// <summary>
 	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
 	/// </summary>
 	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
     __forceinline int GetHeight() { return fBitmap.iHeight; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int Height() { return fBitmap.iHeight; }
+
 	operator FloatBitmap_t & () const { return (FloatBitmap_t &) fBitmap; };
 
 };
@@ -157,7 +218,7 @@ public:
 class CBitmap
 {
 public:
-	RawBitmap_t stBitmap;
+    RawBitmap_t stBitmap{};
 	int iCurrentLine = 0;
 
 	__forceinline  unsigned char *  SetCurrentLine(int iLine) { iCurrentLine = iLine >= stBitmap.iHeight ? stBitmap.iHeight-1 : iLine < 0 ? iLine : iLine;
@@ -317,9 +378,12 @@ public:
 //	CBitmap & operator = (RawBitmap_t & stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
 	CBitmap & operator = (RawBitmap_t stBitmap) { this->stBitmap.Delete(); this->stBitmap = stBitmap; return *this; }
 	CBitmap & operator = (SIZE sz) { this->stBitmap.Delete(); this->stBitmap = Sage::CreateBitmap((int) sz.cx,(int) sz.cy); return *this; }
-	CBitmap & operator = (CBitmap csBitmap) 
-	{ this->stBitmap.Delete();
-		CopyFrom(csBitmap);  return *this; }
+	CBitmap & operator = (const CBitmap & csBitmap) 
+	{ 
+        if (!stBitmap.isValid() || csBitmap.GetWidth() != stBitmap.iWidth || csBitmap.GetHeight() != stBitmap.iHeight)
+            stBitmap.Delete();
+		CopyFrom(csBitmap);  return *this; 
+    }
 //	CBitmap & operator = (FloatBitmap_t fBitmap) 
 //	{ 
 //		stBitmap.Delete(); this->stBitmap = fBitmap.ConverttoBitmap(); return *this; 
@@ -366,6 +430,14 @@ public:
         iCurrentLine = p2.iCurrentLine;
         p2.stBitmap.Clean();
     }
+    CBitmap& operator=(CBitmap&& p2) noexcept
+    {
+        stBitmap = p2.stBitmap;
+        iCurrentLine = p2.iCurrentLine;
+
+        p2.stBitmap.Clean();
+        return *this;
+    }
 	RawBitmap_t & operator *() { return stBitmap; }
 	~CBitmap() 
 	{ 
@@ -388,21 +460,39 @@ public:
     /// <para></para> {0,0} is returned if the bitmap is not valid or does not exist.
 	/// </summary>
 	/// <returns>SIZE structure with the Width and Height dimensions of the bitmap</returns>
-	__forceinline SIZE GetSize() { return { stBitmap.iWidth, stBitmap.iHeight }; }
-    __forceinline int GetTotalPixels() { return stBitmap.iWidth*stBitmap.iHeight; };
+    __forceinline SIZE GetSize() const { return this ? SIZE{ stBitmap.iWidth, stBitmap.iHeight } : SIZE{ 0,0 }; }
+    __forceinline int GetTotalPixels() const { return stBitmap.iWidth*stBitmap.iHeight; };
 	/// <summary>
 	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
 	/// </summary>
 	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
-	__forceinline int GetWidth() { return stBitmap.iWidth; }
+	__forceinline int GetWidth() const { return this ? stBitmap.iWidth : 0; }
+
+	/// <summary>
+	/// Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Width of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+	__forceinline int Width() const { return this ? stBitmap.iWidth : 0; }
 
 	/// <summary>
 	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
 	/// </summary>
 	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
-    __forceinline int GetHeight() { return stBitmap.iHeight; }
-	__forceinline int GetWidthBytes() { return stBitmap.iWidthBytes; }
-	__forceinline int GetOverhang() { return stBitmap.iOverHang; }
+    __forceinline int GetHeight() const { return this ? stBitmap.iHeight : 0; }
+
+	/// <summary>
+	/// Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.
+	/// </summary>
+	/// <returns>Returns the Height of the bitmap in memory.  0 is returned if the bitmap is empty or invalid.</returns>
+    __forceinline int Height() const { return this ? stBitmap.iHeight : 0; }
+
+    __forceinline int GetWidthBytes() const { return this ? stBitmap.iWidthBytes : 0; }
+    __forceinline int GetRowStride() const { return GetWidthBytes(); }
+    __forceinline int RowStride() const { return GetWidthBytes(); }
+    __forceinline int GetChannelStride() const { return this ? 3 : 0; }     // Split RGB not supported for unisgned char (yet anyway).
+    __forceinline int ChannelStride() const { return GetChannelStride(); }
+
+	__forceinline int GetOverhang() const { return this ? stBitmap.iOverHang : 0; }
 
     /// <summary>
     /// Returns the (unsigned char *) memory pointer to the RGB bitmap in memory.
@@ -595,7 +685,8 @@ public:
 
 	CBitmap(const CBitmap &p2)
 	{
-		stBitmap = {};
+  
+	    stBitmap = {};
 		CopyFrom(p2);
 
 	}

@@ -59,6 +59,10 @@ static constexpr __m256i Vec256i(int _x1,  int _x2, int _x3,  int _x4)
     static __forceinline __m128  Vecf(float fValue)             { return _mm_set1_ps(fValue); }
     static __forceinline __m128i Vecic(char cValue)             { return _mm_set1_epi8(cValue); };
     static __forceinline __m128i Veciuc(unsigned char ucValue)  { return _mm_set1_epi8((char) ucValue); };
+    static __forceinline __m128  Load(float * fAddr)                { return _mm_load_ps(fAddr); };
+    static __forceinline void    Store(float * fAddr,__m128 fValue) { return _mm_store_ps(fAddr,fValue); };
+    static __forceinline __m128  Load1(float * fAddr)                { return _mm_load1_ps(fAddr); };
+    static __forceinline __m128d  Load1(double * fAddr)             { return _mm_load1_pd(fAddr); };
 
 };
 
@@ -66,15 +70,27 @@ class Simd256
 {
 public:
     static constexpr unsigned int kSimdBits     = 256;
+    static constexpr int kSimdCharBytes  = 32;
     static constexpr int kSimdBytes32    = 8;
+    static constexpr int kSimdBytes64    = 4;
     static constexpr int kSimdAnd32      = 7;
+    static constexpr int kSimdAnd64      = 3;
+    static constexpr int kSimdCharAnd    = 31;
 
+    template<typename T>
+    static constexpr const int GetSimdBytes()
+    {
+        return std::is_same<float,T>::value ? kSimdBytes32 : kSimdBytes64;
+    }
     static constexpr __m128 Vec128(float _x) { return  __m128{ _x,_x,_x,_x }; }
 static constexpr __m128i Vec128i(int _x1,  int _x2, int _x3,  int _x4) 
         { return  __m128i{ (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4,
                            (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4 }; }
 
+static constexpr __m256 Vec256f(float _x) { return  __m256{ _x,_x,_x,_x, _x,_x,_x,_x }; }
 static constexpr __m256 Vec256(float _x) { return  __m256{ _x,_x,_x,_x, _x,_x,_x,_x }; }
+static constexpr __m256d Vec256(double _x) { return  __m256d{ _x,_x,_x,_x, }; }
+static constexpr __m256d Vec256d(double _x) { return  __m256d{ _x,_x,_x,_x }; }
 static constexpr __m256i Vec256i(int _x1,  int _x2, int _x3,  int _x4) 
     { return  __m256i{  (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4,
                         (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4,
@@ -106,12 +122,77 @@ static constexpr __m256i Vec256i(int _x1,  int _x2, int _x3,  int _x4)
     static __forceinline __m256 Sin(__m256 a)                   { return _mm256_sin_ps(a); };
     static __forceinline __m256 Cos(__m256 a)                   { return _mm256_cos_ps(a); };
 
-    static __forceinline __m256i Veci64(int iValue)             { return _mm256_set1_epi64x(iValue); }
-    static __forceinline __m256i Vecii(int iValue)               { return _mm256_set1_epi32(iValue); }
-    static __forceinline __m256d Vecd(double fValue)            { return _mm256_set1_pd(fValue); }
-    static __forceinline __m256  Vecf(float fValue)             { return _mm256_set1_ps(fValue); }
-    static __forceinline __m256i Vecic(char cValue)             { return _mm256_set1_epi8(cValue); };
-    static __forceinline __m256i Veciuc(unsigned char ucValue)  { return _mm256_set1_epi8((char) ucValue); };
+    static __forceinline __m256i Veci64(int iValue)                 { return _mm256_set1_epi64x(iValue); }
+    static __forceinline __m256i Vecii(int iValue)                  { return _mm256_set1_epi32(iValue); }
+    static __forceinline __m256  Vecff(float fValue)                 { return _mm256_set1_ps(fValue); }
+    static __forceinline __m256  Vecf(float fValue)                 { return _mm256_set1_ps(fValue); }
+    static __forceinline __m256i Vecic(char cValue)                 { return _mm256_set1_epi8(cValue); };
+    static __forceinline __m256i Veciuc(unsigned char ucValue)      { return _mm256_set1_epi8((char) ucValue); };
+    static __forceinline __m256  Load(const float * fAddr)                { return _mm256_load_ps(fAddr); };
+    static __forceinline void    Store(float * fAddr,__m256 fValue) { return _mm256_store_ps(fAddr,fValue); };
+    
+    // double functions (added as needed, so this will be incomplete for longer than float versions above)
+
+    static __forceinline __m256d Vecfd(double fValue)                   { return _mm256_set1_pd(fValue); }
+    static __forceinline __m256d Vecf(double fValue)                    { return _mm256_set1_pd(fValue); }
+    static __forceinline __m256d Mul(__m256d a,__m256d b)               { return _mm256_mul_pd(a,b); };
+    static __forceinline __m256d Add(__m256d a,__m256d b)               { return _mm256_add_pd(a,b); };
+    static __forceinline __m256d Load(const double * fAddr)                   { return _mm256_load_pd(fAddr); };
+    static __forceinline void    Store(double * fAddr,__m256d fValue)   { return _mm256_store_pd(fAddr,fValue); };
+
+
+
+    static __forceinline __m256 CvtFloat(__m256i a)   { return _mm256_cvtepi32_ps(a); }
+    static __forceinline __m256d CvtFloat(__m128i a)   { return _mm256_cvtepi32_pd(a); }
+
+    static __forceinline __m256i CvttInt(__m256  a)   { return _mm256_cvttps_epi32 (a); }
+    static __forceinline __m256i CvttInt(__m128  a)   { return _mm256_cvttps_epi64 (a); }
+    static __forceinline __m256i CvttIntU(__m256  a)   { return _mm256_cvttps_epu32 (a); }
+    static __forceinline __m256i CvttIntU(__m128  a)   { return _mm256_cvttps_epu64 (a); }
+
+    static __forceinline __m256i CvtInt(__m256  a)   { return _mm256_cvtps_epi32 (a); }
+    static __forceinline __m256i CvtInt(__m128  a)   { return _mm256_cvtps_epi64 (a); }
+    static __forceinline __m256i CvtIntU(__m256  a)   { return _mm256_cvtps_epu32 (a); }
+    static __forceinline __m256i CvtIntU(__m128  a)   { return _mm256_cvtps_epu64 (a); }
+
+    static __forceinline __m128i CvttInt32(__m256d  a)   { return _mm256_cvttpd_epi32 (a); }
+
+    static __forceinline __m256i Pack32s(__m256i   a, __m256i b)   { return _mm256_packs_epi32 (a,b); }
+    static __forceinline __m256i Pack32us(__m256i   a, __m256i b)   { return _mm256_packus_epi32 (a,b); }
+    static __forceinline __m256i Pack32s(__m256i   a)   { return _mm256_packs_epi32 (a,_mm256_castsi128_si256(_mm256_extractf128_si256(a,1))); }
+    static __forceinline __m256i Pack32us(__m256i   a)   { return _mm256_packus_epi32 (a,_mm256_castsi128_si256(_mm256_extractf128_si256(a,1))); }
+
+    static __forceinline __m256i Pack16s(__m256i   a, __m256i b)   { return _mm256_packs_epi16 (a,b); }
+    static __forceinline __m256i Pack16us(__m256i   a, __m256i b)   { return _mm256_packus_epi16 (a,b); }
+    static __forceinline __m256i Pack16s(__m256i   a)   { return _mm256_packs_epi16 (a,a); }
+    static __forceinline __m256i Pack16us(__m256i   a)   { return _mm256_packus_epi16 (a,a); }
+
+    template<typename inType = float>
+    static __forceinline __m256i Cvtu8Int(__m128i a)    { return std::is_same<float,inType>::value ? _mm256_cvtepu8_epi32(a) : _mm256_cvtepu8_epi64(a); }
+    
+    template<typename inType = float>
+    static __forceinline __m256i Cvtu8Int(__m128 a)     { return std::is_same<float,inType>::value ?  _mm256_cvtepu8_epi32(_mm_castps_si128(a)) :  _mm256_cvtepu8_epi64(_mm_castps_si128(a)); }
+    
+    template<typename inType = float>
+    static __forceinline __m256i Cvtu8Int(__m128d a)    { return std::is_same<float,inType>::value ?  _mm256_cvtepu8_epi32(_mm_castpd_si128(a)) :  _mm256_cvtepu8_epi64(_mm_castpd_si128(a)) ; }
+
+
+
+
+    static __forceinline __m256i Cvtu8Intd(__m128i a)    { return _mm256_cvtepu8_epi64(a); }
+    static __forceinline __m256i Cvtu8Intd(__m128 a)     { return _mm256_cvtepu8_epi64(_mm_castps_si128(a)); }
+    static __forceinline __m256i Cvtu8Intd(__m128d a)    { return _mm256_cvtepu8_epi64(_mm_castpd_si128(a)) ; }
+
+    static __forceinline __m256i Cvtu8Intf(__m128i a)    { return _mm256_cvtepu8_epi32(a); }
+    static __forceinline __m256i Cvtu8Intf(__m128 a)     { return _mm256_cvtepu8_epi32(_mm_castps_si128(a)); }
+    static __forceinline __m256i Cvtu8Intf(__m128d a)    { return _mm256_cvtepu8_epi32(_mm_castpd_si128(a)) ; }
+
+    template<int i>
+    static __forceinline int Extract16(__m256i a) { return _mm256_extract_epi16(a,i); }
+
+    template<int i>
+    static __forceinline int Extract8(__m256i a) { return _mm256_extract_epi8(a,i); }
+
 
     #define Extractf128_si256(a,iIndex)  _mm256_extractf128_si256(a,iIndex)
 };
@@ -138,7 +219,7 @@ public:
 //                        (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4 }; }
 //
 //
-//static constexpr __m512 Vec512(float _x) { return  __m512{ _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x }; }
+static constexpr __m512 Vec512(float _x) { return  __m512{ _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x }; }
 //static constexpr __m512i Vec512i(int _x1,  int _x2, int _x3,  int _x4) 
 //    { return  __m512i{  (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4,
 //                        (char) _x1,(char) _x2,(char) _x3,(char) _x4, (char) _x1, (char) _x2, (char) _x3,(char) _x4,
@@ -180,6 +261,8 @@ public:
     static __forceinline __m512  Vecf(float fValue)             { return _mm512_set1_ps(fValue); }
     static __forceinline __m512i Vecic(char cValue)             { return _mm512_set1_epi8(cValue); };
     static __forceinline __m512i Veciuc(unsigned char ucValue)  { return _mm512_set1_epi8((char) ucValue); };
+    static __forceinline __m512  Load(float * fAddr)             { return _mm512_load_ps(fAddr); };
+    static __forceinline void Store(float * fAddr,__m512 fValue) { return _mm512_store_ps(fAddr,fValue); };
 
 
 

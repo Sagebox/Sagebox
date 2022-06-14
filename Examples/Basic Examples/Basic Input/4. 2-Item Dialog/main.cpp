@@ -69,7 +69,7 @@ int main()
                                  
     // We already have the radius values in Radius1 and Radius2
   
-    cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor);
+    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor);
 
     cWin.ExitButton();               // Wait for user input so the whole program doesn't close down, since we have no input loop or event structure.
 }

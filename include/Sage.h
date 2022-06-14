@@ -16,13 +16,28 @@
 #define __CSage_H__
 #pragma warning(push)
 #pragma warning(disable : 26451)    // Mute Microsoft "warning" about overflow (which, imo, is far too broad)
-#define EmptyString(_x) (!_x || !*_x)
+
+#define kCPP17Functions         // Temporary space -- uses C++17-style functions, using things like optional, etc.
+
+// include the C++17 regulars
+
+#ifdef kCPP17Functions
+#include <optional>
+#endif
+
+
+
+__forceinline bool EmptyString(const char * c) { return !c || !*c; }
+__forceinline bool EmptyString(const wchar_t * c) { return !c || !*c; }
+__forceinline bool EmptyString(const unsigned char * c) { return !c || !*c; }
+//#define EmptyString(_x) (!(const char *)_x || !*_x)   <-- obsolete $$ remove
 
 #define kStdMsg(_x)		nullptr
 #define kStdPassThrough nullptr			// i.e. "@", or some other token to refer to passing the last error 
 #define stdNoMsg		nullptr
 
-#define __SageInline  __forceinline
+#define __SageInline  __forceinline // Deprecated
+#define _sageinline  __forceinline
 #define SupportGDI
 
 #ifdef SupportGDI
@@ -110,8 +125,9 @@ enum class ImageStatus
 
 // goto versions of std asserts to avoid assert detection (i.e. to do it quietly without raising debugger alerts for casual/non-catostrophic items
 //
-#define stdTryG		bool bError = false; char *___sErrMsg = nullptr;{ 
-#define stdAssertG(_x,_msg) {  if (!((int) (_x))) { Sage::StopHere();___sErrMsg = _msg; bError = true; goto __Err;; } }
+#define stdTryG		bool bError = false; const char *___sErrMsg = nullptr;{ 
+#define stdAssertG(_x,_msg) {  if (!((_x))) { Sage::StopHere();___sErrMsg = _msg; bError = true; goto __Err;; } }
+#define stdAssertNoMsgG(_x) {  if (!((_x))) { Sage::StopHere();___sErrMsg = stdNoMsg; bError = true; goto __Err;; } }
 #define stdCatchG  } __Err:
 #define stdAssertLG(_x,_msg) _x		// versions for stdAssert embedded in Lambdas
 #define stdCatchSageG } __Err:  
@@ -159,6 +175,39 @@ enum class ImageStatus
 
 namespace Sage
 {
+
+// Math namespace to be filled out over time. 
+//
+// Right now, mostly constants and conversions. 
+//
+namespace Math
+{
+    constexpr double PI =  3.141592653589793238;
+    constexpr float  PIf = 3.141592653589793238f;
+    constexpr double ToRad(double fDeg) { return fDeg * PI / 180.0; };
+    constexpr double ToDeg(double fDeg) { return fDeg * 180.0 / PI; };
+    constexpr float  ToRad(float fDeg) { return fDeg * PIf / 180.0f; };
+    constexpr float  ToDeg(float fDeg) { return fDeg * 180.0f / PIf; };
+    constexpr double  ToRad(int iDeg) { return (double) iDeg * PI / 180.0; };
+}
+
+    // System-wide global events. 
+    // Negative numbers are for internal usage.
+    // Use positive values (greater than 0) for user events. 
+
+    enum class SystemGlobalEvents
+    {
+        Unknown         = 0,
+        DevWinAutoClose = -1,   // Tells all non-child dev windows to add close 'X' buttons when there are no primary windows visible.
+                                // It also tells the window to close automatically rather than allowing the user to handle it -- 
+                                // it hides the window on close because this is a signal that the system is waiting for it to close to exit.
+    };
+    enum class QuickFormType
+    {
+        None,
+        Parent,
+        Child
+    };
     class cwfOpt;
     using SageEventHookFunc = bool(*)(HWND hwnd,void * pData,int64_t ullExtra);
 
@@ -172,6 +221,15 @@ namespace Sage
 	constexpr const char * BoolStringYU(bool bValue) { return bValue ? "Yes" : "No"; };
 	constexpr const char * BoolStringYUU(bool bValue) { return bValue ? "YES" : "NO"; };
 
+
+    // Sagebox icon bitmaps embedded in Sagebox. 
+
+    enum class SageIconType
+    {
+        Green32,    // Green project 32x32 icon
+        // Only 1 so far.
+
+    };
     // Keyboard accelerator messages -- still to be completely defined. 
     // Right now, it a placeholder for the ^C keyboard accelerator when the Control-C Exit option is on
     // 
@@ -199,6 +257,7 @@ namespace Sage
         SageboxID             = 0x10,     // generic Sagebox Info, versioning
         TerminateProcess      = 0x20,     // Terminate Program (i.e. for programs that hang or are unresponsive)
         ShowProcessWin        = 0x30,     // Show process window debug (creates it if non-existent)
+        UserSysMenu           = 0x40,     // Starting value for user-added sysmenu items
     };
 	enum class Peek : bool
 	{
@@ -211,7 +270,37 @@ namespace Sage
         Suspended,
 		Unknown,
     };
+    struct EventTrack
+    {
+        int iCount; 
+        bool bEventActive; 
+        __forceinline void ClearEvent() { bEventActive = false; }
+        __forceinline void SetEvent() 
+        {
+            bEventActive = true;
+            iCount++;
+        }
 
+        __forceinline bool EventActive(Sage::Peek peek)
+        {
+            bool bReturn = bEventActive;
+            if (peek != Peek::Yes) bEventActive = false;
+            return bReturn;
+        }
+        __forceinline bool EventActive(bool bPeek) { return EventActive(bPeek ? Peek::Yes : Peek::No); }
+        __forceinline bool NewEvent(EventTrack & stOldEvent,Peek peek = Peek::Yes)
+        {
+            if (stOldEvent.iCount == iCount || !bEventActive) return false;
+
+            stOldEvent = *this;
+            return EventActive(peek);
+        }
+    };
+    struct Events
+    {
+        EventTrack evWindowResizing;
+        EventTrack evWindowResized;
+    };
 
     // SageEvent -- a list of all events that pass through GetEvent() (possibly others) 
     //
@@ -239,8 +328,8 @@ namespace Sage
         ButtonPress,
         ButtonUnpress,
         MouseMoved,
-        MouseLButtonDown,
-        MouseRButtonDown,
+        MouseLButtonClicked,
+        MouseRButtonClicked,
         CloseWindowPressed,
 
         // This list in-progress.  Not all events may be processed with ClearEvent() -- WindowResize is currently the only one intended, but others will follow. 
@@ -444,14 +533,42 @@ enum class BorderType
 	Depressed,
 	None,
 }; 
+// The numbering of these values may not change without entire system review.
+// (everything in the code should be symbolic, though)
+//
 enum class LabelJust
 {
-	None,
-	Top,
-	Bottom,
-	Left,
-	Right,
-	SetXPos,
+    Default           = 0,
+	None              = 0,
+	Top               = 1,
+	Bottom            = 2,
+	Right             = 3,
+	Left              = 4,
+    Center            = 5,
+    TopRight          = 6,
+    TopLeft           = 7,
+    TopCenter         = 8,
+    BottomRight       = 9,
+    BottomLeft        = 10,
+    BottomCenter      = 11,
+	SetXPos           = 12,
+};	
+
+enum class TextJust
+{
+    Default           = 0,
+	None              = 0,
+	Top               = 1,
+	Bottom            = 2,
+	Right             = 3,
+	Left              = 4,
+    Center            = 5,
+    TopRight          = 6,
+    TopLeft           = 7,
+    TopCenter         = 8,
+    BottomRight       = 9,
+    BottomLeft        = 10,
+    BottomCenter      = 11,
 };	
 
 class CWindow;
@@ -656,20 +773,22 @@ typedef RGBColor32* pRGB32;
     //
     // note:  At some point, all opt:: names are expected to be replaced with an integer identifier.
     //
+    // note --> Strings with multiple forms must start with ';', i.e. ";normalize;normalized"
+    //
     class OptName
     {
     public:
         static constexpr const char * __CenterX         = "__CenterX";      // Internal X range for centering (overriding default window size range
         static constexpr const char * __CenterY         = "__CenterY";      // Internal Y range for centering (overriding default window size range
         static constexpr const char * CenterXY          = "CenterXY";      
-        static constexpr const char * CenterX           = "JustCenterX";   
-        static constexpr const char * CenterY           = "JustCenterY";   
-        static constexpr const char * Center            = "CenterY";   
+        static constexpr const char * CenterX           = ";CenterX;JustCenterX";   
+        static constexpr const char * CenterY           = ";CenterY;JustCenterY";   
+        static constexpr const char * Center            = "Center";   
         static constexpr const char * Checkbox          = "Checkbox";       // $$ May not be part of opt::namespace and used as opt::Str("<id>"), i.e. opt::str("checkbox")., etc.
         static constexpr const char * RadioButton       = "RadioButton";    // $$ May not be part of opt::namespace and used as opt::Str("<id>"), i.e. opt::str("checkbox")., etc.
         static constexpr const char * JustCenter        = "JustCenter";    
-        static constexpr const char * JustCenterX       = "JustCenterX";   
-        static constexpr const char * JustCenterY       = "JustCenterY";   
+        static constexpr const char * JustCenterX       = ";CenterX;JustCenterX";   
+        static constexpr const char * JustCenterY       = ";CenterY;JustCenterY";   
         static constexpr const char * JustRight         = "JustRight";     
         static constexpr const char * JustLeft          = "JustLeft";      
         static constexpr const char * JustTopRight      = "JustTopRight";  
@@ -680,9 +799,9 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * JustTopCenter     = "JustTopCenter";   
         static constexpr const char * JustTop           = "JustTop";         
         static constexpr const char * JustBottom        = "JustBottom";    
-        static constexpr const char * TextCenterX       = "TextCenterX";   
+        static constexpr const char * TextCenterX       = ";TextCenterX;TextCenter";   
         static constexpr const char * TextCenterY       = "TextCenterY";   
-        static constexpr const char * TextCenter        = "TextCenter";   
+        static constexpr const char * TextCenter        = ";TextCenter;TextCenterX";   
         static constexpr const char * TextCenterXY      = "TextCenterXY";   
         static constexpr const char * TextRight         = "TextRight";   
         static constexpr const char * TextLeft          = "TextLeft";   
@@ -694,8 +813,16 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * NoClose           = "NoClose";   
         static constexpr const char * Popup             = "Popup";   
         static constexpr const char * Label             = "Label";   
+        static constexpr const char * LabelRight        = "LabelRight";   
+        static constexpr const char * LabelLeft         = "LabelLeft";   
+        static constexpr const char * LabelTop          = "LabelTop";   
+        static constexpr const char * LabelBottom       = "LabelBottom";   
+        static constexpr const char * LabelFont         = "LabelFont";   
+        static constexpr const char * TitleFont         = "TitleFont";   
+        static constexpr const char * LabelColor        = "LabelColor";   
         static constexpr const char * NoCancel          = "NoCancel";   
         static constexpr const char * NoAutoHide        = "NoAutoHide";   
+        static constexpr const char * NoAutoUpdate      = "NoAutoUpdate";   
         static constexpr const char * NoSizing          = "NoSizing";   
         static constexpr const char * ToolWindow        = "ToolWindow";   
         static constexpr const char * Modal             = "Modal";   
@@ -715,20 +842,87 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * MinValue          = "MinValue";
         static constexpr const char * MaxValue          = "MaxValue";
         static constexpr const char * Checked           = "Checked";
-        static constexpr const char * Width             = "Width";
-        static constexpr const char * Height            = "Height";
+        static constexpr const char * Width             = "SizeX";
+        static constexpr const char * Height            = "SizeY";
+        static constexpr const char * MaxWidth          = "MaxSizeX";
+        static constexpr const char * MaxHeight         = "MaxSizeY";
         static constexpr const char * Columns           = "Columns";
         static constexpr const char * Rows              = "Rows";
         static constexpr const char * Hidden            = "Hidden";
         static constexpr const char * Style             = "Style";
-        static constexpr const char * fgColor           = "fgColor";
+        static constexpr const char * fgColor           = ";fgColor;TextColor";
+        static constexpr const char * TextColor         = ";TextColor;fgColor";
         static constexpr const char * bgColor           = "bgColor";
+        static constexpr const char * bgColor2          = "bgColor2";
         static constexpr const char * Transparent       = "Transparent";
-        static constexpr const char * NoBlanks          = "NoBlanks";
+        static constexpr const char * NoBlanks          = ";NoBlanks;NoBlank";
         static constexpr const char * EmptyOk           = "EmptyOk";
         static constexpr const char * QuickCpp          = "QuickCpp";      
         static constexpr const char * DebugMode         = "DebugMode";      
+        static constexpr const char * Font              = "Font";      
+        static constexpr const char * Embed             = "Embed";      
+        static constexpr const char * FastMode          = "FastMode";      
+        static constexpr const char * Literal           = "Literal";      
+        static constexpr const char * Lit               = "Lit";      
+        static constexpr const char * UseEventThread    = "UseEventThread";      
+        static constexpr const char * Fullscreen        = "Fullscreen";      
+        static constexpr const char * SizeX             = "SizeX";      
+        static constexpr const char * SizeY             = "SizeY";      
+        static constexpr const char * MaxSizeX          = "MaxSizeX";      
+        static constexpr const char * MaxSizeY          = "MaxSizeY";      
+        static constexpr const char * LocX              = "LocX";      
+        static constexpr const char * LocY              = "LocY";      
+        static constexpr const char * AddBorder         = "AddBorder";      
+        static constexpr const char * NoResize          = "NoResize";      
+        static constexpr const char * ResizeOk          = ";ResizeOk;ResizingOk;AllowResize;AllowResizing;Resizeable;Resizable";      
+        static constexpr const char * Reversed          = ";Reversed;Reverse";     
+        static constexpr const char * SetTopmost        = "SetTopmost";     
+        static constexpr const char * SetIcon           = "SetIcon";     
+        static constexpr const char * InnerSize         = "InnerSize";     
+        static constexpr const char * FrameSize         = "FrameSize";     
+        static constexpr const char * OffsetX           = ";OffsetX;XOffset";     
+        static constexpr const char * OffsetY           = ";OffsetY;YOffset";     
+        static constexpr const char * NumbersOnly       = "NumbersOnly";     
+        static constexpr const char * FloatsOnly        = "FloatsOnly";     
+
+        //imgOpt-specific names (ones that are not shared with general names)
+
+        static constexpr const char * Percent           = "Percent";
+        static constexpr const char * BeforeTitle       = "BeforeTitle";
+        static constexpr const char * AfterTitle        = "AfterTitle";
+        static constexpr const char * Maximize          = ";Maximize;Maximized";
+        static constexpr const char * ZoomBox           = "ZoomBox";
+        static constexpr const char * FillZoom          = "FillZoom";
+        static constexpr const char * WaitforClose      = ";WaitforClose;WaitClose";
+        static constexpr const char * Normalized        = ";Normalize;Normalize";
+        static constexpr const char * WinColors         = ";WinColors;WinColor";
+        static constexpr const char * VScroll           = "VScroll";
+        static constexpr const char * HScroll           = "HScroll";
+        static constexpr const char * MultiLine         = "MultiLine";
+        static constexpr const char * WantReturn        = ";WantReturn;WantReturns";
+        static constexpr const char * ThickBorder       = "ThickBorder";
+        static constexpr const char * Recessed          = "Recessed";
+        static constexpr const char * DirectDraw        = "DirectDraw";
+        static constexpr const char * RealTime          = "RealTime";
+        static constexpr const char * AsFloat           = "AsFloat";
+        static constexpr const char * SageIcon          = "SageIcon";
+
+            // Private but publicly available items that don't need a SageOpt function
+
+        static constexpr const char * UsingSysMenu      = "UsingSysMenu";      // Using the System Menu (for adding separators manually in the sys menu) 
+
+        // Internal Use Items that don't have SageOpt functions (There may be some above not used here) 
         static constexpr const char * _DefaultTitle     = "_DefaultTitle";      // Internal use
+        static constexpr const char * _Just             = "_Just";              // Internal use
+        static constexpr const char * _LabelJust        = "_LabelJust";         // Internal use
+        static constexpr const char * _IconJust         = "_IconJust";          // Internal use
+        static constexpr const char * _SetIcon32        = "_SetIcon32";         // Internal use
+        static constexpr const char * _NonPrimary       = "_NonPrimary";         // Internal use
+        static constexpr const char * __OffsetX_Any     = ";OffsetX;XOffset;PadX";     
+        static constexpr const char * __OffsetY_Any     = ";OffsetY;YOffset;PadY";     
+        static constexpr const char * __TempEmptyOk     = "__TempEmptyOk";
+        static constexpr const char * __EmptyBlankErr   = "__EmptyBlankErr";
+        static constexpr const char * __NoExdent        = "__NoExdent";
 
 
     };  
@@ -740,7 +934,14 @@ typedef RGBColor32* pRGB32;
 		Always,
 		Passive,
 	};
-	enum class WindowScroll
+
+    enum class VsyncType
+    {
+        Auto,
+        Begin,
+        End,
+    };
+    enum class WindowScroll
 	{
 		Enabled,				// Causes the window to scroll when text written on the last line of the display
 		Disabled,				// When text is written to the bottom of the screen, the window won't scroll.  This helps controls (i.e. buttons, sliders, etc.) keep the same background
@@ -790,8 +991,8 @@ public:
 	int iBlue;
 public:
 	__forceinline RGBColor_t operator * (const RGBColor_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
-	__forceinline RGBColor_t operator + (const RGBColor_t & r2) { return { iRed + r2.iRed, iGreen + r2.iGreen, iBlue + r2.iBlue }; }
-	__forceinline RGBColor_t operator - (const RGBColor_t & r2) { return { iRed +- r2.iRed, iGreen - r2.iGreen, iBlue - r2.iBlue }; }
+	__forceinline RGBColor_t operator + (const RGBColor_t & r2) { return { min(255,max(0,iRed + r2.iRed)), min(255,max(0,iGreen + r2.iGreen)), min(255,max(0,iBlue + r2.iBlue)) }; }
+	__forceinline RGBColor_t operator - (const RGBColor_t & r2) { return { min(255,max(0,iRed - r2.iRed)), min(255,max(0,iGreen - r2.iGreen)), min(255,max(0,iBlue - r2.iBlue)) }; }
 	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
 	__forceinline RGBColor_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
 	__forceinline RGBColor_t operator * (double fValue) { return { (int) ((double)iRed*fValue),  (int) ((double)iGreen*fValue),  (int) ((double)iBlue*fValue) }; }
@@ -799,8 +1000,8 @@ public:
 	__forceinline RGBColor_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
     __forceinline RGBColor_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
 
-	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
-	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+	//__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
+	//__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
    	operator RGBColorA_t ();
 
 #ifdef SupportGDI
@@ -811,9 +1012,9 @@ public:
 
 	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
 	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
-	__forceinline RGBColor_t & fromRGB(DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
-	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
-	__forceinline RGBColor_t & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
+    __forceinline static RGBColor_t fromWinRGB(DWORD dwColor) { return RGBColor_t{ (int) GetRValue(dwColor), (int)  GetGValue(dwColor), (int)  GetBValue(dwColor) }; }
+	__forceinline DWORD operator * () { if (iRed < 0 && iGreen < 0 && iBlue < 0) return -1; return RGB(iRed,iGreen,iBlue);  }
+	__forceinline RGBColor_t & operator = (DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
 	
 	/// <summary>
 	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
@@ -831,21 +1032,33 @@ public:
 	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
 	RGBColor_t & SetUndefined();
 	bool Undefined();
-    __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
-    __forceinline RGBColor_t fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
-    __forceinline RGBColor_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
-    __forceinline RGBColor_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
+    static __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
+    static __forceinline RGBColor_t fromGray(float fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
+     __forceinline RGBColor_t toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
+    __forceinline RGBColor_t toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
 	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
-	__forceinline double Gray() { return (double) ((int)(iRed+iGreen+iBlue))/3.0; }
-	double LabGray();
+	__forceinline float Gray() { return (float) ((int)(iRed+iGreen+iBlue))/3.0f; }
+	float LabGray();
     static RgbColor fromHSL(const HSLColor_t & hslColor);
     static RgbColor fromHSL(double fHue);
     static RgbColor fromHSL(float fHue);
 
+    static RgbColor fromHSV(const HSLColor_t & hslColor);
+    static RgbColor fromHSV(double fHue);
+    static RgbColor fromHSV(float fHue);
+
     // Hue from 0-360
     static RgbColor fromHSL(int iHue);
+    static RgbColor fromHSV(int iHue);
 
 	__forceinline void Clip() { iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
+};
+
+struct RgbGradient
+{
+    RgbColor   color1;
+    RgbColor   color2;
+    bool       bHorizontal;    // Default is vertical
 };
 
 struct RGBColorA_t
@@ -940,6 +1153,7 @@ public:
 		int iWidth;
 		int iHeight;
 		int iTotalSize;
+        bool bInterlaced;   // Interlaced RGB when true; split RGB when false
 		bool bAlignedMem;	// True of memory aligned
 							// $$ This is temporary until all legacy functions
 							// are verified to use aligned memory
@@ -998,7 +1212,7 @@ public:
 		RawBitmap_t operator - ();
 
 		// Check if empty -- it's only empty if everything is 0. Otherwise, it might be used as a bitmap or simply uninitialized
-		bool isEmpty();
+		bool isEmpty() const;
 		bool ApplyMaskColor(RawBitmap_t & stDest,DWORD dwColor);
 		bool ApplyMaskGraphic(Sage::RawBitmap_t & stBackground,Sage::RawBitmap_t & stDest);
 		bool ApplyMaskGraphic(Sage::RawBitmap_t & stSource, Sage::RawBitmap_t & stBackground,Sage::RawBitmap_t & stDest);
@@ -1041,10 +1255,12 @@ public:
 		// Returns true of there is a valid bitmap contained in the structure. 
 		// Returns true if the bitmap is empty (i.e. v.s. isInvalid() which only returns true of the data is corrupted).
 		//
-		bool isValid();
+		bool isValid() const;
 		SIZE GetSize();
+		FloatBitmap_t ConverttoFloatInterlaced();
+		FloatBitmap_t ConverttoFloatInterlaced(FloatBitmap_t & fBitmap) const;
 		FloatBitmap_t ConverttoFloat();
-		FloatBitmap_t ConverttoFloat(FloatBitmap_t & fBitmap);
+		FloatBitmap_t ConverttoFloat(FloatBitmap_t & fBitmap) const;
         static RawBitmap_t CreateBitmap(const unsigned char * sBitmap,int iWidth,int iHeight);
         static RawBitmap_t CreateBitmap(const unsigned char * sBitmap,SIZE szSize);
 
@@ -1107,6 +1323,13 @@ public:
 		void Clean();	// Use carefully
 		bool ClearBitmap();
 		int Init();
+
+		bool CopyFrom(RawBitmap32_t & stSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0});
+		bool Copyto(RawBitmap32_t & stDest, POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 });
+		bool FillColor(Sage::RGBColor_t rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
+		bool FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
+
+
         static RawBitmap32_t CreateFrom(CBitmap & cBitmap);
 	};
 	enum class ButtonType
@@ -1419,6 +1642,8 @@ enum class ControlSubStyles
 	bool FillBitmap(RawBitmap_t & stBitmap,RGBColor_t rgbColor);
 	bool CopyBitmap(RawBitmap_t & stSource,POINT pSourceStart, RawBitmap_t & stDest, POINT pDestStart, const SIZE & szSize); 
 	bool CopyBitmap(RawBitmap_t & stSource,RawBitmap_t & stDest); 
+	bool CopyBitmap(RawBitmap32_t & stSource,POINT pSourceStart, RawBitmap32_t & stDest, POINT pDestStart, const SIZE & szSize); 
+	bool CopyBitmap(RawBitmap32_t & stSource,RawBitmap32_t & stDest); 
 	bool MasktoBmp(RawBitmap_t & stSource,RawBitmap_t & stDest); 
 	[[nodiscard]] RawBitmap_t MasktoBmp(RawBitmap_t & stSource,bool * bSuccess = nullptr); 
 	bool CloneBitmap(RawBitmap_t & stSource,RawBitmap_t & stDest); 
@@ -1446,7 +1671,9 @@ enum class ControlSubStyles
 	bool toHex(char * sText,DWORD & dwValue);
 	unsigned int toHex(char * sText,bool * bFound);
 	char * SkipWhiteSpace2(char * sPlace);
+	const char * SkipWhiteSpace3(const char * sPlace);
 	char * SkipAlphaNumeric(char * sPlace);
+	const char * SkipAlphaNumeric(const char * sPlace);
 	char * SkipTrailingSpace(char * sPlace);
 	bool StripWhiteSpace(char * sSource,char * sDest);
 	bool StripLeadingCRLF(char * sSource,char * sDest);
@@ -1464,6 +1691,7 @@ enum class ControlSubStyles
 	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
 	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
+    CBitmap GetSageIcon(int iIcon); 
 
     // Console Functions
 

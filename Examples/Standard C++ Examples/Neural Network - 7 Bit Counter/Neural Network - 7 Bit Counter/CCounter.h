@@ -67,7 +67,7 @@ private:
     double  m_fTrainInputs[m_iInputs*m_iDataSets];          // Training Inputs
     double  m_fTrainOutputs[m_iInputs*m_iDataSets];         // Training Outputs
 
-    cnnErr_t TrainUpdate(const char * & sMsg) override;     // Override for TrainUpdate() called after every Epoch in the neural network
+    cnnErr TrainUpdate(const char * & sMsg) override;     // Override for TrainUpdate() called after every Epoch in the neural network
     void UpdateValueBox();
     void InitUI();
     CString RunNeuralNetwork();

@@ -54,7 +54,10 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len)
     fDrawTree DrawTree = [&](Point3D_t & sp, double line_len, double a,  double rg,double fDepth)
     {
         auto r = Point3D_t{0,-line_len}.RotateZ(a += rg *_ang) + sp;
-        cWin.DrawLine(sp,r,SageTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
+
+        // DrawLineFast() is used here to keep from anti-aliasing the pixels -- keeps it brighter
+
+        cWin.DrawLineFast((CfPointf) sp,(CfPointf) r,SageTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
 	    for (int i=0;i<2;i++) if (fDepth < 12) DrawTree(r, line_len*.75, a, i*2-1,fDepth+1 );
     };
 

@@ -211,7 +211,7 @@ int CMandelbrot::main()
 {
     // Create Sagebox and Main Mandelbrot Window
 
-    cWin = &Sagebox::NewWindow(100,100,szWinSize.cx,szWinSize.cy,"SageBox: Mandelbrot Smooth Color and 3-D Depth",InnerSize() | Resizeable());   // Create Mandelbrot window
+    cWin = &Sagebox::NewWindow(100,100,szWinSize.cx,szWinSize.cy,"SageBox: Mandelbrot Smooth Color and 3-D Depth",Resizeable());   // Create Mandelbrot window
                                                                                                 // Resizeable() allows the user to resize it with the mouse/maximize
     // Set the canvas size so we can resize the window with the mouse.
     // Otherwise, the window cannot be resized -- resizing can be turned off by adding "false" to

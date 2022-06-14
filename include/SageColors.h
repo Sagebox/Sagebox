@@ -177,6 +177,9 @@ namespace Sage
 	    static RgbColor  SkyBlue                         ; // RGB(40,145,255));
 	    static RgbColor  SkyBlueDark                     ; // RGB(0,30,128));
 	    static RgbColor  SkyBlueLight                    ; // RGB(75,165,255));
+	    static RgbColor  PaleBlueDark                    ; // RGB(40,100,140));
+	    static RgbColor  PaleBlue                        ; // RGB(103,179,217));
+	    static RgbColor  PaleBlueLight                   ; // RGB(145,190,215));
 	    static RgbColor  Cyan                            ; // RGB(0,255,255)); 
 	    static RgbColor  Red                             ; // RGB(255,0,0));
 	    static RgbColor  LightRed                        ; // RGB(255,128,128));
@@ -196,6 +199,8 @@ namespace Sage
 	    static RgbColor  Gray32                          ; // RGB(32,32,32)); 
 	    static RgbColor  Gray42                          ; // RGB(42,42,42)); 
 	    static RgbColor  Gray64                          ; // RGB(64,64,64)); 
+	    static RgbColor  Gray72                          ; // RGB(72,72,72)); 
+	    static RgbColor  Gray92                          ; // RGB(92,92,92)); 
 	    static RgbColor  Black                           ; // RGB(0,0,0)); 
 	    static RgbColor  LightGray                       ; // RGB(200,200,200));
 	    static RgbColor  LightGrey                       ; // RGB(200,200,200));

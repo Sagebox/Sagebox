@@ -232,7 +232,7 @@ CCounterNN::CCounterNN(unsigned int uiRandSeed,CDevNN::stLayerInput_t * stLayers
 //
 // This also shows an early soft (non-error) exit when the error reaches a certain minimum.
 //
-cnnErr_t CCounterNN::TrainUpdate(const char * & sMsg)
+cnnErr CCounterNN::TrainUpdate(const char * & sMsg)
 {
     static int iUpdateCount     = 0;
     static int iIter            = -1;
@@ -240,9 +240,9 @@ cnnErr_t CCounterNN::TrainUpdate(const char * & sMsg)
     
     double * fInputs,* fOutputs;
 
-    auto cnnReturnStatus = cnnErr_t::cnnOk;         // Ok for now, but might return a stop status
+    auto cnnReturnStatus = cnnErr::Ok;         // Ok for now, but might return a stop status
 
-    if (++iIter < m_iTrainResolution) return cnnOk; // Omly process every m_iTrainResolution iterations to keep it faster
+    if (++iIter < m_iTrainResolution) return cnnErr::Ok; // Omly process every m_iTrainResolution iterations to keep it faster
 
     double fError = getError();                     // Get current NN error
 
@@ -307,7 +307,7 @@ cnnErr_t CCounterNN::TrainUpdate(const char * & sMsg)
     
     if (!(iUpdateCount++ % 10)) UpdateValueBox();   // Only update the Values every 10 times, to keep the output faster, since it does a lot of work. 
 
-    auto SetStopMsg = [&](const char * sMessage) { sMsg = sMessage; cnnReturnStatus = cnnStop; }; // Just a shortcut lamdba to streamline code
+    auto SetStopMsg = [&](const char * sMessage) { sMsg = sMessage; cnnReturnStatus = cnnErr::Stop; }; // Just a shortcut lamdba to streamline code
 
     // Stop for three reasons:
     //
@@ -447,8 +447,8 @@ CString CCounterNN::RunNeuralNetwork()
 
     const char * sMsg;
 
-    if (eStatus == cnnErr) sprintf(cMsg,"Returned with Error: %s\n",GetErrorMsg());
-    else if (eStatus == cnnStop) 
+    if (eStatus == cnnErr::Err) sprintf(cMsg,"Returned with Error: %s\n",GetErrorMsg());
+    else if (eStatus == cnnErr::Stop) 
         (sMsg = GetErrorMsg()) ? sprintf(cMsg,"Done.\n%s\n",sMsg) : printf("Done.  Stopped by user or automatic process.\n");
     else sprintf(cMsg,"Train() Finished ok.\n");
     
@@ -483,8 +483,7 @@ void CCounterNN::Go(CWindow & cWin)
 //
 int CCounterNN::main()
 {
-  
-
+ 
     // Get quick bitmap from a PGR container file (in this case stored as a .JPEG)
     // This can be used instead of opening the PGR container and extracting 
     // the file manually.
@@ -493,7 +492,7 @@ int CCounterNN::main()
 
     // Create the Main Window for the 7-bit counter within the window that was passed to this function.
 
-    auto& cWin = SageBox::NewWindow(10,10,1200,690,"SageBox - Neural Network Example: 7-Bit Counter",opt::InnerSize());
+    auto& cWin = SageBox::NewWindow(10,10,1200,690,"SageBox - Neural Network Example: 7-Bit Counter");
 
     // ------------
     // Add the menu
@@ -510,19 +509,7 @@ int CCounterNN::main()
     static constexpr int kMenuItemExit     = 100;           // Exit program (set to automatically press Close Window Button)
     static constexpr int kMenuItemAbout    = 101;           // Launch About Window
 
-    auto cMenu = cWin.CreateMenu();      // Get a menu class so we can add a menu
-
-    cMenu.AddMenuItem("&Exit",kMenuItemExit);
-    cMenu.AddMenuItem("&About",kMenuItemAbout);
-    
-    cMenu.SetCloseButtonItem(kMenuItemExit);    // Set Exit to press the Window Close Button -- not we don't have to 
-                                                // look for the menu item ourselves because it will happen automatically.
-    
-    cMenu.ActivateMenu(true);                   // Turn the menu on -- this only needs to happen one time with the top-level menu only
-                                                // to tell windows to show the menu bar.
-
-
-
+    cWin.CreateMenu("&Exit=100,&About");
     cWin.DisplayBitmap(0,0,cBitmap);        // Display the bitmap we loaded from the PGR container
                                             // The window gets updated when the sub-windows are created.
 

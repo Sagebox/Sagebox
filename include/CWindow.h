@@ -46,7 +46,12 @@
 #include "CStyleDefaults.h"
 #include "Cpaswindow.h"
 #include "Point3D.h"
-
+#include "CDataStore.h"
+#include <tuple>
+#include <optional>
+#include <array>
+#include <map>
+#include "CQuickForm.h"
 #ifdef __SageGDIPlusSupport
 #include <gdiplus.h>
 #include "CGdiPlus.h"
@@ -144,6 +149,36 @@ public:
 
    // This private section should disappear altogether in an upcoming update
 private:
+
+    // Window Title Widget & Information for Child Windows with external titles.
+    //
+    //  Note -- The Window Titles for Child Windows are in-progress and may not be completely functional
+    // (such as adapting to window size changes and movements)
+    //
+    struct WindowTitle_t
+    {
+        CTextWidget     * cWidget;        // Title Widget 
+        bool              bHidden;        // Showing/not showing.
+    };
+
+
+    struct QuickFormType_t
+    {
+        QuickFormType eType;
+        CDataStore::DataStore_t stDatastore;
+        QuickFormEngine * pQuickForm;
+    };
+
+    // Memory allocated for various Window items, to avoid using stack memory.
+    struct WindowPackage_t
+    {
+        WindowTitle_t   stWindowTitle;
+        int             iLastSysMenu;
+        bool            bPlacedSysMenuBorder;   // i.e. the one Sagebox adds
+        bool            bMagicWindow;
+        QuickFormType_t stQuickFormType;
+    };
+    static constexpr const char * kDefaultChildTitleFont = "17";                  // Font to set Child Title Widgets to when font is not specified in the options.
     friend CDevControls;
     friend CMenu;
     friend WinOpt;
@@ -168,6 +203,8 @@ private:
     bool m_bTransparent             = false;                                // True when a child widow is transparent (so it can be updated through UpdateBg() or automatically)
     bool m_bShowInitial             = false;                                // Internal use, subject to change
     bool m_bShowInitialized         = false;                                // Internal use, subject to change
+
+    WindowPackage_t * m_WindowPackage    = nullptr;                         // Allocated memory window used for various items to keep from using the stack. 
     unsigned char * m_sLastKnownDIBMem   = nullptr;                         // Last Known DIB section memory installed by user ($$ This is temporary and will be removed)
     SIZE m_szLastKnownDIBSize       = {};                                   // Last Known DIB section size installed by user ($$ This is temporary and will be removed)
 
@@ -176,6 +213,7 @@ private:
     void _vprintf(const char * Format,va_list va_args);                                 // Used internally
     void _vprintf(const cwfOpt & cwOpt,const char * Format,va_list va_args);                                 // Used internally
 
+    void DestructWindowPackage();                                           // Handle Destruction of Window Package Items & Window Package Memory itself
 #ifdef __SageGDIPlusSupport
     static Gdiplus::Graphics m_cEmptyGDI;           // Empty GDI for invalid windows, etc. -- something to return that the GDI can deal with as an object with a NULL HDC
     Gdiplus::Graphics * m_cGDI = nullptr;           // The one and only GDI graphics object, though the user can create their own.
@@ -359,6 +397,7 @@ private:
     POINT                         m_pLastAutoWindowLocOrg   = {};
     int                           m_iAutoWindowLocStep      = 0;
     CString                     * m_cTempString             = nullptr;    // Used for various temp uses.
+    CString                     * m_cTempString2            = nullptr;    // Used for various temp uses.
     char                        * m_sOptLine                = nullptr;    // Used for retrieving options.  Do not dealloc;
     int                           m_iWaitEventCount         = 0;
     int                           m_iEventCounter           = 0;
@@ -380,6 +419,7 @@ private:
     CEditBox                * m_cEditBox            = nullptr;
     CButton                 * m_cButton             = nullptr;
     HWND                      m_hWnd                = nullptr;
+    HMENU                     m_hMenu               = nullptr;  // Last known menu
 
     CEControlAction_t       * m_stControl;
     CEWindow_t              * m_stWindow;
@@ -404,25 +444,45 @@ private:
     int GetOptInt(const char * sFind,bool & bSet);
     int GetOptInt(const char * sFind);  // An oversight for not making bool & bSet a pointer.
     bool GetOptInt(const char * sFind,int & iValue);
+
     long long GetOptLongLong(const char * sFind,bool & bSet);
     long long GetOptLongLong(const char * sFind);  // An oversight for not making bool & bSet a pointer.
     bool GetOptLongLong(const char * sFind,long long & iValue);
+    long GetOptLong(const char * sFind,bool & bSet);
+    long GetOptLong(const char * sFind);  // An oversight for not making bool & bSet a pointer.
+    bool GetOptLong(const char * sFind, long & iValue);
     bool GetOptColor(const char * sFind,DWORD & dwColor);
     bool GetOptColor(const char * sFind,RGBColor_t & rgbColor);
+
     double GetOptFloat(const char * sFind,bool & bSet);
     bool GetOptFloat(const char * sFind,double & fValue);
     CString GetOptString(const char * sFind,bool * bSet = nullptr);
     bool GetOptString(const char * sFind,CString & stString);
     bool GetOptBool(const char * sFind,bool bDefault = false); 
+
+    std::optional<std::array<long,2>> GetOptLongPair(const char * sFind);
+    std::optional<SIZE> GetOptSize(const char * sFind);  
+    bool GetOptSize(const char * sFind,SIZE * szSize); 
+    SIZE GetOptSize(const char * sFind,SIZE szDefault);  
+
+    std::optional<POINT> GetOptPoint(const char * sFind);  
+    bool GetOptPoint(const char * sFind,POINT * pPOint); 
+    POINT GetOptPoint(const char * sFind,POINT pDefault);  
+    const char * GetOptPointer(const char * sFind); 
+
+
     void SetOptLine(const char * sOptions);
     POINT GetNewAutoWindowLoc();
     const char * GetInput(const char * sControls = nullptr,const char * sDefaultText = nullptr); 
     bool TranslateButtonStyle(SageString200 & stStyle,char * sStyle,char * sDefaultStyle,CStyleDefaults::ControlType eControlStyle,bool bStrict = false);
     bool _AutoUpdate(Sage::UpdateDirty upDateDirty);
     SIZE CreateGenericButtonGroup(bool bRadioButton,int iNumButtons,int iX,int iY,const char * * sButtonNames,int iGroupID, const char * sLabel, const cwfOpt & cwOpt = cwfOpt());
+        
+    
 
 protected:
     friend DialogStruct;
+    bool                  m_bActive         = false;    // Is the Window Active? (If not, it acts as if it is deleted)
     CUserWindow         * m_cUserWin        = nullptr;  // Main engine Window Interface
     CDavinci            * m_cDavinciMain    = nullptr;  // Interface to CSageBox global functions (Deprecated)
     CSageBox            * m_cSageBox        = nullptr;  // Main SageBox core
@@ -435,7 +495,7 @@ protected:
     // -----------------------------------------------------------------------------------------
 
 public:
-    // Empty controls used for various routine to return the empty controls rather than nullptrs, for fallthrough errors
+   // Empty controls used for various routine to retu rn the empty controls rather than nullptrs, for fallthrough errors
 
     static CWindow            m_cEmptyWindow;           // Returned when control not found for any function that returns a conrol reference.
     static CButton            m_cEmptyButton;          
@@ -444,6 +504,10 @@ public:
     static CListBox           m_cEmptyListBox;         
     static CComboBox          m_cEmptyComboBox;        
     static CDialog            m_cEmptyDialog;          
+    
+    // Returns Main Sagebox Root Hidden Window
+    //
+    static CWindow * GetSageWindow(); 
 
     // --------------------------------------------------------------------------------------------------------------
     // opt -- allows easy option-finding for writing Widgets and other functions that use options embedded in strings
@@ -480,6 +544,15 @@ public:
         // GetOptInt() -- Find an integer value in a string, i.e. "Offset=1234"
         //
         int                 GetOptInt(const char * sFind);
+        std::optional<int>  GetInt(const char * sFind);
+        int GetInt(const char * sFind,int iDefault);
+        std::optional<double>  GetFloat(const char * sFind);
+        double GetFloat(const char * sFind,double fDefault);
+        int GetOptIntOr(const char * sFind,int iDefault); 
+
+        std::optional<long>  GetLong(const char * sFind);
+        long GetLong(const char * sFind,long iDefault);
+        long GetOptLongOr(const char * sFind,long iDefault); 
 
         // GetOptInt() -- Find an integer value in a string, i.e. "Offset=1234"
         //
@@ -487,27 +560,42 @@ public:
 
         // GetOptLongLong() -- Find an integer value in a string, i.e. "Offset=1234"
         //
-        long long                 GetOptLongLong(const char * sFind,bool & bSet);
+        long long GetOptLongLong(const char * sFind,bool & bSet);
 
         // GetOptLongLong() -- Find an integer value in a string, i.e. "Offset=1234"
         //
-        long long                 GetOptLongLong(const char * sFind);
+        long long GetOptLongLong(const char * sFind);
 
-         // GetOptLongLong() -- Find an longlong value in a string, i.e. "Offset=1234"
+        // GetOptLongLong() -- Find an longlong value in a string, i.e. "Offset=1234"
         //
-        bool                GetOptLongLong(const char * sFind,long long & iValue);
+        bool GetOptLongLong(const char * sFind,long long & iValue);
+
+        // GetOptLong() -- Find an integer value in a string, i.e. "Offset=1234"
+        //
+        long GetOptLong(const char * sFind,bool & bSet);
+
+        // GetOptLong() -- Find an integer value in a string, i.e. "Offset=1234"
+        //
+        long GetOptLong(const char * sFind);
+
+         // GetOptLong() -- Find an longlong value in a string, i.e. "Offset=1234"
+        //
+        bool GetOptLong(const char * sFind, long & iValue);
 
         // Get a color in the string.  This can take two forms, typically generated by cwfOpt
         // i.e. fgColor="Red" or fgColor=\x123456
         // i.e. fgColor("Red"), fgColor(MyColor), fgColorRGB(255,0,0)), fgColor({255,0,0})
         //
-        bool                GetOptColor(const char * sFind,DWORD & dwColor);
+        bool GetOptColor(const char * sFind,DWORD & dwColor);
+        
  
         // Get a color in the string.  This can take two forms, typically generated by cwfOpt
         // i.e. fgColor="Red" or fgColor=\x123456
         // i.e. fgColor("Red"), fgColor(MyColor), fgColorRGB(255,0,0)), fgColor({255,0,0})
         //
         bool                GetOptColor(const char * sFind,RGBColor_t & rgbColor);
+        std::optional<RgbColor> GetColor(const char * sFind); 
+        RgbColor GetColor(const char * sFind,RgbColor rgbDefault); 
 
         //Get a float value from a string, i.e. "Radius = 4.5"
         //
@@ -528,9 +616,11 @@ public:
         // i.e. opt::Group("MyGroup");
         //
         bool                GetOptString(const char * sFind,CString & stString);
+        CString             GetString(const char * sFind,const char * sDefault = nullptr);
+        bool                GetString(const char * sFind,CString * cOutString);
 
         // Get a boolean from the input stream, which is defined by being declared
-        // For eample, GetOptBool("Transparent") returns TRUE of Transparent is defined
+        // For example, GetOptBool("Transparent") returns TRUE of Transparent is defined
         // (but not assigned -- "Transparent=<value>" is ignored. 
         // 
         // Returns FALSE if Transparent is not declared
@@ -538,6 +628,45 @@ public:
         //
         bool                GetOptBool(const char * sFind,bool bDefault = false);
 
+        std::optional<std::array<long,2>> GetOptLongPair(const char * sFind);
+        std::optional<SIZE> GetOptSize(const char * sFind);  
+        bool GetOptSize(const char * sFind,SIZE * szSize); 
+        SIZE GetOptSize(const char * sFind,SIZE szDefault);  
+
+        std::optional<POINT> GetOptPoint(const char * sFind);  
+        bool GetOptPoint(const char * sFind,POINT * pPOint); 
+        POINT GetOptPoint(const char * sFind,POINT pDefault);  
+
+        const char * GetOptPointer(const char * sFind); 
+
+        template<typename eType>
+        eType GetMapEnum(const char * sValName,std::map<std::string,eType> & inMap,eType eDefault = eType::Unknown)
+        {
+            auto eReturn = eDefault;
+            if (EmptyString(sValName)) return eReturn;
+            auto sTemp = CWindow::GetSageWindow()->opt.GetOptString(sValName); 
+            if (!EmptyString(sTemp))
+            {
+                auto c = inMap.find(*sTemp); 
+                if (c != inMap.end()) eReturn = c->second; 
+            }
+            return eReturn;
+        }
+        template<typename eType>
+        eType GetMapBool(std::map<std::string,eType> & inMap,eType eDefault = eType::Unknown)
+        {
+            auto eReturn = eDefault;
+            for (auto & name : inMap) 
+            {
+                if (GetOptBool(name.first.c_str()))
+                {
+                    eReturn = name.second;
+                    break;
+                }
+            }
+ 
+            return eReturn;
+        }
         // Set the options line.  This used for all Get operations.  If not set, then it will return on a null string or 
         // act on the last known string.  
         //
@@ -550,7 +679,7 @@ public:
     // Returns true if an event has occurred.  This can be used when GetEvent() isn't appropriate (such as in a loop that takes a lot of time)
     // When GetEvent() is called, the Event Pending Status is cleared back to false
     //
-    __forceinline bool EventReady() { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(); }                                     // $QC
+    __forceinline bool EventPending(Peek peek = Peek::No) { return (!this || !m_cUserWin) ? false : m_cUserWin->EventPending(peek); }                                     // $QC
 
     // ClearEvent() -- Clear a specific pending event (whether it is pending or not).  This can be called before GetEvent() to clear the 
     // Event Queue of any specific event. For example, ClearEvent(SageEvent::MouseMove) or ClearEvent(SageEvent::WindowResize). 
@@ -578,6 +707,12 @@ public:
     // acted upon as received by windows. 
     //
     bool SetMessageHandler(CWindowHandler & cHandler,void * pClassInfo = nullptr);                                                              // $QC
+
+    // $$ Temporary until AddHandler() and RemoveHandle() become available.  TBD
+    bool __SetAdminHandler(CWindowHandler * cHandler,void * pClassInfo = nullptr);                                                              // $QC       
+    // $$ Temporary until AddHandler() and RemoveHandle() become available.  TBD
+    bool __SetAdminHandler(CWindowHandler & cHandler,void * pClassInfo = nullptr);                                                              // $QC
+
 
     // in -- used as C++ cin, but with more options.
     // use MyWindow.in or just in when in the class the same way as C++.
@@ -1256,6 +1391,52 @@ public:
     //
     void Cls(RGBColor_t rgbColor,RGBColor_t rgbColor2);                                                                                                         // $QCC    
 
+    // Clears the window and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsHold(DWORD iColor1=-1,DWORD iColor2 = -1);                                                                                                              // $QCC          
+
+    // Clears the window and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsHold(RGBColor_t rgbColor);                                                                                                                              // $QCC    
+
+    // Clears the window and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsHold(const char * sColor1,const char * sColor2=nullptr);                                                                                                // $QCC    
+
+    // Clears the window and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    bool ClsHold(CBitmap & cBitmap);                                                                                                                                // $QCC
+    
+    // Clears the window and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsHold(RGBColor_t rgbColor,RGBColor_t rgbColor2);                                                                                                         // $QCC
+
+    // Clears the window's entire canvas and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsCanvasHold(DWORD iColor1=-1,DWORD iColor2 = -1);                                                                                                              // $QCC          
+    
+    // Clears the window's entire canvas and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsCanvasHold(RGBColor_t rgbColor);                                                                                                                              // $QCC    
+    
+    // Clears the window's entire canvas and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsCanvasHold(const char * sColor1,const char * sColor2=nullptr);                                                                                                // $QCC    
+    
+    // Clears the window's entire canvas and also calls DontUpdate() to turn off Updates until Update() is called.
+    // Update is called prior to the Cls().  This is useful for real-time displays.  See Cls() for more information
+    //
+    void ClsCanvasHold(RGBColor_t rgbColor,RGBColor_t rgbColor2);                                                                                                         // $QCC
+
+    
     // ClsCanvas() -- Same as Cls() but clears the entire Windows Canvas rather then the display area.
     // Cls() clears the entire displayable part of the window. However, the Window may be much larger and the visible portion only
     // part of it.
@@ -1359,7 +1540,8 @@ public:
     /// <param name="iUpdateMS"></param>
     /// <returns></returns>
     bool UpdateAll(int iUpdateMS = 0);                                                                                                                      // $QC
-        
+    bool UpdateAll(bool bForced);                                                                                                                      // $QC
+
     // ForceUpdate() -- This is deprecated, but may be used in the future when more update/painting options are implemented
     //
     bool __ForceUpdate(bool bIfDirty = false);
@@ -1434,6 +1616,14 @@ public:
     // This sets the Canvas size of the window (i.e. the drawable space), which can exceed the size of the window.
     //
     bool SetCanvasSize(int iWidth,int iHeight,bool bAllowResizing = true);                                                                                  // $QC
+
+    bool SetMaxWinSize(SIZE szMaxSize); 
+    bool SetMaxWinSize(SIZE szMinSize,SIZE szMaxSize); 
+
+    bool SetMinWinSize(SIZE szMinSize); 
+
+
+
     bool AllowResizing(bool bAllowResizing = true);                                                                                                         // $QC
     // GetClientSize() -- Get the current client area size (i.e. writeable/drawable part of the window)
     // This value may be larger than the visible window.
@@ -1520,354 +1710,600 @@ public:
     SIZE GetTextSize(const char * sFont,const char * sText);                                                                                               // $QC
     bool GetTextSize(const char * sFont,const char * sText,SIZE & Size);                                                                                   // $QC
 
+    SIZE GetTextSize(const char * sFont,const wchar_t * sText);                                                                                             // $QC
+    SIZE GetTextSize(int iFontSize,const wchar_t * sText);                                                                                                  // $QC
+    SIZE GetTextSize(int iFontSize,const char * sText);                                                                                                     // $QC
+    bool GetTextSize(int iFontSize,const char * sText,SIZE & Size);                                                                                         // $QC
+
     // AddWindowShadow() -- Adds a shadow to the window.  This can be useful for popup-windows or
     // child windows embedded in the current window.
     //
-    bool AddWindowShadow();                                                                                                                                 // $QC
-
-    // Recangle() -- Put out a filled or outlined rectangle to the window.
-    //
-    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
-    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
-    //
-    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
-    // with this color.
-    //
-    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
-    // Rectangle() or any other function that uses a Windows PEN.
-    //
-    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
-    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
-    //        Rectangle(50,50,400,200,dwRed); 
-    //
-    // Draw a filled rectangle of color RED.
-    //
-    //        Rectangle(50,50,400,200,dwRed,dwGreen);
-    //
-    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
-    //
-    bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iColor2 = -1);                                                                   // $QCC
-
-    // Recangle() -- Put out a filled or outlined rectangle to the window.
-    //
-    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
-    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
-    //
-    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
-    // with this color.
-    //
-    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
-    // Rectangle() or any other function that uses a Windows PEN.
-    //
-    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
-    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
-    //        Rectangle(50,50,400,200,dwRed); 
-    //
-    // Draw a filled rectangle of color RED.
-    //
-    //        Rectangle(50,50,400,200,dwRed,dwGreen);
-    //
-    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
-    //
-    bool DrawRectangle(POINT pLoc,SIZE szSize,int iWidth,int iHeight,int iColor,int iColor2 = -1);                                                                   // $QCC
-
-    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawRectangle() and SetPenSize() for more information
-    //
-    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC    
-
-    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawRectangle() and SetPenSize() for more information
-    //
-    bool DrawOpenRectangle(int iX,int iY,int iWidth,int iHeight,int iColor,int iPenSize = 0);  // $QCC      
-
-    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawRectangle() and SetPenSize() for more information
-    //
-    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
-
-    // DrawOpenRectangle() -- Draws an 'open' rectangle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawRectangle() and SetPenSize() for more information
-    //
-    bool DrawOpenRectangle(POINT pLoc,SIZE szSize,int iColor,int iPenSize = 0);  // $QCC
-
-    bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
-    bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
-    bool DrawGradient(RECT rGradientRect,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);  // $QCC
-
-    // Recangle() -- Put out a filled or outlined rectangle to the window.
-    //
-    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
-    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
-    //
-    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
-    // with this color.
-    //
-    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
-    // Rectangle() or any other function that uses a Windows PEN.
-    //
-    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
-    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
-    //        Rectangle(50,50,400,200,dwRed); 
-    //
-    // Draw a filled rectangle of color RED.
-    //
-    //        Rectangle(50,50,400,200,dwRed,dwGreen);
-    //
-    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
-    //
-    bool DrawRectangle(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor  = Rgb::Default,RGBColor_t rgbColor2 = Rgb::Undefined);       // $QCC   
-    
-    // Recangle() -- Put out a filled or outlined rectangle to the window.
-    //
-    // Rectangle() will display a rectangle to the screen, at point (x,y) with a width and height specified.
-    // The Recangle function will generally draw a filled recangle, but can draw a rectangle with a specific PEN and BRUSH (Windows terms).
-    //
-    // Specifically, the first color is the background color (i.e. Windows BRUSH).  When only the first color is provided, the entire rectangle is filled
-    // with this color.
-    //
-    // If a second color is specified, this is used as the Windows PEN, which is an outline.  The Windows Pen With is typicall 1, but SetPenWidth() can be used to set the width of the pen prior to calling
-    // Rectangle() or any other function that uses a Windows PEN.
-    //
-    //        DWORD dwRed = RGB(255,0,0);        // Or cWindow->GetColor(CDavinci::Colors::Red);  or CDavinci::GetColor("Red");
-    //        DWORD dwGreen = RGB(0,255,0);    // Or cWindow->GetColor(CDavinci::Colors::Green);     or GetColor("Green")   (when 'using namespace Davinci')
-    //        Rectangle(50,50,400,200,dwRed); 
-    //
-    // Draw a filled rectangle of color RED.
-    //
-    //        Rectangle(50,50,400,200,dwRed,dwGreen);
-    //
-    // Draw a filled rectangle of color RED, with an outlined of color GREEN with the current Pen Width (defaults to 1)
-    //
-    bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Undefined,RGBColor_t rgbColor2 = Rgb::Undefined);  // $QCC
-
-
-    // Ractangle2() -- Used for testing 
-    //
-    bool Rectangle2(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        // $QCC  
-
-    // Draw a Triangle on the screen using the three points
-    // The third point will connect directly to the first point.
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawTriangle(POINT v1,POINT v2,POINT v3,int iColor1,int iColor2 = -1);  // $QCC
-
-    // Draw a Quadrangle on the screen using the three points
-    // The fourth point will connect directly to the first point.
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-   bool DrawQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,int iColor1,int iColor2 = -1);  // $QCC
-    
-    // Draw a Polygon on the screen using an array of POINT * values.
-    // The last point will connect directly to the first point.
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawPolygon(POINT * pPoints,int iVertices,int iColor1,int iColor2 = -1);  // $QCC
-    bool DrawPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);  // $QCC
-
-    bool DrawOpenPolygon(POINT * pPoints,int iVertices,int iColor1,int iPenSize = 0);  // $QCC
-    bool DrawOpenPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
-
+    bool AddWindowShadow();                                                                                                                              // $QC
 
     bool DrawSphere(int iX,int iY,double fRadius,RgbColor fgColor,Point3D_t pAngles = {0,0,0},double fShininess = 50); 
     bool DrawSphere(int iX,int iY,double fRadius,RgbColor fgColor,double fShininess); 
     bool DrawSphere(POINT pLoc,double fRadius,RgbColor fgColor,Point3D_t pAngles = {0,0,0},double fShininess = 50); 
     bool DrawSphere(POINT pLoc,double fRadius,RgbColor fgColor,double fShininess); 
 
-    // Draw a Circle on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawCircle(int iX,int iY,int iRadius,int iColor1,int iColor2 = -1);        // $QCC
+    /// #DrawRectangle
+    /// <summary>
+    /// Draws an open/wireframe Rectangle on the screen at starting point (x,y) with a width and height of (iWidth,iHeight)<para></para>
+    /// See FillRectangle() to draw a filled Rectangle vs. an open/wireframe Rectangle<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the rectangle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the rectangle in the window.</param>
+    /// <param name="iWidth">- Width (in pixels) of the rectangle in the X dimension. See various overloads for different types of Width,Height input.</param>
+    /// <param name="iHeight">- Radius (in pixels) of the rectangle in the Y dimension.</param>
+    /// <param name="rgbColor">- Color of the rectangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the rectangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                       // $QCC #DrawRectangle 
+    bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                     // $QCC #DrawRectangle
+    bool DrawRectangle(float iX,float iY,float iWidth,float iHeight,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                             // $QCC #DrawRectangle 
+    bool DrawRectangle(double iX,double iY,double iWidth,double iHeight,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                        // $QCC #DrawRectangle 
+    bool DrawRectangle(CfPoint fLoc,CfPoint fSize,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                              // $QCC #DrawRectangle 
+    bool DrawRectangle(CfPointf fLoc,CfPointf fSize,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                             // $QCC #DrawRectangle 
+
+    /// #FillRectangle
+    /// <summary>
+    /// Draws a filled Rectangle on the screen at starting point (x,y) with a width and height of (iWidth,iHeight)<para></para>
+    /// See DrawRectangle() to draw an open/wireframe Rectangle vs. a filled Rectangle<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the rectangle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the rectangle in the window.</param>
+    /// <param name="iWidth">- Width (in pixels) of the rectangle in the X dimension. See various overloads for different types of Width,Height input.</param>
+    /// <param name="iHeight">- Radius (in pixels) of the rectangle in the Y dimension.</param>
+    /// <param name="rgbColorIn">- Color of the interior of the rectangle</param>
+    /// <param name="rgbColorOut">- [optional] Color of the rectangle border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the rectangle border.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillRectangle(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                // $QCC #FillRectangle
+    bool FillRectangle(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                              // $QCC #FillRectangle
+    bool FillRectangle(float iX,float iY,float iWidth,float iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);      // $QCC #FillRectangle   
+    bool FillRectangle(double iX,double iY,double iWidth,double iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0); // $QCC #FillRectangle   
+    bool FillRectangle(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                       // $QCC #FillRectangle   
+    bool FillRectangle(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                      // $QCC #FillRectangle   
+
+    bool DrawFilledRectangle(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                  // $QCC #FillRectangle
+    bool DrawFilledRectangle(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                                // $QCC #FillRectangle
+    bool DrawFilledRectangle(float iX,float iY,float iWidth,float iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);        // $QCC #FillRectangle      
+    bool DrawFilledRectangle(double iX,double iY,double iWidth,double iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);   // $QCC #FillRectangle      
+    bool DrawFilledRectangle(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                         // $QCC #FillRectangle      
+    bool DrawFilledRectangle(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                        // $QCC #FillRectangle      
+
+    /// #DrawFilledRectangleFast
+    /// <summary>
+    /// Draws a 'fast' filled Rectangle on the screen at starting point (x,y) with a width and height of (iWidth,iHeight)<para></para>
+    /// See DrawRectangleFast() to draw an open/wireframe Rectangle vs. a filled Rectangle<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the rectangle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the rectangle in the window.</param>
+    /// <param name="iWidth">- Width (in pixels) of the rectangle in the X dimension. See various overloads for different types of Width,Height input.</param>
+    /// <param name="iHeight">- Radius (in pixels) of the rectangle in the Y dimension.</param>
+    /// <param name="rgbColorIn">- Color of the interior of the rectangle</param>
+    /// <param name="rgbColorOut">- [optional] Color of the rectangle border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the rectangle border.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledRectangleFast(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0); // $QCC #DrawFilledRectangleFast
+    bool DrawFilledRectangleFast(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);               // $QCC #DrawFilledRectangleFast
+   
+    bool FillRectangleFast(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);       // $QCC #DrawFilledRectangleFast
+    bool FillRectangleFast(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                     // $QCC #DrawFilledRectangleFast
+    
+    /// #DrawRectangleFast
+    /// <summary>
+    /// Draws an open/wireframe Rectangle on the screen at starting point (x,y) with a width and height of (iWidth,iHeight)<para></para>
+    /// See FillRectangleFast() to draw a filled Rectangle vs. an open/wireframe Rectangle<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the rectangle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the rectangle in the window.</param>
+    /// <param name="iWidth">- Width (in pixels) of the rectangle in the X dimension. See various overloads for different types of Width,Height input.</param>
+    /// <param name="iHeight">- Radius (in pixels) of the rectangle in the Y dimension.</param>
+    /// <param name="rgbColor">- Color of the rectangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the rectangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawRectangleFast(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);   // $QCC #DrawRectangleFast    
+    bool DrawRectangleFast(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                 // $QCC #DrawRectangleFast
+   
+    // Triangle functions
+
+    /// #DrawTriangle
+    /// <summary>
+    /// Draws an open/wireframe Triangle on the screen at starting point (x,y) with vertexes v1,v2,and v3<para></para>
+    /// See FillTriangle() to draw a filled Triangle vs. an open/wireframe Triangle<para></para>
+    /// Note: Vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the Triangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the Triangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the Triangle.</param>
+    /// <param name="rgbColor">- Color of the triangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the triangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawTriangle(POINT v1,POINT v2,POINT v3,RgbColor rgbColor,int iPenSize = 0);                                                               // $QCC #DrawTriangle
+    bool DrawTriangle(CfPoint v1,CfPoint v2,CfPoint v3,RgbColor rgbColor,double iPenSize = 0);                                                      // $QCC #DrawTriangle
+    bool DrawTriangle(CfPointf v1,CfPointf v2,CfPointf v3,RgbColor rgbColor,float iPenSize = 0);                                                    // $QCC #DrawTriangle
+                                                                                                                                                            
+    /// #FillTriangle
+    /// <summary>
+    /// Draws a filled Triangle on the screen at starting point (x,y) with vertexes v1,v2,and v3<para></para>
+    /// See DrawTriangle() to draw an open/wireframe Triangle vs. a filled Triangle an open/wireframe Triangle<para></para>
+    /// Note: Vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the Triangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the Triangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the Triangle.</param>
+    /// <param name="rgbColorIn">- Color of the triangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the triangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillTriangle(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                      // $QCC #FillTriangle
+    bool FillTriangle(CfPoint v1,CfPoint v2,CfPoint v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);             // $QCC #FillTriangle
+    bool FillTriangle(CfPointf v1,CfPointf v2,CfPointf v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);           // $QCC #FillTriangle
+
+    bool DrawFilledTriangle(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                // $QCC #FillTriangle
+    bool DrawFilledTriangle(CfPoint v1,CfPoint v2,CfPoint v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);       // $QCC #FillTriangle
+    bool DrawFilledTriangle(CfPointf v1,CfPointf v2,CfPointf v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);     // $QCC #FillTriangle
+
+    /// #FillTriangleFast
+    /// <summary>
+    /// Draws a 'fast' filled Triangle on the screen at starting point (x,y) with vertexes v1,v2,and v3<para></para>
+    /// See DrawTriangleFast() to draw an open/wireframe Triangle vs. a filled Triangle an open/wireframe Triangle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the Triangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the Triangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the Triangle.</param>
+    /// <param name="rgbColorIn">- Color of the triangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the triangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledTriangleFast(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);            // $QCC #FillTriangleFast
+    bool FillTriangleFast(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                  // $QCC #FillTriangleFast
+
+    /// #DrawTriangleFast
+    /// <summary>
+    /// Draws a 'fast' open/wireframe Triangle on the screen at starting point (x,y) with vertexes v1,v2,and v3<para></para>
+    /// See FillTriangle() to draw a filled Triangle vs. an open/wireframe Triangle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the Triangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the Triangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the Triangle.</param>
+    /// <param name="rgbColor">- Color of the triangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the triangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawTriangleFast(POINT v1,POINT v2,POINT v3,RgbColor rgbColor,int iPenSize = 0);  // $QCC #DrawTriangleFast
+
+    // QuadRangle Functions
+  
+    /// #DrawQuadrangle
+    /// <summary>
+    /// Draws an open/wireframe Quadrangle on the screen at starting point (x,y) with vertexes v1,v2,v3, and v4.<para></para>
+    /// See FillQuadrangle() to draw a filled Quadrangle vs. an open/wireframe Quadrangle<para></para>
+    /// Note: Vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the quadrangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the quadrangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the quadrangle.</param>
+    /// <param name="v4">- (x,y) vertex 4 of the quadrangle.</param>
+    /// <param name="rgbColor">- Color of the quadrangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the quadrangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColor,int iPenSize = 0);                                                                // $QCC #DrawQuadrangle
+    bool DrawQuadrangle(CfPoint v1,CfPoint v2,CfPoint v3,CfPoint v4,RgbColor rgbColor,double iPenSize = 0);                                                     // $QCC #DrawQuadrangle
+    bool DrawQuadrangle(CfPointf v1,CfPointf v2,CfPointf v3,CfPointf v4,RgbColor rgbColor,float iPenSize = 0);                                                  // $QCC #DrawQuadrangle
+
+    /// #FillQuadrangle
+    /// <summary>
+    /// Draws a filled Quadrangle on the screen at starting point (x,y) with with vertexes v1,v2,v3, and v4.<para></para>
+    /// See DrawQuadrangle() to draw an open/wireframe Quadrangle vs. a filled Quadrangle an open/wireframe Quadrangle<para></para>
+    /// Note: Vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the quadrangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the quadrangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the quadrangle.</param>
+    /// <param name="v4">- (x,y) vertex 4 of the quadrangle.</param>
+    /// <param name="rgbColorIn">- Color of the quadrangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the quadrangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                       // $QCC #FillQuadrangle
+    bool FillQuadrangle(CfPoint v1,CfPoint v2,CfPoint v3,CfPoint v4, RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);           // $QCC #FillQuadrangle
+    bool FillQuadrangle(CfPointf v1,CfPointf v2,CfPointf v3,CfPointf v4, RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);        // $QCC #FillQuadrangle
+
+    bool DrawFilledQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                 // $QCC #FillQuadrangle
+    bool DrawFilledQuadrangle(CfPoint v1,CfPoint v2,CfPoint v3,CfPoint v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);      // $QCC #FillQuadrangle
+    bool DrawFilledQuadrangle(CfPointf v1,CfPointf v2,CfPointf v3,CfPointf v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);   // $QCC #FillQuadrangle
+
+    /// #FillQuadrangleFast
+    /// <summary>
+    /// Draws a 'fast' filled Quadrangle on the screen at starting point (x,y) with vertexes v1,v2,v3, and v4.<para></para>
+    /// See DrawQuadrangleFast() to draw an open/wireframe Quadrangle vs. a filled Quadrangle an open/wireframe Quadrangle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the quadrangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the quadrangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the quadrangle.</param>
+    /// <param name="v4">- (x,y) vertex 4 of the quadrangle.</param>
+    /// <param name="rgbColorIn">- Color of the quadrangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the quadrangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledQuadrangleFast(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC #FillQuadrangleFast
+    bool FillQuadrangleFast(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);           // $QCC #FillQuadrangleFast
  
-    // Draw a Circle on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawCircle(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);        // $QCC
+    /// #DrawQuadrangleFast
+    /// <summary>
+    /// Draws a 'fast' open/wireframe Quadrangle on the screen at starting point (x,y) with vertexes v1,v2,v3, and v4.<para></para>
+    /// See FillQuadrangle() to draw a filled Quadrangle vs. an open/wireframe TriQuadrangleangle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="v1">- (x,y) vertex 1 of the quadrangle.</param>
+    /// <param name="v2">- (x,y) vertex 2 of the quadrangle.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the quadrangle.</param>
+    /// <param name="rgbColor">- Color of the quadrangle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the quadrangle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawQuadrangleFast(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColor,int iPenSize = 0);  // $QCC #DrawQuadrangleFast
 
-    // Draw a Circle on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawCircle(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined);        // $QCC
+    /// #DrawPolygon
+    /// <summary>
+    /// Draws an open/wireframe Polygon on the screen at starting point (x,y) with vertexes defined in pPoints<para></para>
+    /// See FillPolygon() to draw a filled Polygon vs. an open/wireframe Polygon<para></para>
+    /// Note: vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="pPoints">- POINT, cPoint, cPointf, or cfPointf array of vertices</param>
+    /// <param name="iVertices">- Number of vertices in pPoints.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the polygon.</param>
+    /// <param name="rgbColor">- Color of the polygon</param>
+    /// <param name="iPenSize">- [optional] Pen size for the polygon color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                        // $QCC
+    bool DrawPolygon(CfPointf * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);                                                                   // $QCC
+    bool DrawPolygon(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                       // $QCC
+    bool DrawPolygon(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);                                                                   // $QCC
+    bool DrawPolygon(Gdiplus::Point * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                               // $QCC
+    bool DrawPolygon(Gdiplus::PointF * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);                                                            // $QCC
 
-    // Draw a Circle on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawCircle(POINT pLoc,int iRadius,int iColor1,int iColor2 = -1);        // $QCC
+    /// #DrawFilledPolygon
+    /// <summary>
+    /// Draws an filled Polygon on the screen at starting point (x,y) with vertexes defined in pPoints<para></para>
+    /// See DrawPolygon() to draw an open/wireframe Polygon vs. a filled Polygon<para></para>
+    /// Note: vertex and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="pPoints">- POINT, cPoint, cPointf, or cfPointf array of vertices</param>
+    /// <param name="iVertices">- Number of vertices in pPoints.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the polygon.</param>
+    /// <param name="rgbColorIn">- Color of the quadrangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the quadrangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                // $QCC #DrawFilledPolygon
+    bool DrawFilledPolygon(CPoint * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);               // $QCC #DrawFilledPolygon
+    bool DrawFilledPolygon(CfPointf * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);           // $QCC #DrawFilledPolygon
+    bool DrawFilledPolygon(CfPoint * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,double iPenSize = 0);           // $QCC #DrawFilledPolygon
+    bool DrawFilledPolygon(Gdiplus::Point * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);       // $QCC #DrawFilledPolygon
+    bool DrawFilledPolygon(Gdiplus::PointF * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);    // $QCC #DrawFilledPolygon
+   
+    bool FillPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                      // $QCC #DrawFilledPolygon
+    bool FillPolygon(CPoint * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                     // $QCC #DrawFilledPolygon
+    bool FillPolygon(CfPointf * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);                 // $QCC #DrawFilledPolygon
+    bool FillPolygon(CfPoint * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,double iPenSize = 0);                 // $QCC #DrawFilledPolygon
+    bool FillPolygon(Gdiplus::Point * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);             // $QCC #DrawFilledPolygon
+    bool FillPolygon(Gdiplus::PointF * pPoints,int iVertices,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);          // $QCC #DrawFilledPolygon
+   
+    /// #DrawPolygonFast
+    /// <summary>
+    /// Draws a 'fast' open/wireframe Polygon on the screen at starting point (x,y) with vertexes defined in pPoints<para></para>
+    /// See FillPolygonFast() to draw a filled Polygon vs. an open/wireframe Polygon<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="pPoints">- POINT, cPoint, cPointf, or cfPointf array of vertices</param>
+    /// <param name="iVertices">- Number of vertices in pPoints.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the polygon.</param>
+    /// <param name="rgbColor">- Color of the polygon</param>
+    /// <param name="iPenSize">- [optional] Pen size for the polygon color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawPolygonFast(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                    // $QCC #DrawPolygonFast
+    bool DrawPolygonFast(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                   // $QCC #DrawPolygonFast
+    bool DrawPolygonFast(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                  // $QCC #DrawPolygonFast
 
-    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenCircle(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0);      // $QCC
+    bool DrawFilledPolygonFast(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);      // $QCC #DrawPolygonFast
+    bool DrawFilledPolygonFast(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC #DrawPolygonFast
+    bool DrawFilledPolygonFast(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);    // $QCC #DrawPolygonFast
 
-    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenCircle(int iX,int iY,int iRadius,int iColor,int iPenSize = 0);     // $QCC
+    /// #FillPolygonFast
+    /// <summary>
+    /// Draws a 'fast' filled Polygon on the screen at starting point (x,y) with vertexes defined in pPoints<para></para>
+    /// See DrawPolygonFast() to draw an open/wireframe Polygon vs. a filled Polygon<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="pPoints">- POINT, cPoint, cPointf, or cfPointf array of vertices</param>
+    /// <param name="iVertices">- Number of vertices in pPoints.</param>
+    /// <param name="v3">- (x,y) vertex 3 of the polygon.</param>
+    /// <param name="rgbColorIn">- Color of the quadrangle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the quadrangle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillPolygonFast(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);      // $QCC #FillPolygonFast
+    bool FillPolygonFast(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC #FillPolygonFast
+    bool FillPolygonFast(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);    // $QCC #FillPolygonFast
+
+    // Circle Drawing Functions
+
+    /// #DrawCircle
+    /// <summary>
+    /// Draws an open/wireframe Circle on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See FillCircle() to draw a filled Circle vs. an open/wireframe Circle<para></para>
+    /// Note: x,y, width,height, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the circle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the circle in the window.</param>
+    /// <param name="iRadius">- Radius (in pixels) of the circle.</param>
+    /// <param name="rgbColor">- Color of the circle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the circle color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawCircle(int iX,int iY,int iRadius,RgbColor rgbColor = Rgb::Default,int iPenSize =0);                  // $QCC  #DrawCircle
+    bool DrawCircle(POINT pLoc,int iRadius,RgbColor rgbColor = Rgb::Default,int iPenSize =0 );                    // $QCC  #DrawCircle
+    bool DrawCircle(double iX,double iY,double iRadius,RgbColor rgbColor = Rgb::Default,double fPenSize = 0);     // $QCC  #DrawCircle
+    bool DrawCircle(float iX,float iY,float iRadius,RgbColor rgbColor = Rgb::Default,float fPenSize = 0);         // $QCC  #DrawCircle
+    bool DrawCircle(CfPoint fLoc,double iRadius,RgbColor rgbColor = Rgb::Default,double fPenSize = 0);            // $QCC  #DrawCircle
+    bool DrawCircle(CfPointf fLoc,float iRadius,RgbColor rgbColor = Rgb::Default,float fPenSize = 0);             // $QCC  #DrawCircle
+
+    /// #FillCircle
+    /// <summary>
+    /// Draws a filled Circle on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See DrawCircle() to draw an open/wireframe Circle vs. a filled Circle an open/wireframe Circle<para></para>
+    /// Note: x,y, width,height, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the circle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the circle in the window.</param>
+    /// <param name="iRadius">- Radius (in pixels) of the circle.</param>
+    /// <param name="rgbColorIn">- Color of the circle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the circle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillCircle(int iX,int iY,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);          // $QCC #FillCircle
+    bool FillCircle(POINT pLoc,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);             // $QCC #FillCircle
+    bool FillCircle(float iX,float iY,float iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                 // $QCC #FillCircle  
+    bool FillCircle(double iX,double iY,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);             // $QCC #FillCircle  
+    bool FillCircle(CfPoint fLoc,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                    // $QCC #FillCircle  
+    bool FillCircle(CfPointf fLoc,float iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                     // $QCC #FillCircle  
+
+    /// #DrawFilledCircle
+    /// <summary>
+    /// Draws a filled Circle on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See DrawCircle() to draw an open/wireframe Circle vs. a filled Circle an open/wireframe Circle<para></para>
+    /// Note: x,y, width,height, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the circle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the circle in the window.</param>
+    /// <param name="iRadius">- Radius (in pixels) of the circle.</param>
+    /// <param name="rgbColorIn">- Color of the circle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the circle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledCircle(int iX,int iY,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);              // $QCC  #DrawFilledCircle
+    bool DrawFilledCircle(POINT pLoc,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                 // $QCC  #DrawFilledCircle
+    bool DrawFilledCircle(float iX,float iY,float iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);      // $QCC  #DrawFilledCircle  
+    bool DrawFilledCircle(double iX,double iY,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                 // $QCC  #DrawFilledCircle  
+    bool DrawFilledCircle(CfPoint fLoc,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                        // $QCC  #DrawFilledCircle  
+    bool DrawFilledCircle(CfPointf fLoc,float iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                         // $QCC  #DrawFilledCircle  
+
+    /// #DrawFilledCircleFast
+    /// <summary>
+    /// Draws a 'fast' filled Circle on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See DrawCircleFast() to draw an open/wireframe Circle vs. a filled Circle an open/wireframe Circle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the circle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the circle in the window.</param>
+    /// <param name="iRadius">- Radius (in pixels) of the circle.</param>
+    /// <param name="rgbColorIn">- Color of the circle's interior</param>
+    /// <param name="rgbColorOut">- [optional] Color of the circle's border</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawFilledCircleFast(int iX,int iY,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);   // $QCC   #DrawFilledCircleFast
+    bool DrawFilledCircleFast(POINT pLoc,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);      // $QCC   #DrawFilledCircleFast
+   
+
+    bool FillCircleFast(int iX,int iY,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);  // $QCC   #DrawFilledCircleFast
+    bool FillCircleFast(POINT pLoc,int iRadius,RgbColor rgbColorIn = Rgb::Default,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC   #DrawFilledCircleFast
+
+    /// #DrawCircleFast
+    /// <summary>
+    /// Draws a 'fast' open/wireframe Circle on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See DrawCircleFast() to draw an open/wireframe Circle vs. a filled Circle an open/wireframe Circle<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the circle in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the circle in the window.</param>
+    /// <param name="iRadius">- Radius (in pixels) of the circle.</param>
+    /// <param name="rgbColor">- Color of the circle</param>
+    /// <param name="iPenSize">- [optional] Pen size for the border color if specified.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawCircleFast(int iX,int iY,int iRadius,RgbColor rgbColor = Rgb::Default,int iPenSize =0);      // $QCC  #DrawCircleFast
+    bool DrawCircleFast(POINT pLoc,int iRadius,RgbColor rgbColor = Rgb::Default,int iPenSize =0 );        // $QCC  #DrawCircleFast
+   
+    // Draw Ellipse Functions
+
+    /// #DrawEllipse
+    /// <summary>
+    /// Draws an open/wireframe Ellipse on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See FillEllipse() to draw a filled Ellipse vs. an open/wireframe Ellipse<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the ellipse in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the ellipse in the window.</param>
+    /// <param name="iRadiusX">- Width/Radius (in pixels) of the ellipse in the X dimension. See various overloads for different types of RadiusX,RadiusY input.</param>
+    /// <param name="iRadiusY">- Radius (in pixels) of the ellipse in the Y dimension.</param>
+    /// <param name="rgbColor">- Color of the ellipse</param>
+    /// <param name="iPenSize">- [optional] Pen size for the ellipse color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                       // $QCC #DrawEllipse
+    bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                          // $QCC #DrawEllipse
+    bool DrawEllipse(double iX,double iY,double iRadiusX,double iRadiusY,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);        // $QCC #DrawEllipse   
+    bool DrawEllipse(float iX,float iY,float iRadiusX,float iRadiusY,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);             // $QCC #DrawEllipse   
+    bool DrawEllipse(CfPoint fLoc,CfPoint fSize,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                 // $QCC #DrawEllipse   
+    bool DrawEllipse(CfPointf fLoc,CfPointf fSize,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                // $QCC #DrawEllipse    
+
+    /// #FillEllipse
+    /// <summary>
+    /// Draws a filled Ellipse on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See Ellipse() to draw an open/wireframe Ellipse vs.a filled  Ellipse<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: Point, cfPoint, and cfPointf pair/vector arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function responds to current opacity and transformations and will anti-alias output results.<para></para>
+    /// --> This drawing function is high-precision where float and double values may be used for positioning and size.<para></para>
+    /// --> Hint: use an odd-size PenSize for sharper edges.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the ellipse in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the ellipse in the window.</param>
+    /// <param name="iRadiusX">- Width/Radius (in pixels) of the ellipse in the X dimension. See various overloads for different types of RadiusX,RadiusY input.</param>
+    /// <param name="iRadiusY">- Radius (in pixels) of the ellipse in the Y dimension.</param>
+    /// <param name="rgbColorIn">- Color of the interior of the ellipse</param>
+    /// <param name="rgbColorIn">- [optional[ Color of the border of the ellipse</param>
+    /// <param name="iPenSize">- [optional] Pen size for the ellipse border.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0); // $QCC #FillEllipse
+    bool FillEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);    // $QCC #FillEllipse
+    bool FillEllipse(float iX,float iY,float iRadiusX,float iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);          // $QCC #FillEllipse  
+    bool FillEllipse(double iX,double iY,double iRadiusX,double iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);     // $QCC #FillEllipse  
+    bool FillEllipse(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                              // $QCC #FillEllipse  
+    bool FillEllipse(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                             // $QCC #FillEllipse  
+
+    bool DrawFilledEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None,int iPenSize = 0);       // $QCC #FillEllipse
+    bool DrawFilledEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC #FillEllipse
+    bool DrawFilledEllipse(float iX,float iY,float iRadiusX,float iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);           // $QCC #FillEllipse   
+    bool DrawFilledEllipse(double iX,double iY,double iRadiusX,double iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);      // $QCC #FillEllipse   
+    bool DrawFilledEllipse(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                               // $QCC #FillEllipse   
+    bool DrawFilledEllipse(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                              // $QCC #FillEllipse   
+
+    /// #DrawEllipseFast
+    /// <summary>
+    /// Draws a 'fast' open/wireframe Ellipse on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See FillEllipseFast() to draw a filled Ellipse vs. an open/wireframe Ellipse<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the ellipse in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the ellipse in the window.</param>
+    /// <param name="iRadiusX">- Width/Radius (in pixels) of the ellipse in the X dimension. See various overloads for different types of RadiusX,RadiusY input.</param>
+    /// <param name="iRadiusY">- Radius (in pixels) of the ellipse in the Y dimension.</param>
+    /// <param name="rgbColor">- Color of the ellipse</param>
+    /// <param name="iPenSize">- [optional] Pen size for the ellipse color.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool DrawEllipseFast(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);      // $QCC #DrawEllipseFast
+    bool DrawEllipseFast(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);         // $QCC #DrawEllipseFast
+
+    /// #FillEllipseFast
+    /// <summary>
+    /// Draws a 'fast' filled Ellipse on the screen at starting point (x,y) with a width and height of (radiusX, radiusY)<para></para>
+    /// See Ellipse() to draw an open/wireframe Ellipse vs.a filled  Ellipse<para></para>
+    /// Note: x,y, Radius/Size, and PenSize values must all be of same type (int,float,double)<para></para>
+    /// Note: POINT arrays may also be used.  PenSize must be of same type as pair (i.e. int, float, double.)<para></para>
+    /// --> This drawing function is a 'fast' function that does not use anti-aliasing and is about 10x faster than
+    /// non-fast drawing functions.  These functions are useful for general drawing and do not respond to opacity or transformations.<para></para>
+    /// </summary>
+    /// <param name="iX">- Location of the X center of the ellipse in the window.  See various overloads for different types of X,Y input.</param>
+    /// <param name="iY">- Location of the Y center of the ellipse in the window.</param>
+    /// <param name="iRadiusX">- Width/Radius (in pixels) of the ellipse in the X dimension. See various overloads for different types of RadiusX,RadiusY input.</param>
+    /// <param name="iRadiusY">- Radius (in pixels) of the ellipse in the Y dimension.</param>
+    /// <param name="rgbColorIn">- Color of the interior of the ellipse</param>
+    /// <param name="rgbColorIn">- [optional[ Color of the border of the ellipse</param>
+    /// <param name="iPenSize">- [optional] Pen size for the ellipse border.  If the PenSize is not specified, the current default pen size is used.</param>
+    /// <returns></returns>
+    bool FillEllipseFast(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);        // $QCC #FillEllipseFast
+    bool FillEllipseFast(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);           // $QCC #FillEllipseFast
+   
+    bool DrawFilledEllipseFast(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None,int iPenSize = 0);       // $QCC #FillEllipseFast
+    bool DrawFilledEllipseFast(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);     // $QCC #FillEllipseFast
+     
     
-    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenCircle(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0 );        // $QCC
-    
-    // DrawOpenCircle() -- Draws an 'open' circle with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenCircle(POINT pLoc,int iRadius,int iColor,int iPenSize =0 );        // $QCC
+    bool DrawGradient(int ix,int iy,int iWidth,int iHeight,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false); // $QCC
+    bool DrawGradient(POINT pLoc,SIZE szSize,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);               // $QCC
+    bool DrawGradient(RECT rGradientRect,RGBColor_t rgbColor1,RGBColor_t rgbColor2,bool bHorizontal = false);                   // $QCC
 
-    // Draw an Ellipse on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Size can be changed with SetPenSize()
-    //
-    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);  // $QCC
- 
-    // Draw a ellipse on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);  // $QCC
 
-    // Draw a ellipse on the Window
+    // Ractangle2() -- Used for testing 
     //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-    bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor1,int iColor2 = -1);  // $QCC
-
-    // Draw a ellipse on the Window
-    //
-    // The first Color (which can be RGB() or RGBColor_t()) is the internal color.
-    // The second color is the outline color (if ommitted, there is no outline).
-    // The outline size is determine by the Pen Thickness, which defaults to 1.
-    //
-    // The Pen Thickness can be changed with SetPenThickness()
-    //
-   bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::None);  // $QCC
-
-    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
-    
-    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenEllipse(int iX,int iY,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);  // $QCC
-
-    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);  // $QCC
-
-    // DrawOpenEllipse() -- Draws an 'open' ellipse with only the outline color and no inside color (i.e. the inside
-    // is not drawn, only the border). 
-    //
-    // This draws the border, the size of the current pen.  You can also add the pen size that will be used as an extra parameter, which will
-    // override the current pen setting without changing the value of the current pen size
-    //
-    // See DrawCircle() and SetPenSize() for more information
-    //
-    bool DrawOpenEllipse(POINT pLoc,int iRadiusX,int iRadiusY,int iColor,int iPenSize = 0);  // $QCC
+    bool Rectangle2(int ix,int iy,int iWidth,int iHeight,int iColor,int iColor2 = -1);        // $QCC  
 
     // Set the  color for new lines, circles, rectangles,e tc. using SetPenColor() (or MoveTo()) and then DrawLine() (or LineTo())
     // This allows a default line color to be selected so that functions later drawing lines with SetLinePos()/DrawLine()
@@ -1903,381 +2339,48 @@ public:
     //
     // note: This does not work with DrawLine().  When using DrawLine(), the color must be specifieed.
     //
-    bool SetPenColor(RGBColor_t rgbColor);  // $QC
+    bool SetPenColor(RGBColor_t rgbColor);                                                                  // $QC
 
-    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
-    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
-    //
-    bool SetLinePos(int iX,int iY,int iColor);  // $QC
+    bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);                                        // $QC
+    bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                           // $QC
 
-    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
-    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
-    //
-    bool SetLinePos(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
+    bool MoveTo(float iX,float iY,RGBColor_t rgbColor = Rgb::Undefined);                                    // $QC
+    bool MoveTo(double iX,double iY,RGBColor_t rgbColor = Rgb::Undefined);                                  // $QC
+    bool MoveTo(CfPointf pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                        // $QC
+    bool MoveTo(CfPoint pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                         // $QC
 
-    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
-    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
-    //
-    bool SetLinePos(POINT pLoc,int iColor);  // $QC
-
-    // SetLinePos() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    // MoveTo() may be used instead of SetLinePos() for more compatibility with Windows. 
-    // MoveTo() is exactly the same function as SetLinePos(), just with a different name
-    //
-    bool SetLinePos(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
-
-    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    //
-    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
-    //
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.l
-    //
-    // A color may also be specified to LineTo()
-    //
-    bool MoveTo(int iX,int iY,int iColor);  // $QC
-
-    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    //
-    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
-    //
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
-
-    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    //
-    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
-    //
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    bool MoveTo(POINT pLoc,int iColor);  // $QC
-
-    // MoveTo() -- Set the position for the next LineTo() draw.  This can be used to set the 
-    //
-    // MoveTo() is the same as SetLinePos() and is provided for convenience (since its shorter and more intuitive)
-    //
-    // initial draw position when no line has been previously drawm, or to reset the position when DrawLine()
-    // has been used and the draw position is set to the next position. 
-    //
-    // If a color is specified, LineTo() will use this color.   Otherwise, LineTo() uses the last draw line color
-    // or a default color.
-    //
-    // A color may also be specified to LineTo()
-    //
-    bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);  // $QC
-
-    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool LineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);   // $QCC
-
-    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool LineTo(int iX,int iY,int iColor);  // $QCC
-
-    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool LineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
-
-    // Draw a line to the X,Y n specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool LineTo(POINT pLoc,int iColor); // $QCC
-
-    // LineToEx() -- Draw a Line to the current Point or Set the current point.
-    // LineToEx() is the same as DrawLineTo()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool LineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
-
-    // LineToEx() -- Draw a Line to the current Point or Set the current point.
-    // LineToEx() is the same as DrawLineTo()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool LineToEx(bool bFirstPoint,int iX,int iY,int iColor);  // $QCC
-
-    // LineToEx() -- Draw a Line to the current Point or Set the current point.
-    // LineToEx() is the same as DrawLineTo()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool LineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
-
-    // LineToEx() -- Draw a Line to the current Point or Set the current point.
-    // LineToEx() is the same as DrawLineTo()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.LineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool LineToEx(bool bFirstPoint,POINT pLoc,int iColor); // $QCC
-
-    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool DrawLineTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
-
-    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool DrawLineTo(int iX,int iY,int iColor);  // $QCC
-
-    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool DrawLineTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
-
-    // Draw a line to the X,Y position specified.    This draws a line from the current position set by 
-    // a previous DrawLine() or SetLinePos(). 
-    //
-    // If no color is specified, the last color used in DrawLine() -- or the color specified in SetLinePos() is used. 
-    //
-    // If no line has been drawn, use SetLinePos() to Set the draw-line position start (and optional color)
-    //
-    // LineTo() and DrawLineTo() are the same function.  DrawLineTo() is added for consitency with naming conventions with DrawLine()
-    // and other Draw functions
-    //
-    bool DrawLineTo(POINT pLoc,int iColor =-1); // $QCC
-
-    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
-    // DrawLineToEx() is the same as LineToEx()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);  // $QCC
-
-    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
-    // DrawLineToEx() is the same as LineToEx()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool DrawLineToEx(bool bFirstPoint,int iX,int iY,int iColor);  // $QCC
-
-    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
-    // DrawLineToEx() is the same as LineToEx()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined); // $QCC
-
-    // DrawLineToEx() -- Draw a Line to the current Point or Set the current point.
-    // DrawLineToEx() is the same as LineToEx()
-    //
-    // if (bFirstPoint) is true, MoveTo() is used to set the point.  When bFirstpoint is false, LineTo() is used instead.
-    // This allows loops to not distingiush between first point vs future points.
-    //
-    // For Example,
-    //
-    // -->  for(int i=0;i<100;i++) { Cpoint MyPoint = SomeFunction(); cWin.DrawLineToEx(!i,MyPoint); }
-    //
-    // This will set the point (i.e. MoveTo() when i == 0, and then use LineTo() after that.
-    //
-    bool DrawLineToEx(bool bFirstPoint,POINT pLoc,int iColor); // $QCC
+    bool DrawLineToFast(int iX,int iY,RGBColor_t rgbColor  = Rgb::Undefined,int iPenSize = 0);              // $QCC
+    bool DrawLineToFast(POINT pLoc,RGBColor_t rgbColor  = Rgb::Undefined,int iPenSize =0);                  // $QCC
+  
+    bool DrawLineTo(POINT p1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                          // $QCC
+    bool DrawLineTo(int ix1,int iy1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                   // $QCC
+    bool DrawLineTo(float ix1,float iy1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);             // $QCC
+    bool DrawLineTo(double ix1,double iy1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);          // $QCC
+    bool DrawLineTo(const CfPointf p1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);               // $QCC
+    bool DrawLineTo(const CfPoint p1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);               // $QCC
 
 
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    // If the color is omitted, the current line color is used.
-    // The line color can be set or changed with SetLineColor() or SetLinePos()
-    //
-    bool DrawLine(int ix1,int iy1,int ix2,int iy2,int iColor); // $QCC
- 
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    // If the color is omitted, the current line color is used.
-    // The line color can be set or changed with SetLineColor() or SetLinePos()
-    //
-    bool DrawLine(POINT p1,POINT p2,int iColor); // $QCC
+    bool DrawLineToExFast(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor);                                          // $QCC
+    bool DrawLineToExFast(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor);                                             // $QCC
 
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    // If the color is omitted, the current line color is used.
-    // The line color can be set or changed with SetLineColor() or SetLinePos()
-    //
-    bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default); // $QCC
+    bool DrawLineToEx(bool bFirstPoint,POINT p1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                   // $QCC
+    bool DrawLineToEx(bool bFirstPoint,int ix1,int iy1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);            // $QCC
+    bool DrawLineToEx(bool bFirstPoint,float ix1,float iy1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);      // $QCC
+    bool DrawLineToEx(bool bFirstPoint,double ix1,double iy1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);   // $QCC
+    bool DrawLineToEx(bool bFirstPoint,const CfPointf p1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);        // $QCC
+    bool DrawLineToEx(bool bFirstPoint,const CfPoint p1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);        // $QCC
 
 
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    // If the color is omitted, the current line color is used.
-    // The line color can be set or changed with SetLineColor() or SetLinePos()
-    //
-    bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default); // $QCC
+    bool DrawLineFast(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                               // $QCC
+    bool DrawLineFast(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                 // $QCC
 
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,int iColor);      // $QCC
+    bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                   // $QCC
+    bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                     // $QCC
+    bool DrawLine(float ix1,float iy1,float ix2,float iy2,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);           // $QCC
+    bool DrawLine(double ix1,double iy1,double ix2,double iy2,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);      // $QCC
+    bool DrawLine(const CfPointf p1,const CfPointf p2,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);               // $QCC
+    bool DrawLine(const CfPoint p1,const CfPoint p2,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);                // $QCC
+
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -2286,14 +2389,7 @@ public:
     // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
     //
     bool DrawLine2(int ix1,int iy1,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default);       // $QCC
-    
-    // Draw a line in the window.  
-    // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
-    //
-    // The color can be RGB() or RGBColor_t
-    // The thickness of the line can be changed with SetPenThickness(), which defaults to 1.
-    //
-    bool DrawLine2(POINT p1,SIZE szDist,int iColor);         // $QCC
+  
 
     // Draw a line in the window.  
     // This draws a line from (ix1,iy1) to (ix2,iy2) in the given color
@@ -2326,6 +2422,169 @@ public:
     // go below the minimum of 1.
     //
     int SetPenSize(int iThickness); // $QC
+
+    /// <summary>
+    /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// </summary>
+    /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+    /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+    /// <returns></returns>
+    bool SetDrawOpacity(int iOpacity,bool bAsByteValue = false);                // $QC
+
+    /// <summary>
+    /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// </summary>
+    /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+    /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+    /// <returns></returns>
+    bool SetDrawOpacity(float fOpacity,bool bAsByteValue = false);              // $QC
+
+    /// <summary>
+    /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// </summary>
+    /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+    /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+    /// <returns></returns>
+    bool SetDrawOpacity(double fOpacity,bool bAsByteValue = false);             // $QC
+
+    /// <summary>
+    /// Returns the current Opacity for GDI-based draw functions.  Value is from 0-255 (fully transparent to fully opaque)
+    /// </summary>
+    /// <returns></returns>
+    int GetDrawOpacity();
+
+    /// <summary>
+    /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object will be rotated by --iAngle-- degrees. 
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawRotateTransform(int iAngle);                                       // $QC
+ 
+    /// <summary>
+    /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object will be rotated by --iAngle-- degrees. 
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawRotateTransform(double fAngle);                                    // $QC
+
+    /// <summary>
+    /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object will be rotated by --iAngle-- degrees. 
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawRotateTransform(float iAngle);                                     // $QC
+
+    /// <summary>
+    /// Resets all transforms for GDI-based object (i.e. objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.)
+    /// </summary>
+    /// <returns></returns>
+    bool DrawResetTransform();                                                  // $QC
+
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>    
+    bool DrawTranslateTransform(int iX,int iY);                                 // $QC  
+    
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>    
+    bool DrawTranslateTransform(float iX,float iY);                             // $QC
+ 
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawTranslateTransform(double iX,double iY);                           // $QC
+
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawTranslateTransform(POINT pLoc);                                    // $QC
+
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawTranslateTransform(CfPointf pLoc);                                 // $QC
+
+    /// <summary>
+    /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+    /// <para>
+    /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+    /// </para><para>--> Use DrawResetTransform when finished with transformations
+    /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+    /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+    /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+    /// </para>
+    /// </summary>
+    /// <param name="iAngle">Angle to rotate in degrees</param>
+    /// <returns></returns>
+    bool DrawTranslateTransform(CfPoint pLoc);                                  // $QC
+
 
     // GetPenSize() -- Returns the size (i.e. thickness) of the current pen)
     //
@@ -2579,7 +2838,26 @@ public:
     //
     CSlider &  NewSlider(int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
+    // Float Slider Variatons of NewSlider 
 
+    /// #NewfSlider
+    /// <summary>
+    /// Creates a float-point slider.  This is the same as NewSlider() except that the values are floating point, with a default range of 0.0-1.0.<para></para>
+    /// Use Slider functions GetPosf(), SetPosf() to get/set values, and SetRangef() to change the range.<para></para>
+    /// .<para></para>
+    /// With options, use opt::SetRangef() to set floating point ranges. <para></para>
+    /// --> Note: You can also use the NewSlider() function with the opt::AsFloat() option to set it as a floating points slider.<para></para>
+    /// </summary>
+    /// <param name="iX">- X Location of Slider</param>
+    /// <param name="iY">- Y Location of Slider</param>
+    /// <param name="iSize">Width of Slider (use 0 for default value)</param>
+    /// <param name="sLabel">- [optional] label of slider</param>
+    /// <param name="cwOpt">- [optional] other options such as Title(), Rangef(), Default(), etc.</param>
+    /// <returns></returns>
+    CSlider &  NewSliderf(int iX,int iY,int iSize,const char * sLabel,const cwfOpt & cwOpt = cwfOpt());         // $QC #NewfSlider
+    CSlider &  NewSliderf(int iX,int iY,int iSize,const wchar_t * sLabel,const cwfOpt & cwOpt = cwfOpt());      // $QC #NewfSlider
+    CSlider &  NewSliderf(int iX,int iY,int iSize,const cwfOpt & cwOpt = cwfOpt());                             // $QC #NewfSlider
+                                                                                        
     // QuickButton() -- Put up a quick button and information line. 
     //
     // This is used for quick Input-and-Go buttons, to stop program execution and get a quick button to continue.
@@ -2595,6 +2873,361 @@ public:
     void QuickButton(const char * sText = nullptr,const char * sTitleBar = nullptr); // $QC
 
 
+    struct WinDraw
+    {
+    private:
+        friend CWindow;
+        CWindow * m_cWin                    = nullptr;
+        CPasWindow * m_cWinCore             = nullptr;
+    public:
+
+        // SetPenSize -- Sets the thickness of the 'pen' (i.e. draw line thickness or outline thickness on Cricles, Triangles, etc.)
+        //
+        // This value defaults to 1, but can be set prior to drawing any control that uses an outline or draws a line.
+        // SetPenThickness() must be used again to revert back to the original thickness.  
+        // 
+        // SetPenThickness() returns the new thickness of the pen -- this useful to ensure the value does not 
+        // go below the minimum of 1.
+        //
+        int SetPenSize(int iThickness);
+
+        // GetPenSize() -- Returns the size (i.e. thickness) of the current pen)
+        //
+        int GetPenSize();
+
+
+        // Circle Functions
+
+        bool FillCircle(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);    
+        bool FillCircle(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);       
+        bool FillCircle(float iX,float iY,float iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);         
+        bool FillCircle(double iX,double iY,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);     
+        bool FillCircle(CfPoint fLoc,double iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);            
+        bool FillCircle(CfPointf fLoc,float iRadius,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                   
+        
+        bool FillCircleFast(int iX,int iY,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);
+        bool FillCircleFast(POINT pLoc,int iRadius,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);   
+
+        bool DrawCircle(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0);                                               
+        bool DrawCircle(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize =0 );                                                 
+        bool DrawCircle(double iX,double iY,double iRadius,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                  
+        bool DrawCircle(float iX,float iY,float iRadius,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                      
+        bool DrawCircle(CfPoint fLoc,double iRadius,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                         
+        bool DrawCircle(CfPointf fLoc,float iRadius,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                          
+
+
+        bool DrawCircleFast(int iX,int iY,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);      
+        bool DrawCircleFast(POINT pLoc,int iRadius,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);        
+
+        // Ellipse Functions
+ 
+        bool FillEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);     
+        bool FillEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);        
+        bool FillEllipse(float iX,float iY,float iRadiusX,float iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);              
+        bool FillEllipse(double iX,double iY,double iRadiusX,double iRadiusY,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);         
+        bool FillEllipse(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                                  
+        bool FillEllipse(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                                 
+
+        bool FillEllipseFast(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0); 
+        bool FillEllipseFast(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColorIn = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0); 
+    
+        bool DrawEllipse(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                               
+        bool DrawEllipse(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                  
+        bool DrawEllipse(double iX,double iY,double iRadiusX,double iRadiusY,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                
+        bool DrawEllipse(float iX,float iY,float iRadiusX,float iRadiusY,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                     
+        bool DrawEllipse(CfPoint fLoc,CfPoint fSize,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                                         
+        bool DrawEllipse(CfPointf fLoc,CfPointf fSize,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                                        
+
+
+        bool DrawEllipseFast(int iX,int iY,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0); 
+        bool DrawEllipseFast(POINT pLoc,int iRadiusX,int iRadiusY,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0); 
+
+        // Rectangle Functions
+
+        bool DrawRectangle(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                       
+        bool DrawRectangle(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                     
+        bool DrawRectangle(float iX,float iY,float iWidth,float iHeight,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                             
+        bool DrawRectangle(double iX,double iY,double iWidth,double iHeight,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                        
+        bool DrawRectangle(CfPoint fLoc,CfPoint fSize,RGBColor_t rgbColor = Rgb::Default,double fPenSize = 0);                                              
+        bool DrawRectangle(CfPointf fLoc,CfPointf fSize,RGBColor_t rgbColor = Rgb::Default,float fPenSize = 0);                                             
+
+        bool FillRectangle(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                
+        bool FillRectangle(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                              
+        bool FillRectangle(float iX,float iY,float iWidth,float iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);      
+        bool FillRectangle(double iX,double iY,double iWidth,double iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0); 
+        bool FillRectangle(CfPoint fLoc,CfPoint fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,double fPenSize = 0);                       
+        bool FillRectangle(CfPointf fLoc,CfPointf fSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,float fPenSize = 0);                      
+
+        bool FillRectangleFast(int iX,int iY,int iWidth,int iHeight,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);            
+        bool FillRectangleFast(POINT pLoc,SIZE szSize,RgbColor rgbColorIn,RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);                          
+        
+        bool DrawRectangleFast(int iX,int iY,int iWidth,int iHeight,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                   
+        bool DrawRectangleFast(POINT pLoc,SIZE szSize,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                 
+
+
+        // Triangle Draw Functions
+
+        bool DrawTriangle(POINT v1,POINT v2,POINT v3,RgbColor rgbColor,int iPenSize = 0);                                                      
+        bool DrawTriangle(CfPoint v1,CfPoint v2,CfPoint v3,RgbColor rgbColor,double iPenSize = 0);                                             
+        bool DrawTriangle(CfPointf v1,CfPointf v2,CfPointf v3,RgbColor rgbColor,float iPenSize = 0);                                           
+
+        bool FillTriangle(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);             
+        bool FillTriangle(CfPoint v1,CfPoint v2,CfPoint v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);    
+        bool FillTriangle(CfPointf v1,CfPointf v2,CfPointf v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);  
+
+        bool FillTriangleFast(POINT v1,POINT v2,POINT v3,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);         
+        bool DrawTriangleFast(POINT v1,POINT v2,POINT v3,RgbColor rgbColor,int iPenSize = 0); 
+
+        // Quadrangle Draw Functions
+
+        bool DrawQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColor,int iPenSize = 0);                                                      
+        bool DrawQuadrangle(CfPoint v1,CfPoint v2,CfPoint v3,CfPoint v4,RgbColor rgbColor,double iPenSize = 0);                                             
+        bool DrawQuadrangle(CfPointf v1,CfPointf v2,CfPointf v3,CfPointf v4,RgbColor rgbColor,float iPenSize = 0);                                           
+
+        bool FillQuadrangle(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);             
+        bool FillQuadrangle(CfPoint v1,CfPoint v2,CfPoint v3,CfPoint v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,double iPenSize = 0);    
+        bool FillQuadrangle(CfPointf v1,CfPointf v2,CfPointf v3,CfPointf v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,float iPenSize = 0);  
+
+        bool FillQuadrangleFast(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColorIn, RgbColor rgbColorOut = Rgb::Undefined,int iPenSize = 0);         
+        bool DrawQuadrangleFast(POINT v1,POINT v2,POINT v3,POINT v4,RgbColor rgbColor,int iPenSize = 0); 
+
+        // Polygon functions
+
+        bool DrawPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                       
+        bool DrawPolygon(CfPointf * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);                                                                  
+        bool DrawPolygon(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                      
+        bool DrawPolygon(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);                                                                  
+        bool DrawPolygon(Gdiplus::Point * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                              
+        bool DrawPolygon(Gdiplus::PointF * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);                                                           
+
+        bool FillPolygon(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                         
+        bool FillPolygon(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                        
+        bool FillPolygon(CfPointf * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);                    
+        bool FillPolygon(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,double iPenSize = 0);                    
+        bool FillPolygon(Gdiplus::Point * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                
+        bool FillPolygon(Gdiplus::PointF * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,float iPenSize = 0);             
+   
+        bool DrawPolygonFast(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                   
+        bool DrawPolygonFast(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                  
+        bool DrawPolygonFast(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                                                 
+
+
+        bool FillPolygonFast(POINT * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                     
+        bool FillPolygonFast(CPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                    
+        bool FillPolygonFast(CfPoint * pPoints,int iVertices,RGBColor_t rgbColor = Rgb::Default,RGBColor_t rgbColorOut = Rgb::Undefined,int iPenSize = 0);                   
+
+
+        // Line Draw Functions
+
+        bool MoveTo(int iX,int iY,RGBColor_t rgbColor = Rgb::Undefined);                                       
+        bool MoveTo(POINT pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                          
+
+        bool MoveTo(float iX,float iY,RGBColor_t rgbColor = Rgb::Undefined);                                   
+        bool MoveTo(double iX,double iY,RGBColor_t rgbColor = Rgb::Undefined);                                 
+        bool MoveTo(CfPointf pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                       
+        bool MoveTo(CfPoint pLoc,RGBColor_t rgbColor = Rgb::Undefined);                                        
+
+        bool LineToFast(int iX,int iY,RGBColor_t rgbColor  = Rgb::Undefined,int iPenSize = 0);             
+        bool LineToFast(POINT pLoc,RGBColor_t rgbColor  = Rgb::Undefined,int iPenSize =0);                 
+  
+        bool LineTo(POINT p1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                         
+        bool LineTo(int ix1,int iy1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                  
+        bool LineTo(float ix1,float iy1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);            
+        bool LineTo(double ix1,double iy1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);         
+        bool LineTo(const CfPointf p1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);              
+        bool LineTo(const CfPoint p1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);              
+
+
+        bool LineToExFast(bool bFirstPoint,int iX,int iY,RGBColor_t rgbColor);                                         
+        bool LineToExFast(bool bFirstPoint,POINT pLoc,RGBColor_t rgbColor);                                            
+
+        bool LineToEx(bool bFirstPoint,POINT p1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                  
+        bool LineToEx(bool bFirstPoint,int ix1,int iy1,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);           
+        bool LineToEx(bool bFirstPoint,float ix1,float iy1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);     
+        bool LineToEx(bool bFirstPoint,double ix1,double iy1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);  
+        bool LineToEx(bool bFirstPoint,const CfPointf p1,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);       
+        bool LineToEx(bool bFirstPoint,const CfPoint p1,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);       
+
+
+        bool DrawLineFast(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                              
+        bool DrawLineFast(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                
+
+        bool DrawLine(POINT p1,POINT p2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                                  
+        bool DrawLine(int ix1,int iy1,int ix2,int iy2,RGBColor_t rgbColor = Rgb::Default,int iPenSize = 0);                    
+        bool DrawLine(float ix1,float iy1,float ix2,float iy2,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);          
+        bool DrawLine(double ix1,double iy1,double ix2,double iy2,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);     
+        bool DrawLine(const CfPointf p1,const CfPointf p2,RGBColor_t rgbColor = Rgb::Default,float iPenSize = 0);              
+        bool DrawLine(const CfPoint p1,const CfPoint p2,RGBColor_t rgbColor = Rgb::Default,double iPenSize = 0);               
+
+        // GDI Transform functions
+
+        /// <summary>
+        /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// </summary>
+        /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+        /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+        /// <returns></returns>
+        bool SetDrawOpacity(int iOpacity,bool bAsByteValue = false);
+
+        /// <summary>
+        /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// </summary>
+        /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+        /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+        /// <returns></returns>
+        bool SetDrawOpacity(float fOpacity,bool bAsByteValue = false);
+
+        /// <summary>
+        /// Sets the opacity for shapes drawn with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// </summary>
+        /// <param name="iOpacity">- Opacity value (0 = transparent, 100 (or 255 is bAsByteValue is true) is completely opaque.  Default is fully opaque</param>
+        /// <param name="bAsByteValue">When false, the Opacity value is used as a percentage.  When true, Opacity value is used as a BYTE value 0-255 to set the value directly.</param>
+        /// <returns></returns>
+        bool SetDrawOpacity(double fOpacity,bool bAsByteValue = false);
+
+        /// <summary>
+        /// Returns the current Opacity for GDI-based draw functions.  Value is from 0-255 (fully transparent to fully opaque)
+        /// </summary>
+        /// <returns></returns>
+        int GetDrawOpacity();
+
+        /// <summary>
+        /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object will be rotated by --iAngle-- degrees. 
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool RotateTransform(int iAngle);
+ 
+        /// <summary>
+        /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object will be rotated by --iAngle-- degrees. 
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool RotateTransform(double fAngle);
+
+        /// <summary>
+        /// Sets the rotational transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object will be rotated by --iAngle-- degrees. 
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool RotateTransform(float iAngle);
+
+        /// <summary>
+        /// Resets all transforms for GDI-based object (i.e. objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.)
+        /// </summary>
+        /// <returns></returns>
+        bool ResetTransform();
+
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>    
+        bool TranslateTransform(int iX,int iY);
+
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>    
+        bool TranslateTransform(float iX,float iY);
+ 
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>  
+        bool TranslateTransform(double iX,double iY);
+
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool TranslateTransform(POINT pLoc);
+
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool TranslateTransform(CfPointf pLoc);
+
+        /// <summary>
+        /// Sets the positional transform for objects drawn with with GDI functions, such as Circle(), FillCircle(), Triangle, etc.
+        /// <para>
+        /// When used, the object drawn at (0,0) will now be drawn at (X,y) and all coordinates used will transform (0,0) into X and Y
+        /// </para><para>--> Use DrawResetTransform when finished with transformations
+        /// </para><para>--> Transformations are processed in order called.  calling DrawRotateTransform() then DrawTranslateTransform() vs. 
+        /// </para><para>DrawTranslateTransform() then DrawRotateTransform() will result in different behavior. 
+        /// </para><para>--> Typical order is DrawTranslateTransform() to set the center of the transform, then DrawRotateTransform() to rotate on that center.
+        /// </para>
+        /// </summary>
+        /// <param name="iAngle">Angle to rotate in degrees</param>
+        /// <returns></returns>
+        bool TranslateTransform(CfPoint pLoc);
+
+
+
+    };
+
+    WinDraw draw;
     // ---------------------
     // win.dialog functions.  
     // ---------------------
@@ -3337,7 +3970,7 @@ public:
         //
         // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
         //
-        bool      MenuItemSelected(Peek peek = Peek::No)                      ;
+        std::optional<int> MenuItemSelected(Peek peek = Peek::No)                      ;
 
         // Retrieves the last menu item selected.
         // 
@@ -3345,7 +3978,7 @@ public:
         //
         // This will continue to return the same menu item until a new menu item is selected.
         //
-        int       GetMenuItem()                                             ;     
+        int       GetSelectedMenuItem()                                             ;     
  
         // Returns true if the Left Mouse Button is currently pressed.  
         // This is not a mouse event and returns the real-time status of the mouse.
@@ -3635,12 +4268,19 @@ public:
         //
         bool SetWindowClosing(bool bPressCloseButton = false);     
 
+#ifdef kCPP17Functions
+        std::optional<int> MouseWheelMoved(Peek peek = Peek::No);
+#else
         bool MouseWheelMoved(Peek peek = Peek::No);
+#endif
         bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No);
         int GetMouseWheelMove(bool bResetEvent = false); 
 
         bool WindowResized(Peek peek = Peek::No);
         bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No);
+
+        bool WindowResizing(Peek peek = Peek::No);
+        bool WindowResizing(SIZE & szNewWinSize,Peek peek = Peek::No);
 
         // Returns TRUE when the mouse capture has been release.  This only returns true when
         // the mouse capture previously engaged for the window has been released.
@@ -3653,7 +4293,7 @@ public:
         // Returns true if an event has occurred.  This can be used when GetEvent() isn't appropriate (such as in a loop that takes a lot of time)
         // When GetEvent() is called, the Event Pending Status is cleared back to false
         //
-        __forceinline bool EventReady() { return !m_cWin ? false : m_cWin->EventReady(); };
+        __forceinline bool EventPending(Peek peek = Peek::No) { return !m_cWin ? false : m_cWin->EventPending(peek); };
 
         // EndProgramOnClose() -- When in Event-Driven mode and ThreadStop() has been called, this 
         // causes Sagebox to call EndProgram(0) to continue the thread with a window close status.
@@ -3705,7 +4345,9 @@ public:
         //
         bool SendEventsToParent(); 
 
-    };
+
+
+     };
 
     WinEvent event;
 
@@ -4190,7 +4832,7 @@ public:
         // --> ThickBorder()    -- Puts a thick border around the input box, appearing more like a window rather than an input box.
         // --> NoBlankEntry()   -- Does not return unless some text is entered (i.e. will not return on a blank line).  If the Window is closing (WindowClosing() is true), GetString() will return regardless.
         //
-        int GetInteger(int iDefault = INT_MAX,const cwfOpt & cwOpt = cwfOpt());
+        int GetInteger(const char * sText,const cwfOpt & cwOpt = cwfOpt());
 
         // GetInteger() -- Creates an Edit Box at the current console cursor (X,Y) point and waits for the user to enter an integer
         //
@@ -4574,7 +5216,7 @@ public:
         //
         // There are 4 different function prototypes so that options can be omitted when not required.
         //
-        double getFloat(double fDefault = DBL_MAX,const cwfOpt & cwOpt = cwfOpt());
+        double GetFloat(const char * sText,const cwfOpt & cwOpt = cwfOpt());
 
         // console.GetFloat() -- Get a floating-point value from the user, in an inline console-style input (i.e. as part of a text line rather than a windowed box)
         //
@@ -4630,7 +5272,7 @@ public:
         //
         // There are 4 different function prototypes so that options can be omitted when not required.
         //
-        double getFloat(const cwfOpt & cwOpt = cwfOpt());
+        double GetFloat(const cwfOpt & cwOpt = cwfOpt());
 
         // SetTabPos() -- Set the X position for Write/out/putchar/etc output to the character nth character position.
         // For example. SetTabPos(40) puts the output position (i.e. cursor) at charatcer position 40, based on the average character width.
@@ -5968,6 +6610,44 @@ public:
 
     bool BlendDIB(HBITMAP hBitmap,const SIZE szSize,const POINT pDest,const SIZE szDest = {});
 
+    /// <summary>
+    /// Displays a transformed bitmap, that can be rotated, scaled (zoom), or flipped in any direction. Masks are also supported.
+    /// <para></para>
+    /// Note that the position (iX, iY, or the POINT pLoc) is the center of the image.  Rotation also occurs about the center of the image.
+    /// <para></para>
+    /// --> This function creates a CBMPTransform.  For multiple operations, create a CBmpBitmap transform object locally -- rotation and scale operatons can be
+    /// used multiple times without allocating memory on each call (allocated memory is freed when the CBmpBitmap object goes out of scope)
+    /// <para></para>
+    /// --> *** note *** -- TransformBitmap() and CBmpBitmap are in an experimental stage. 
+    /// </summary>
+    /// <param name="iX">X location of center of image (you can also use a POINT to specify center (x,y)</param>
+    /// <param name="iY">Y location of center of image (when a POINT is not used instead)</param>
+    /// <param name="cBitmap">Bitmap to be displayed</param>
+    /// <param name="fAngle">Angle of rotation</param>
+    /// <param name="fZoom">Zoom factor</param>
+    /// <param name="eFlip">Flip type, i.e. horizonal, vertical, etc.</param>
+    /// <returns></returns>
+    bool TransformBitmap(int iX,int iY,CBitmap & cBitmap,double fAngle,double fZoom = 1.0,FlipType eFlip = FlipType::None);
+
+    /// <summary>
+    /// Displays a transformed bitmap, that can be rotated, scaled (zoom), or flipped in any direction. Masks are also supported.
+    /// <para></para>
+    /// Note that the position (iX, iY, or the POINT pLoc) is the center of the image.  Rotation also occurs about the center of the image.
+    /// <para></para>
+    /// --> This function creates a CBMPTransform.  For multiple operations, create a CBmpBitmap transform object locally -- rotation and scale operatons can be
+    /// used multiple times without allocating memory on each call (allocated memory is freed when the CBmpBitmap object goes out of scope)
+    /// <para></para>
+    /// --> *** note *** -- TransformBitmap() and CBmpBitmap are in an experimental stage. 
+    /// </summary>
+    /// <param name="iX">X location of center of image (you can also use a POINT to specify center (x,y)</param>
+    /// <param name="iY">Y location of center of image (when a POINT is not used instead)</param>
+    /// <param name="cBitmap">Bitmap to be displayed</param>
+    /// <param name="fAngle">Angle of rotation</param>
+    /// <param name="fZoom">Zoom factor</param>
+    /// <param name="eFlip">Flip type, i.e. horizonal, vertical, etc.</param>
+    /// <returns></returns>
+    bool TransformBitmap(POINT pLoc,CBitmap & cBitmap,double fAngle,double fZoom = 1.0,FlipType eFlip = FlipType::None);
+
     // StretchBitmap() -- Display a stretched bitmap to the window.  
     //
     // The source bitmap can be stretched to any size, and from any portion of the bitmap.
@@ -6285,6 +6965,16 @@ public:
     //
     bool MouseMoved(Peek peek = Peek::No); // $QCC
 
+    // Experimental
+    //
+    std::optional<POINT> MouseMoved17(Peek peek = Peek::No)
+    {
+        std::optional<POINT> p;
+        POINT pMouse;
+        if (MouseMoved(pMouse,peek)) p = pMouse;
+        return p;
+    }
+
     // Returns true if the mouse was moved
     // This is an event and is a one-time only read so that the status is reset 
     // (i.e. the status wont become true again until the next mouse movement)
@@ -6422,30 +7112,32 @@ public:
     /// <summary>
     /// Returns the last (current) Mouse Drag Event mouse position, i.e. the position the mouse was at when the mouse moved while the left mouse button was pressed.
     /// <para></para>
-    /// If the mouse button was clicked with no subsequent mousemove, both MouseDragLast() and MouseDragPrev() will return the mouse position of the mouse button click.
+    /// If the mouse button was clicked with no subsequent mousemove, both MouseDragPos() and MouseDragPrev() will return the mouse position of the mouse button click.
     /// <para></para>
     /// --> See MouseDragPrev() to return the mouse position before the current position.
     /// <para></para>
-    /// --> *** Important *** Call MouseDragPrev() only once per cycle and before MouseDragLast(), as each call to MouseDragPrev() increments the 
-    /// "previous" point to the same point as MouseDragLast()
+    /// --> *** Important *** Call MouseDragPrev() only once per cycle and before MouseDragPos(), as each call to MouseDragPrev() increments the 
+    /// "previous" point to the same point as MouseDragPos()
     /// </summary>
     /// <returns>Mouse position of current/last Drag Event</returns>
-    POINT MouseDragLast();      // $QCC
+    POINT GetMouseDragPos();      // $QCC
+    POINT MouseDragPos();      // $QCC
 
     /// <summary>
     /// Returns the previous (one before current) Mouse Drag Event mouse position.
     /// <para></para>
-    /// If the mouse button was clicked with no subsequent mousemove, both MouseDragLast() and MouseDragPrev() will return the mouse position of the mouse button click.
+    /// If the mouse button was clicked with no subsequent mousemove, both MouseDragPos() and MouseDragPrev() will return the mouse position of the mouse button click.
     /// <para></para>
-    /// --> See MouseDragLast() to return the mouse position of the current (i.e. last) Drag Event
+    /// --> See MouseDragPos() to return the mouse position of the current (i.e. last) Drag Event
     /// <para></para>
-    /// --> In combination with MouseDragLast(), this allows connecting points from mouse movements.  When a mouse drag event occurs, the 
-    /// current positon in MouseDragLast() is copied to MouseDragPrev().
+    /// --> In combination with MouseDragPos(), this allows connecting points from mouse movements.  When a mouse drag event occurs, the 
+    /// current positon in MouseDragPos() is copied to MouseDragPrev().
     /// <para></para>
-    /// --> *** Important *** Call MouseDragPrev() only once per cycle and before MouseDragLast(), as each call to MouseDragPrev() increments the 
-    /// "previous" point to the same point as MouseDragLast()
+    /// --> *** Important *** Call MouseDragPrev() only once per cycle and before MouseDragPos(), as each call to MouseDragPrev() increments the 
+    /// "previous" point to the same point as MouseDragPos()
     /// </summary>
     /// <returns>Mouse position of previous Drag Event</returns>
+    POINT GetMouseDragPrev();      // $QCC
     POINT MouseDragPrev();      // $QCC
 
     bool MouseDragEnded(Peek peek = Peek::No); // $QCC
@@ -6456,7 +7148,10 @@ public:
 
     bool StartMouseDrag(POINT pPoint); // $QCC
 
+    bool MouseDragReset();  // $QCC
+
     POINT GetMouseDragStart(); // $QCC
+    POINT MouseDragStart(); // $QCC
 
     // GetMousePos() -- Returns the current mouse coordinates relative to the window
     //
@@ -6484,11 +7179,18 @@ public:
     //
     POINT GetMouseClickPos(); // $QCC
 
+
+#ifdef kCPP17Functions
+        std::optional<int> MouseWheelMoved(Peek peek = Peek::No);       // $QCC
+#else
     bool MouseWheelMoved(Peek peek = Peek::No); // $QCC
+#endif
     bool MouseWheelMoved(int & iDistance,Peek peek = Peek::No); // $QCC
     int GetMouseWheelMove(bool bResetEvent = true); // $QCC
     bool WindowResized(SIZE & szNewWinSize,Peek peek = Peek::No); // $QC
     bool WindowResized(Peek peek = Peek::No); // $QC
+    bool WindowResizing(Peek peek = Peek::No);
+    bool WindowResizing(SIZE & szNewWinSize,Peek peek = Peek::No);
 
     // SetWritePos() -- Set the output position in the Window for writing text. 
     // 
@@ -6525,6 +7227,23 @@ public:
     // See SetWritePos() for more information; 
     //
     ConsoleOp_t SetWritePosX(int iX); // $QC
+
+    // SetWriteIndent() -- Sets the indent for text printing functions when a cr/lf "\n" is returned.
+    // This allows informally indenting printing.  
+    //
+    // This only affects where the X position in the console output gets reset to when the "\n" is seen.
+    // All other write(), printf(), SetPos(), etc. functions work as normal. 
+    // Use SetIndent()  (without arguments to reset it). 
+    //
+    void SetWriteIndent(int iIndent = 0);
+
+    /// <summary>
+    /// Sets the vertical padding for each line written in the window. 
+    /// <para></para>
+    /// This allows adding vertical space per-line when writing out to the window.
+    /// </summary>
+    /// <param name="iPad"></param>
+    void SetWritePadding(int iPad);
 
     // SetBkMode() -- Set the text background mode.
     // BkMode returns eeither BkMode::Transparent or BkMode::Opaque
@@ -6735,7 +7454,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(RawBitmap_t & stBitmap,const  cwfOpt & cwOpt = cwfOpt()); // $QC
+    CWindow & _BitmapWindow(RawBitmap_t & stBitmap,const  cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -6752,7 +7471,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(CBitmap & cBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+    CWindow & _BitmapWindow(CBitmap & cBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -6769,7 +7488,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
+    CWindow & _BitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -6786,7 +7505,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(POINT pLoc,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
+    CWindow & _BitmapWindow(POINT pLoc,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -6803,7 +7522,7 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(int iX,int iY,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+    CWindow & _BitmapWindow(int iX,int iY,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // BitmapWindow() -- Create a window (popup or embedded) designed to show bitmaps.
     //
@@ -6820,7 +7539,114 @@ public:
     // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
     // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
     //
-    CWindow & BitmapWindow(POINT pLoc,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+    CWindow & _BitmapWindow(POINT pLoc,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+
+    // -----------------------------------------------------------------------------------------
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                    (Bitmap displays upside-down compared to BitmapWindow() call)
+    // 
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(RawBitmap_t & stBitmap,const  cwfOpt & cwOpt = cwfOpt()); // $QC
+
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                     (Bitmap displays upside-down compared to BitmapWindow() call)
+    //
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(CBitmap & cBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                    (Bitmap displays upside-down compared to BitmapWindow() call)
+    //
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
+
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                    (Bitmap displays upside-down compared to BitmapWindow() call)
+    // 
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(POINT pLoc,CBitmap & cBitmap,const cwfOpt & cwOpt= cwfOpt()); // $QC
+
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                    (Bitmap displays upside-down compared to BitmapWindow() call)
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(int iX,int iY,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
+
+    // BitmapWindowR() -- Create a window (popup or embedded) designed to show bitmaps.
+    //                    (Bitmap displays upside-down compared to BitmapWindow() call)
+    // This can create a popup window or embedded window, with a bitmap included to display on creation.
+    // When no location (iX,iY) is given the window pops up automatially (i.e. a separate window).
+    // Otherwise, when iX and iY are given, the window is embedded into the parent window unless:
+    //
+    // When Popup() (i.e. opt::Popup()) is given as an option, the window is not embedded and a new popup window is 
+    // created.
+    //
+    // The window is sized to the input bitmap.
+    //
+    // Once the window is created, it may be treated as any window.
+    // Note: With Bitmap Popup Windows(), when the 'X' is pressed, the window is automatically closed
+    // unlike regular CWindow windows where the 'X' button sets a notification and WindowClosing() status.
+    //
+    CWindow & _BitmapWindowR(POINT pLoc,RawBitmap_t & stBitmap,const  cwfOpt & cwOpt= cwfOpt()); // $QC
 
     // Create a new Child Window within the parent window. 
     // This created an embedded window that is the same as other windows (and, in fact, return CWindow)
@@ -7049,9 +7875,9 @@ public:
     //
     void SetAutoBuffer(bool bAutoBuffer); // $QC
 
-    // SetWindowBuffering() -- Sets whether or not the window is bufferred to a bitmap before sending output to the screen. 
+    // SetDirectDraw() -- Sets whether or not the window is bufferred to a bitmap before sending output to the screen. 
     //
-    // By default, all SageBox windows are bufferred, meaning that all display actions are performed on a bitmap and then
+    // By default, all SageBox windows are bufferred (i.e. Direct Draw is false), meaning that all display actions are performed on a bitmap and then
     // sent to the window -- either immediately or through a schedule update for faster processing.
     //
     // When the Window is covered up and uncovered, or disappears due to other window and reappears, Windows tells Sagebox to repaint
@@ -7067,9 +7893,10 @@ public:
     // When turning the Buffering back on, Sagebox copies the contents of the window so that Buffering can be turned off for some 
     // specific purposes and easily turned back on with buffering enabled.
     //
-    void SetWindowBuffering(bool bBuffer); // $QC
+    void SetDirectDraw(bool bDirectDraw); // $QC
+    void ThunkDirectDraw();
 
-
+    bool isDirectDraw();                    // $QC
     /// <summary>
     /// Sets the Auto Update Type for the Window
     /// <para></para>&#160;&#160;&#160;
@@ -7108,6 +7935,8 @@ public:
     /// <param name="AutoUpdateType update"> = UpdateType.  AutoUpdate(true) sets AutoUpdateType::On, AutoUpdate(false) turns off auto-update</param>
     void SetAutoUpdate(AutoUpdateType update); // $QC
  
+    bool UpdatesOn();
+
     // Create a new button on the window. 
     //
     // Creates a new button at the (iX,iY) coordinates.  The Width and Height are optional, depending on the needs and type of the button.
@@ -7657,6 +8486,17 @@ public:
     //
     SIZE GetWindowSize(bool bFrameSize = false);    // $QC
 
+   // Returns the Windows Size, either the visible canvas size or actual window size including the frame and title bar.
+    //
+    // The Windows has three components:  The Window itself (frame, title bar, etc.), visible canvas (the visible part of the window
+    // that can be drawn on), and the entire canvas (the entire writeable part of the internal bitmap that may be larger than displayed in the window).
+    //
+    // GetWindowSize() returns the visible canvas size so that where to put objects may be calculated.
+    // GetWindowSize(true) returns the entire visible window size, including the frame, title bar, and borders. 
+    //
+    // See GetCanvasSize() to retrieve the size of the entire canvas that may exceed the visible window
+    //
+    SIZE Size(bool bFrameSize = false);    // $QC
     // Returns the ID assigned to the Window when ID() was used to create the window.
     //
     int GetID(); // $QC
@@ -7691,11 +8531,23 @@ public:
     //
     int GetWindowWidth(bool bFrameSize = false);    // $QC
 
+    // GetWindowWidth() - returns the width of the displayed canvas of the window.
+    // Use GetWindoWidth(true) to get the full width of the widow, including the frame.
+    // See GetWindowSize() to return both Width and Height in SIZE structure.
+    //
+    int Width(bool bFrameSize = false);    // $QC
+
     // GetWindowHeight() - returns the height of the displayed canvas of the window.
     // Use GetWindowHeight(true) to get the full width of the height, including the frame.
     // See GetWindowSize() to return both Width and Height in SIZE structure.
     //
     int GetWindowHeight(bool bFrameSize = false);   // $QC
+
+   // GetWindowHeight() - returns the height of the displayed canvas of the window.
+    // Use GetWindowHeight(true) to get the full width of the height, including the frame.
+    // See GetWindowSize() to return both Width and Height in SIZE structure.
+    //
+    int Height(bool bFrameSize = false);   // $QC
 
     // Returns true if the Window is showing on the desktop.  False is returned if the Window is invisible.
     //
@@ -7708,8 +8560,20 @@ public:
     // For example using auto& MyWindow = window("MyWindow") will return an empty window if a window
     // with the Name("MyWindow") does not exist.  In which case, isValid() can be used to determine this is an empty window.
     //
+    // isValid() and isWindowValid() are the samne function.
+    //
     bool isValid(); // $QC
 
+   // Returns true of the window object is a valid window.
+    // False is returned if not.  This can happen when a window is retrieved that is not valid, or a 
+    // Window has been closed. 
+    //
+    // For example using auto& MyWindow = window("MyWindow") will return an empty window if a window
+    // with the Name("MyWindow") does not exist.  In which case, isValid() can be used to determine this is an empty window.
+    //
+    // isValid() and isWindowValid() are the samne function.
+    //
+    __forceinline bool isWindowValid() { return isValid(); }; // $QC
 
     // GetWindowBitmap() -- Fills a RawBitmap_t structure with the contents of the window, which can then be used for blending
     // and other functions.
@@ -7773,6 +8637,29 @@ public:
     // (this helps avoid multi-threading issues)
     //
     bool SendWidgetMessage(HWND hWndParent,void * cWidget = nullptr,int iMessage = 0); // $QC
+
+    // PostWidgetMessage()
+    // 
+    // This is used by Widgets to send a generic message that can be intercepted with OnWidgetMessage() and also
+    // causes EventLoop() and WaitforEvent() to return so the main procedure can look for WidgetMessages.
+    //
+    // This is also useful for Widgets to send messages to themselves to process elements in the main
+    // thread rather than the calling thread of an interface function with unknown status (i.e. updates, etc.)
+    // (this helps avoid multi-threading issues)
+    //
+    bool PostWidgetMessage(CWindow * cWin,void * cWidget = nullptr,int iMessage = 0); // $QC
+
+    // PostWidgetMessage()
+    // 
+    // This is used by Widgets to send a generic message that can be intercepted with OnWidgetMessage() and also
+    // causes EventLoop() and WaitforEvent() to return so the main procedure can look for WidgetMessages.
+    //
+    // This is also useful for Widgets to send messages to themselves to process elements in the main
+    // thread rather than the calling thread of an interface function with unknown status (i.e. updates, etc.)
+    // (this helps avoid multi-threading issues)
+    //
+    bool PostWidgetMessage(HWND hWndParent,void * cWidget = nullptr,int iMessage = 0); // $QC
+
 
     // WaitforEvent() -- Wait for a user event, such as a mouse move, mouse click, button press, slider press, or any control or widget event.
     //
@@ -8002,7 +8889,11 @@ public:
     // (in which case an empty string is returned).
     //
     CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt); // $QC
-    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt) { return NewEditBox(iX,iY,iWidth,iHeight,cwOpt);}  // $QC // $$moveme
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,cwfOpt & cwOpt); // $QC // $$moveme
+   
+    CEditBox & NewEditBox(int iX,int iY,int iWidth,cwfOpt & cwOpt); // $QC
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,cwfOpt & cwOpt); // $QC // $$movme
+
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -8036,7 +8927,10 @@ public:
     // (in which case an empty string is returned).
     //
     CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
-    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return NewEditBox(iX,iY,iWidth,iHeight,sText,cwOpt); }  // $QC //$$moveme
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());  // $QC //$$moveme
+
+    CEditBox & NewEditBox(int iX,int iY,int iWidth,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CInputBox & NewInputBox(int iX,int iY,int iWidth,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());  // $QC //$$moveme
 
     // NewEditBox -- Create a new edit box at (iX,iY) of specific width (and, optionally, height)
     // 
@@ -8052,8 +8946,8 @@ public:
     // Events are returned such as editbox.ReturnedPressed() which is set when the return key is pressed or ESC key is pressed
     // (in which case an empty string is returned).
     //
-    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
-    CInputBox & NewInputBox(CInputBox * pObject,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return NewEditBox(pObject,iX,iY,iWidth,iHeight,sText,cwOpt); }  // $QC //$$moveme
+    CEditBox & NewEditBox(CEditBox * pObject,int iX,int iY,int iWidth,int iHeight = 0,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CInputBox & NewInputBox(CInputBox * pObject,int iX,int iY,int iWidth,int iHeight = 0,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt()) { return NewEditBox(pObject,iX,iY,iWidth,iHeight,sText,cwOpt); }  // $QC //$$moveme
 
     // CreateButtonStyle() -- Allows the creation of personalized, bitmap-based buttons.
     //
@@ -8265,6 +9159,7 @@ public:
     --> note: default for text placement is Centered in the Y dimension, and Left in the X dimension.
     */
     CTextWidget & TextWidget(int iX,int iY,int iWidth,int iHeight,const char * sMessage = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+
     /* TextWidget() -- Creates a persistent Text Widget Windows to write Text
     
     A Text Widget is a widow that that is placed on the current window.   This protects the text, and the
@@ -8364,6 +9259,9 @@ public:
     //
     // Note:: this is not a user function and is used by SageBox and Widgets
     // 
+
+    CTextWidget & TextWidget(const char * sMessage,const cwfOpt & cwOpt = cwfOpt());        // $QC
+
     int RegisterWidget(int & iRegistryID); // $QC
 
     // SnaptoWin() -- Used by Widgets and controls to make sure their window/control is completely within the parent window
@@ -8657,6 +9555,36 @@ public:
     //
     void WriteShadow(int iX,int iY,const char * sMessage,const cwfOpt & cwOpt = cwfOpt()); // $QCC
 
+    // Retrieves the last menu item selected.
+    // 
+    // This is meant to be used right after MenuItemSelected() is called, and will return the last menu item selected.
+    //
+    // This will continue to return the same menu item until a new menu item is selected.
+    //
+    int GetSelectedMenuItem();                                                                      // $QC
+
+    bool CreateMenu(const char * sMenu,const cwfOpt & cwOpt = CWindow::cwNoOpt);                                                            // $QC
+    bool QuickMenu(const char * sMenu,const cwfOpt & cwOpt = CWindow::cwNoOpt);                                                            // $QC
+    
+    int GetMenuItemID(const char * sMenu);                                                          // $QC
+    bool isMenuIDSelected(const char * sMenu);                                                        // $QC
+    bool isMenuIDSelected(int iMenuID) { return this->GetSelectedMenuItem() == iMenuID; }             // $QC
+
+    bool EnableMenuItem(int iMenuID,bool bEnable = true);                                           // $QC
+    bool EnableMenuItem(const char * sMenu,bool bEnable = true);                                    // $QC
+
+    bool DisableMenuItem(int iMenuID,bool bDisable = true);                                           // $QC
+    bool DisableMenuItem(const char * sMenu,bool bDisable = true);                                    // $QC
+
+    bool SetMenuItemCheck(int iMenuID,bool bChecked);
+    bool SetMenuItemCheck(const char * sMenu,bool bChecked);
+
+    bool HideMenu(bool bHide = true);                   //  $QCC
+    bool ShowMenu(bool bShow = true);                   //  $QCC
+    bool ShowMenu(CMenu & cMenu,bool bShow = true);     //  $QCC
+    bool HideMenu(CMenu & cMenu,bool bHide = true);     //  $QCC
+
+    void PrintMenuItems();                              // $QC
 
     // CreateMenu() -- Creates a menu that can be added as a main menu or sub menu to the window.
     //
@@ -8686,15 +9614,7 @@ public:
     //
     // If the iMenuItem is not included in the call, GetMenuItem() can be used to retrieve the last menu item selected
     //
-    bool MenuItemSelected(Peek peek = Peek::No); // $QC
-
-    // Retrieves the last menu item selected.
-    // 
-    // This is meant to be used right after MenuItemSelected() is called, and will return the last menu item selected.
-    //
-    // This will continue to return the same menu item until a new menu item is selected.
-    //
-    int GetMenuItem(); // $QC
+    std::optional<int> MenuItemSelected(Peek peek = Peek::No); // $QC
 
     bool SetCloseButtonMenu(int iMenuItem = 0); // $QC
 
@@ -8722,8 +9642,8 @@ public:
     /// <returns></returns>
      CBitmap ReadImageFile(std::string & sPath,bool * bSuccess = nullptr); // $QC
 
-    [[nodiscard]] RawBitmap32_t ReadImageFile32(const char * sPath,bool * bSuccess = nullptr); // $QC
-    [[nodiscard]] RawBitmap32_t ReadImageFile32(std::string & sPath,bool * bSuccess = nullptr); // $QC
+    CBitmap32 ReadImageFile32(const char * sPath,bool * bSuccess = nullptr); // $QC
+    CBitmap32 ReadImageFile32(std::string & sPath,bool * bSuccess = nullptr); // $QC
 
     /// <summary>
     /// Reads an image in memory and returns a CBitmap.  If the Bitmap is not valid, then there was an error. 
@@ -9124,14 +10044,18 @@ public:
     //
     bool SendEventsToParent();  // $QC
 
+    /// <summary>
+    /// Returns parent window.  Useful for Chld Windows and other window operations.
+    /// </summary>
+    /// <returns>CWindow pointer to parent window.  nullptr if there is no parent.</returns>
+    CWindow * GetParentWindow(); 
+
     stControlLabel_t AddControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bUpdate,const cwfOpt & cwOpt = cwfOpt()); // $QC
    
     bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate = true,BorderType eBorderType = BorderType::Depressed, LabelJust eLabelType = LabelJust::None,const cwfOpt & cwOpt = cwfOpt()); // $QCC
     bool DrawLabelBox(POINT pLocation,SIZE szSize, const char * sTitle,const cwfOpt & cwOpt); // $QCC
     bool DrawLabelBox(POINT pLocation,SIZE szSize,const char * sTitle,bool bUpdate,const cwfOpt & cwOpt); // $QCC
-    bool HideMenu(); // $QC
-    bool ShowMenu(CMenu & cMenu); // $QCC
-
+ 
     bool SetFullScreen(bool bFullscreen = true,bool bForceShow = false); // $QC
 
     CDavinci * GetDavinciMain(); // $QC
@@ -9168,7 +10092,41 @@ public:
     bool UpdateOnce(); // $QC
 
     bool SetasTopWindow(); // $QC
-    bool SetasTopmostWindow(); // $QC
+    bool SetasTopmostWindow(bool bTopMost = true); // $QC
+    bool SetasBottomWindow(); // $QC
+
+    /// <summary>
+    /// Sets window as the top window in the Z-Order of all windows created by Sagebox.
+    /// <para></para>
+    /// See WindowTopMost() to make window a 'topmost' window, which will persist in the z-order 
+    /// </summary>
+    /// <returns></returns>
+    bool WindowTop();            // $QC
+
+    /// <summary>
+    /// Set Window as a topmost window.  This will being the window the top of all windows and persist
+    /// as the topmost window even when other windows are activated.
+    /// <para></para>
+    /// See WindowTop() to bring the window to the top of the z-order with it being persistent.
+    /// </summary>
+    /// <param name="bTopMost"> - when true, this sets the window as a persistent topmost window.  When False, this turns off the topmost status.</param>
+    /// <returns></returns>
+    bool WindowTopMost(bool bTopMost = true);        // $QC
+
+    /// <summary>
+    /// Mazimize the window on the desktop. 
+    /// </summary>
+    /// <returns></returns>
+    bool WindowMaximize();       // $QC
+
+    /// <summary>
+    /// Minimize the Window in the desktop.
+    /// </summary>
+    /// <returns></returns>
+    bool WindowMinimize();       // $QC
+
+
+
     bool DrawSimpleDoc(const unsigned char * sPgrData,const cwfOpt & cwOpt = cwfOpt());  // $QCC
     bool DrawSimpleDoc(const char * sPgrPath, const cwfOpt & cwOpt = cwfOpt()); // $QCC
 
@@ -9192,7 +10150,7 @@ public:
     //
     CWindow::WinGroup * DevGetGroup(); // $QC
 
-    // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
+    // Create a Dev Controls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
     // GUI functions with GUI controls. 
     // 
@@ -9203,9 +10161,9 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(int iX = -1, int iY = -1, const cwfOpt & cwOpt = cwfOpt()); // $QC
+    CDevControls & NewDevWindow(int iX, int iY, const cwfOpt & cwOpt = CWindow::cwNoOpt); // $QC
 
-    // QuickControlWindow() -- Create a QuickControls Window, allowing for quick creation and automatic placement of
+    // Create a Dev Controls Window, allowing for quick creation and automatic placement of
     // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
     // GUI functions with GUI controls. 
     // 
@@ -9216,7 +10174,83 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-    CDevControls * DevControlsWindow(const cwfOpt & cwOpt); // $QC
+    CDevControls & NewDevWindow(POINT pLoc, const cwfOpt & cwOpt = CWindow::cwNoOpt); // $QC
+
+    // Create a Dev Controls Window, allowing for quick creation and automatic placement of
+    // controls (buttons, slider, editboxes, etc.) in the window.   This allows quick prototyping and development of non
+    // GUI functions with GUI controls. 
+    // 
+    // See documentationn in CQuickControls.h for more information
+    //
+    // ** Important note ** the object pointer returned MUST BE DELETED, as it is not a managed object. 
+    // Example code tends to use Obj<CQuickControls> cQuickControl = QuickControlWindow() to treat it as a stack object
+    // that is automatically deleted when the current function (or class) goes out of scope.
+    // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
+    //
+    CDevControls & NewDevWindow(const cwfOpt & cwOpt = CWindow::cwNoOpt); // $QC
+
+
+    /// #DevSetBgColor
+    /// <summary>
+    /// Sets the background color (or colors) of the Dev Window.<para></para>
+    /// --> Note: This function should be called before any Dev Controls are created (i.e. buttons, sliders, etc.) so that<para></para>
+    /// they will blend properly into the background.<para></para>
+    /// Two colors may be used to form a gradient, which will span the maximum vertical length of the Dev Window (i.e. it will show more as controls are added)
+    /// .<para></para>
+    /// Colors can be Sagebox Rgb Color (i.e. RgbColor(0,255,0), SageColor::Red, PanColor::Green,etc.) or string such as <para></para>
+    /// "Green","red","PanColor:ForestGreen", etc.<para></para>
+    /// .<para></para>
+    /// Examples: DevSetBgColor(SageColor::Black)<para></para>
+    ///          DevSetBgColor("black","blue")<para></para>
+    /// </summary>
+    /// <param name="rgbColor1">- Color to clear the dev window</param>
+    /// <param name="rgbColor2">- [optional] Second color to clear the background with a gradient</param>
+    /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <returns></returns>
+    bool DevSetBgColor(RgbColor rgbColor1,RgbColor rgbColor2 = Sage::Rgb::Undefined,bool bDrawBar = true);  // # DevSetBgColor
+    bool DevSetBgColor(RgbColor rgbColor1,bool bDrawBar);                                                   // # DevSetBgColor
+    bool DevSetBgColor(const char * sColor1,const char * sColor2 = nullptr,bool bDrawBar = true);           // # DevSetBgColor
+    bool DevSetBgColor(const char * sColor1,bool bDrawBar);                                                 // # DevSetBgColor
+
+    /// #DevSetBgBitmap
+    /// <summary>
+    /// Sets the background bitmap of the Dev Window.  The bitmap provided should span the <para></para>
+    /// width and height of the full Dev Window, as Dev Windows grow vertically as controls are added.<para></para>
+    /// --> Note: This function should be called before any Dev Controls are created (i.e. buttons, sliders, etc.) so that<para></para>
+    /// .<para></para>
+    /// Options can be used to set a new Y position.  Use opt::PadY() option to set the current Y position<para></para>
+    /// This can be useful if the bitmap has a header, allowing the first control to start beneath it.<para></para>
+    /// .<para></para>
+    /// Examples:  DevSetBgBitmap(MyBitmap)<para></para>
+    ///            DevSetBgBitmap("c:\\bitmaps\\MyBitmap.jpg")<para></para>
+    ///            DevSetBgBitmap(MyBitmap,false,opt::PadY(50))<para></para>
+    /// 
+    /// </summary>
+    /// <param name="cBitmap">- The bitmap to set as background bitmap.  This bitmap may be a Sage::CBitmap type or string containing the bitmap path.</param>
+    /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <param name="cwOpt"> - [optional] Options.  The only useful option (right now) is the PadY() option to set the first control Y position in the DevWindow</param>
+    /// <returns></returns>
+    bool DevSetBgBitmap(CBitmap & cBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());       // # DevSetBgBitmap
+    bool DevSetBgBitmap(const char * sBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());    // # DevSetBgBitmap
+    bool DevSetBgBitmap(CBitmap & cBitmap,const cwfOpt & cwOpt);                                       // # DevSetBgBitmap
+    bool DevSetBgBitmap(const char * sBitmap,const cwfOpt & cwOpt);                                    // # DevSetBgBitmap
+
+    /// <summary>
+    /// When bAllowClose = false, Disables the Dev Window from closing on its own -- the program must close it purposely. <para></para>
+    /// This will disable the 'x' from appearing when the Dev Window is the only window open, so that the  <para></para>
+    /// user cannot close it with the 'x' button. <para></para>
+    /// . <para></para>
+    /// This function must be called before AllowClose() is called, otherwise results may be unpredictable. <para></para>
+    /// Note: to manually add the 'x' (and Close Button), use AllowClose().
+    /// </summary>
+    /// <returns></returns>
+    bool DevAllowAutoClose(bool bAllowClose = true); 
+
+    /// <summary>
+    /// Sets the Y position of the next control added.
+    /// </summary>
+    bool DevSetNextY(int iY);
+
 
 	// DevButton() -- Add a button to the Default Dev Control Window.  This accepts all options as normal buttons, but 
 	// the default will add a regular button. 
@@ -9332,14 +10366,26 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup DevRadioButtons(std::vector<char *>  vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup DevRadioButtons(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
-    // QuickSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
+    ButtonGroup DevCheckboxGroup(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup DevCheckboxGroup(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup DevCheckboxGroup(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup DevCheckboxGroup(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+
+    // DevSlider() -- Add a slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
     // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
 	// The title is displayed beneath the slider, as well as the value. 
 	//
     CSlider & DevSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
+
+    // DevSliderf() -- Add a floating-point slider to the Default Dev Controls Window.  The default width is 200 with a 0-100 range.  
+    // The Range can be changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
+	// -->
+	// The title is displayed beneath the slider, as well as the value. 
+	//
+    CSlider & DevSliderf(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     // DevEditBox() -- Add an EditBox to the default Dev control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
@@ -9359,14 +10405,37 @@ public:
 	CWindow & DevWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt()); // $QC
 	CWindow & DevWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt()); // $QC
 	CWindow & DevWindow(const cwfOpt & cwOpt = cwfOpt()); // $QC
-	CWindow & DevWindow(const char * sTitle); // $QC
+	CWindow & DevWindow(const char * sTitle,const cwfOpt & cwOpt = cwfOpt()); // $QC
 
     CTextWidget & DevText(const char * sText,const cwfOpt & cwOpt  = cwfOpt()); // $QC
     CTextWidget & DevText(const char * sText,int iHeight,const cwfOpt & cwOpt  = cwfOpt()); // $QC
     CTextWidget & DevText(int iHeight,const cwfOpt & cwOpt  = cwfOpt()); // $QC
     CTextWidget & DevText(const cwfOpt & cwOpt  = cwfOpt()); // $QC
 
+    /// # DevBitmap
+    /// <summary>
+    /// Adds a bitmap to the window. This bitmap is copied and stored by the Dev Window.  The original bitmap does not need to be kept allocated.<para></para>
+    /// The bitmap can be a 32-bit BMP or .PNG file and will blend in to the background.<para></para>
+    /// --> Bitmaps in the Dev Window are meant to be either icons or small bitmaps for headers.  <para></para>
+    /// A String may be added to the the right of the bitmap.  If the bitmap is not found, the string will still be printed.<para></para>
+    /// Sagebox options can be used to set the Font and color of the text.  The text will be centered vertically to the bitmap's center.<para></para>
+    /// ---> Examples: AddBitmap(MyBitmap)<para></para>
+    /// DevBitmap("c:\\bitmaps\\mybitmap.bmp",false) <para></para>
+    /// DevBitmap("c:\\bitmaps\\mybitmap.png"," Project Controls",opt::PadY(10))        -- add 10 pixels to the Y position in the window after the bitmap.<para></para>
+    /// DevBitmap("c:\\bitmaps\\mybitmap.png"," Project Controls",opt::Font(20 | opt::TextColor("green"))<para></para>
+    /// </summary>   
+    /// <param name="cBitmap">- The bitmap to display.  This can either be a Sage::CBitmap type (with transparencies) or a path to the bitmap.</param>
+    /// <param name="sText">- [optional] Text to the right of the bitmap. Note the space in the example above to add some blank space.</param>
+    /// <param name="bDrawTopBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <param name="cwOpt">- [optional] Options such as opt::Font(), opt::TextColor(), opt::PadY() to control the next and next control position.</param>
+    /// <returns></returns>
+    bool DevBitmap(CBitmap & cBitmap,bool bDrawTopBar = true);                                                               /// # DevBitmap
+    bool DevBitmap(CBitmap & cBitmap,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # DevBitmap
+    bool DevBitmap(CBitmap & cBitmap,const char * sText,const cwfOpt & cwOpt);                                               /// # DevBitmap
 
+    bool DevBitmap(const char * sPath,bool bDrawTopBar = true);                                                               /// # DevBitmap
+    bool DevBitmap(const char * sPath,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # DevBitmap
+    bool DevBitmap(const char * sPath,const char * sText,const cwfOpt & cwOpt);                                               /// # DevBitmap
 
     /// <summary>
     /// Auto-hides the DevWindow when the user presses the 'x' button or close button.  This does not destroy the devwindow, and only hides it.
@@ -9421,7 +10490,28 @@ public:
     /// </summary>
     /// <param name="bAddCloseButton">when TRUE adds a "Close" button.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
     /// <returns></returns>
-    bool DevAllowClose(bool bAddCloseButton = false);   // $QC
+    bool DevAllowClose(bool bAllowClose = true,bool bAddCloseButton = false);   // $QC
+
+    /// <summary>
+    /// Sets the window to close automatically when there are no other windows open. <para></para>
+    /// By default, the Dev Window is a 'primary' window and won't close when <para></para>
+    /// functions such as WaitPending() or GetEvent() are used.<para></para>
+    /// .<para></para>
+    /// When set to false (default), the window won't close until it is closed by the user. 
+    /// or the program exits.
+    /// </summary>
+    /// <param name="bAutoClose">when true, the dev window will close automatically.  When false, the user must close it.</param>
+    bool DevAutoClose(bool bAutoClose = true);
+  
+    /// <summary>
+    /// Sets the location of the Dev Window
+    /// </summary>
+    bool DevSetLocation(int iX,int iY);
+
+    /// <summary>
+    /// Sets the location of the Dev Window
+    /// </summary>
+    bool DevSetLocation(POINT pLoc);
 
     /// <summary>
     /// Returns TRUE if the "Close" Button or 'X' has been pressed (both are added by DevAllowClose()).
@@ -9464,7 +10554,7 @@ public:
     //
     CDevControls * GetDevControlsPtr(); // $QC
  
-    bool DevControlsTopmost(bool bTopmost = true); // $QC
+    bool DevWindowTopmost(bool bTopmost = true); // $QC
 
     /// <summary>
     /// Disable ablility for user to close the window by pressing the upper-right "X" button or 
@@ -9489,6 +10579,7 @@ public:
 
     bool SetClsBitmap(RawBitmap_t & stBitmap,bool bClsNow = true); // $QC
     bool SetClsBitmap(CBitmap & cBitmap,bool bClsNow = true); // $QC
+    bool SetClsBitmap(char * sBitmap,bool bClsNow = true); // $QC
     bool ClearClsBitmap(); // $QC
     CBitmap & GetClsBitmap(); // $QC
     // ReadPgrBitmap() -- Reads a Bitmap or JPEG file from a .PGR file (or PGR Memory) and returns a 
@@ -9756,7 +10847,7 @@ public:
     bool InitGdiPlus(); // $QC
 
     Gdiplus::Graphics & GetGdiGraphics();   // $QC
-
+    bool SetGdiGraphics(Gdiplus::Graphics * cGdi) { if (!this) return false; m_cGDI = cGdi; return true; };
 #endif
     /// <summary>
     /// Waits for the monitor VSync blank time to start before returning.  This will sync your graphics with the graphic output to the monitor. 
@@ -9768,7 +10859,7 @@ public:
     /// --> Important Note: VsyncReady() and VsyncWait() are mutually exclusive. Using them together will cause performance issues. 
     /// </summary>
     /// <returns></returns>
-    bool VsyncWait();   // $QCC
+    bool VsyncWait(VsyncType vSync = VsyncType::Auto);   // $QCC
 
     /// <summary>
     /// Returns TRUE if the VsyncWait and VsyncThread capabilities are accurate (i.e. if DirectDraw() was initialized and can look for the Vertical ReSync)
@@ -9840,6 +10931,7 @@ public:
     std::tuple<HBITMAP,unsigned char *> CreateDIBitmap32(int iWidth,int iHeight,bool bUpsideDown = false);            // $QC
 
     bool SetDirtyFlag(bool bDirty = true);                                          // $QC
+    bool SetDirtyFlagUpdate();                                          // $QC
 
 
     /// <summary>
@@ -9853,16 +10945,102 @@ public:
     /// Importante Note: Use UnlockPaint() to unlock when finished, otherwise your program will hang.
     /// </summary>
     /// <returns></returns>
-    bool LockPaint();
+    bool LockPaint();       // $QC
 
     /// <summary>
     /// Unlocks the OS Paint Lock.  see LockPaint() for more details.
     /// </summary>
     /// <returns></returns>
-    bool UnlockPaint();
+    bool UnlockPaint();     // $QC
+
+   
+    /// <summary>
+    /// Used for functions that want to return an empty window vs. a live window (i.e. if an error occurred). 
+    /// <para></para>
+    /// This is typically used for Widgets and other processes that return created windows.  EmptWindow() can be returned as a safe-to-use window that will not perform any actions.
+    /// <para></para>
+    /// ---> use isWindowValid() (i.e. MyWindow.isWindowValid()) to determine if a window is a valid window 
+    /// <para></para>
+    /// ---> The window returned by GetEmptyWindow() is invalid, but can be used as an 'empty window' that won't perform actions, but will simply pass through ok.
+    /// </summary>
+    /// <returns>Reference to safe-to-use Empty Windows.</returns>
+    static CWindow & GetEmptyWindow() { return m_cEmptyWindow; } // $QC
 
     __forceinline unsigned char * GetLastKnownDIBMem()    { return m_sLastKnownDIBMem; }    // $QC      -- $$ This is a temorary function and will be removed; for internal use.
-    __forceinline SIZE GetLastKnownDIBSize()    { return m_szLastKnownDIBSize; }    // $QC      -- $$ This is a temorary function and will be removed; for internal use.
+    __forceinline SIZE GetLastKnownDIBSize()    { return m_szLastKnownDIBSize; }            // $QC      -- $$ This is a temorary function and will be removed; for internal use.
+
+    bool TitleWidgetAdd(const char * sTitle,const cwfOpt & cwOpt = cwfOpt());// $QC
+    bool TitleWidgetUpdate(const char * sTitle = nullptr);// $QC
+    bool TitleWidgetSetText(const char * sTitle);// $QC
+    bool TitleWidgetShow(bool bShow = true);// $QC
+    bool TitleWidgetHide(bool bHide = true); // $QC
+    bool TitleWidgetRemove();// $QC
+    CTextWidget & TitleWidgetGet();// $QC
+
+    /// <summary>
+    /// Sets the Z-position of the console window directly behind the Window. 
+    /// <para></para>
+    /// Also see Sagebox::ConsoleSetBottom() and Sagebox::ConsoleBringForward()
+    /// </summary>
+    /// <returns></returns>
+    bool ConsoleSetBehind(); // $QC
+
+
+    /// <summary>
+    /// Internal function, used for creating and maintaining Widgets in a safe environment
+    /// </summary>
+    /// <returns></returns>
+    CDataStore * __GetDataStoreClassPointer();    // $QC
+
+    CDataStore * __RegisterandIncrementDataStore(int & iControlID,CDataStore::DataStore_t * & stDataStore); // $QC
+
+    int AddSysMenuItem(const char * sSysMenuItem);
+    void InsertSysMenuBorder(int iMenuID);
+
+    bool __WindowSetAsPrimary(bool bAsPrimary = true); 
+    Events & GetEventStruct(); 
+
+    /// <summary>
+    /// Sets RealTime status for Window. <para></para>
+    /// This sets the status of the Window for real-time drawing, includes setting the high-resolution timer and turning off Auto Updates to the Window.
+    /// </summary>
+    void __SetRealTime();
+  
+    /// <summary>
+    /// Internal Use.<para></para>
+    /// Sets the window as a "magic window" which has properties that allow it to automatically appear, disappear, and perform other functions based on the usage<para></para>
+    /// of the window.<para></para>
+    /// .<para></para>
+    /// --> This is used for scripting languages like Python and only works with outside processes.  This is not a C++-based or useable function.<para></para>
+    /// --> This function is for internal use. 
+    /// </summary>
+    /// <param name="bMagicWindow"></param>
+    bool __SetMagicWindow(bool bMagicWindow);
+
+    QuickFormType __GetQuickFormType();
+    bool __isQuickFormWindow();
+    CQuickForm GetQuickForm();
+
+    /// <summary>
+    /// Tells the Window to close (hide itself) automatically when the user presses the 'X' or otherwise purposely closes the window.
+    /// <para></para>
+    /// When set to off (false), the Window will stay displayed until the close event is handled by the program and the window is deleted or hidden manually.
+    /// <para></para>
+    /// This is the default behavor for top-level (i.e. Main) windows.  Use HideOnClose(false) to turn this off.
+    /// <para></para>
+    /// --> When the window is closed by the user, it is hidden.  A WindowClose event is active, and the Window may be shown again by calling the Window's show() function.
+    /// </summary>
+    /// <param name="bHideOnClose">set to 'true' to hide on close; 'false' to not hide when the user closes the window.</param>
+    /// <returns></returns>
+    bool HideOnClose(bool bHideOnClose = true);
+
+
+    /// <summary>
+    /// Returns true if the window has been designated as a RealTime or DirectDraw Window.
+    /// </summary>
+    /// <returns></returns>
+    bool isRealTimeWindow();
+ 
 //#endif
 
 };

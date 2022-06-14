@@ -19,8 +19,8 @@ Global
 		Windows Debug|x86 = Windows Debug|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x64.ActiveCfg = Debug Optimized|Win32
-		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x64.Build.0 = Debug Optimized|Win32
+		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Debug|x64.ActiveCfg = Debug|x64
@@ -35,8 +35,8 @@ Global
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Windows Debug|x64.Build.0 = Windows Debug|x64
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
 		{7659C9C2-66CC-42D2-9EFA-97B6C5630937}.Windows Debug|x86.Build.0 = Windows Debug|Win32
-		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x64.ActiveCfg = Debug Optimized|Win32
-		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x64.Build.0 = Debug Optimized|Win32
+		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
 		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
 		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
 		{77A52D11-7CAC-4C3F-A322-64F9DC81826E}.Debug|x64.ActiveCfg = Debug|x64

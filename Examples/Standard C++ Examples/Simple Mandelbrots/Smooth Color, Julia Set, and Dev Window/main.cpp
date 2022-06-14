@@ -238,7 +238,7 @@ void DrawMandelbrot()
 int main()
 {
     
-    cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"SageBox: Mandelbrot Smooth Color and 3-D Depth",InnerSize());
+    cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"SageBox: Mandelbrot Smooth Color and 3-D Depth");
 
     CreateColorTable();     // Initialize Color Table used for smooth coloring
     DrawMandelbrot();       // Draw initial Mandelbrot before entering event loop

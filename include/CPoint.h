@@ -156,6 +156,9 @@ struct CPoint
     __forceinline CPoint _max(POINT & c) { return {max(x,c.x),max(y,c.y)}; }
     __forceinline CPoint _min(SIZE & c) { return {min(x,c.cx),min(y,c.cy)}; }
     __forceinline CPoint _max(SIZE & c) { return {max(x,c.cx),max(y,c.cy)}; }
+
+    __forceinline bool WithinRect(CPoint tl, CPoint br) {  return (x >= tl.x && y >= tl.y && x < br.x && y < br.y); }
+
 };
 
 struct CfPoint
@@ -175,11 +178,11 @@ struct CfPoint
 		y = (double) p.y;
 		return (*this);
 	}
-	__forceinline CfPoint operator + (const CfPoint & p2)
+	__forceinline CfPoint operator + (const CfPoint & p2) const
 	{
 		return { x + p2.x, y+p2.y };
 	}
-	__forceinline CfPoint operator / (const CfPoint & p2)
+	__forceinline CfPoint operator / (const CfPoint & p2)  const
 	{
 		return { x / p2.x, y/p2.y };
 	}
@@ -190,11 +193,11 @@ struct CfPoint
 		return *this;
 	}
 
-	__forceinline CfPoint operator - (const CfPoint & p2)
+	__forceinline CfPoint operator - (const CfPoint & p2) const
 	{
 		return { x - p2.x, y-p2.y };
 	}
-	__forceinline CfPoint operator - (const CPoint & p2)
+	__forceinline CfPoint operator - (const CPoint & p2) const
 	{
 		return { x - (double) p2.x, y- (double) p2.y };
 	}
@@ -210,7 +213,7 @@ struct CfPoint
 		y *= p2.y;
 		return *this;
 	}
-	__forceinline CfPoint operator * (const CfPoint & p2)
+	__forceinline CfPoint operator * (const CfPoint & p2)  const
 	{
 		return { x * p2.x, y * p2.y };
 	}
@@ -241,7 +244,7 @@ struct CfPoint
          x = p2.x;
          y = p2.y;
      }
-    __forceinline CfPoint operator = (Point3D_t & p);
+    CfPoint operator = (Point3D_t& p);
 
 	__forceinline CfPoint operator * (int iValue) { return { x * (double) iValue,y * (double) iValue }; }
 	__forceinline CfPoint operator / (int iValue) { return { x / (double) iValue,y / (double) iValue }; }
@@ -266,7 +269,10 @@ struct CfPoint
     CfPoint(const Point3D_t & p);
     CfPoint(const CfPointf & p);
 	CfPoint() { };
-	CfPoint(double fx,double fy) { x = fx; y = fy; };
+	CfPoint(double fx,double fy)
+    { 
+        x = fx; y = fy; 
+    };
 	__forceinline CfPoint(const CPoint & p)
 	{
 		x = (double) p.x;
@@ -290,6 +296,9 @@ struct CfPoint
 	}
 	__forceinline POINT operator * () { return { (int) x,(int) y }; }
 	__forceinline operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
+
+    __forceinline bool WithinRect(CfPoint tl, CfPoint br) {  return (x >= tl.x && y >= tl.y && x < br.x && y < br.y); }
+    operator Point3D_t() const;
 };
 
 
@@ -434,6 +443,9 @@ struct CfPointf
 	}
 	__forceinline POINT operator * () { return { (int) x,(int) y }; }
 	__forceinline operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
+    __forceinline bool WithinRect(CfPointf tl, CfPointf br) {  return (x >= tl.x && y >= tl.y && x < br.x && y < br.y); }
+    operator Point3D_t() const;
+
 };
 
 //#ifdef SAGEBOX_AVX

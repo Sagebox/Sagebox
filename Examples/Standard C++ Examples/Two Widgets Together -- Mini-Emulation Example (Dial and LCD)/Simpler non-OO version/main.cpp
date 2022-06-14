@@ -15,7 +15,7 @@
 //
 //  The premise of the emulator is a simple local temperature dial and a remote, embedded device that receives the data (and has an LCD display).
 //
-//  The temperature dial could be for a wall heater, or a pool heater (a real situation where SageBox has been used), or another device.
+//  The temperature dial could be for a wall heater, or a pool heater (a real situation where Sagebox has been used), or another device.
 //  The LCD display can be a real LCD display across a yard or courtyard to the actual heater, displaying real-time data.
 //
 //  Most emulators actually start off this small, expanding over time into something much larger.
@@ -24,7 +24,7 @@
 // The PGR File - Portable Graphics Resource
 // -----------------------------------------
 //
-//  The PGR file is used in many SageBox programs, mostly to provide a background texture.  In this program, it is used for more.
+//  The PGR file is used in many Sagebox programs, mostly to provide a background texture.  In this program, it is used for more.
 //  It contains the background, but also information where to put things. 
 //
 //  This allows the emulator to have many different configurations with different hardware without changing code: all controlled and defined
@@ -39,7 +39,7 @@
 //
 //  This file is written on one main() function
 //
-//  It is written this way for clarity and to show more easily some SageBox functions.
+//  It is written this way for clarity and to show more easily some Sagebox functions.
 //
 //  Also, it is a good example of using lamdbas prior to moving to a class/OO-based program.
 //  The lambdas work as local class functions since they have acess to all local variables, and are 
@@ -50,7 +50,7 @@
 //  functions to actual hardware, emulation, debugging, etc. without modifying core emulator code. 
 //  (though in a pure 'C' environment function pointers can work just as well, too, though not as readable)
 
-#include "SageBox.h"
+#include "Sagebox.h"
 #include "Widgets\include\CDialWidget.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
@@ -80,7 +80,7 @@ int main()
     // 
     // NoBorder() -- Specifies no title bar (i.e. client area only) for popup windows. 
 
-    auto& cWin = Sagebox::NewWindow(100,100,cBitmap.GetWidth(),cBitmap.GetHeight(),"SageBox -- Using two Widgets / Simple Emulation Example",NoBorder());
+    auto& cWin = Sagebox::NewWindow(100,100,cBitmap.GetWidth(),cBitmap.GetHeight(),"Sagebox -- Using two Widgets / Simple Emulation Example",NoBorder());
 
     cWin.DisplayBitmap(cBitmap);        // Display the background image.
 
@@ -115,7 +115,7 @@ int main()
     // guarentee the latest output until an Update() is called.
 
     cDebugWin.SetAutoUpdate(AutoUpdateType::Immediate);        // Slow-but-sure updates (i.e. don't have to worry about updating)
-    cDebugWin.printf("{g}Emulator Debug Window Ready (non-OO version)\n");            // Print a message so the user knows its operating. "{g}" sets the text color to green.
+    cDebugWin.printf("{g}Emulator Debug Window Ready (non-OO version) - {y}Move the dial to see results.\n\n");            // Print a message so the user knows its operating. "{g}" sets the text color to green.
 
     // -----------
     // The Lambdas

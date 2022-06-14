@@ -141,6 +141,10 @@ public:
 	bool	SetText(const char * sText)	;
 	bool SetText(int iValue);
 	bool SetText(double fValue);
+    bool SetValue(int iValue); 
+    bool SetValue(double iValue); 
+    bool SetValue(float iValue); 
+
 	double GetFloat(bool * bOk = nullptr);
 	bool GetFloat(double & fValue,double fSetValue = DBL_MIN);
 	int GetInteger(bool * bOk = nullptr);
@@ -320,7 +324,7 @@ public:
 
 	bool ClearFlags();
 	bool SetLocation(int iX,int iY);
-	POINT GetLocation();
+	POINT GetLocation(bool bEditBoxOnly = false);
 	SIZE GetWindowSize();
 	int GetID();
 	const char * GetName();
@@ -338,7 +342,7 @@ public:
 	SIZE getSize();
 	bool isVisible();
 	bool isValid();
-	bool AttachArrowBox(CWindow * cParent);
+	bool AttachArrowBox(CWindow * cParent = nullptr);   // $$ Deprecated -- remove parent parameter
 	bool SetSignal(bool * pSignal,char * pTextSignal = nullptr,int iTextLength = 0);
 	bool Redraw();
 	bool SetSignal(EditBoxSignal & stSignal);

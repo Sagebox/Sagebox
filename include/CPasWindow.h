@@ -19,7 +19,7 @@ class CUserWindow
 {
 public:
  struct stFuncGetInputOptions_t;
- bool EventPending();
+ bool EventPending(Sage::Peek peek = Sage::Peek::No);
  bool ClearEvent(SageEvent eEvent);
  bool ClearEvents(); 
 

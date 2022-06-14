@@ -20,8 +20,6 @@
 #include <cmath>
 #include "SimdClass.h"
 #include "CPoint.h"
-using namespace std;
-//using namespace SageWin;
 
 // Point3d_t - Create a vector-based point structure.  This allows us to use
 // vector functions rather than specifying the same action for each X,Y,Z. 
@@ -76,7 +74,7 @@ struct Point3Df_t
                                                                     (decltype(Point3Df_t::fZ)) rgbColor.iBlue/255.0f }; };
 
 };
-
+using Point3D = Point3D_t;
 struct Point3D_t
 {
 	double fX,fY,fZ;
@@ -109,10 +107,27 @@ struct Point3D_t
 	__SageInline Point3D_t RotateXYZ(Point3D_t pAngles) const { return RotateX(pAngles.fX).selfRotateY(pAngles.fY).selfRotateZ(pAngles.fZ); }	    // Rotate point around Z-Axis
 	__SageInline Point3D_t & selfRotateX(double fAngle) { double fY2 = fY *cos(fAngle) - fZ*sin(fAngle); fZ = fY *sin(fAngle) + fZ*cos(fAngle); fY = fY2; return *this; }	// Rotate point around X-Axis
 	__SageInline Point3D_t & selfRotateY(double fAngle) { double fX2 = fZ *sin(fAngle) + fX*cos(fAngle); fZ = fZ *cos(fAngle) - fX*sin(fAngle); fX = fX2; return *this; }	// Rotate point around Y-Axis
-	__SageInline Point3D_t & selfRotateZ(double fAngle) { double fX2 = fX *cos(fAngle) - fY*sin(fAngle); fY = fX *sin(fAngle) + fY*cos(fAngle); fX = fX2; return *this; }	// Rotate point around Z-Axis
+	__SageInline Point3D_t & selfRotateZ(double fAngle) // Rotate point around Z-Axis
+        { 
+            auto fCos = cos(fAngle); auto fSin = sin(fAngle);
+            double fX2 = fX *fCos - fY*fSin; fY = fX *fSin + fY*fCos; fX = fX2; 
+            return *this; 
+        }	
 	__SageInline Point3D_t & selfRotateXYZ(Point3D_t pAngles) { selfRotateX(pAngles.fX).selfRotateY(pAngles.fY).selfRotateZ(pAngles.fZ); return *this; }	// Rotate point around X-Axis
 	__SageInline RGBColor_t toRGB() const { return RGBColor_t{(int) fX,(int) fY,(int) fZ}; };
 	__SageInline DWORD toColorRef() const { return RGB((int) fX,(int) fY,(int) fZ); };
+
+    // Experimental functions -- if they work out, then they will be added to CPoint, cfPoint, etc. 
+    //
+    __SageInline bool Within(const CfPoint & p1,const CfPoint & p2) const       { return !((fX < p1.x)   | (fY < p1.y ) | (fX >= p1.x + p2.x)   | (fY >= p1.y + p2.y)); }
+    __SageInline bool Within(const CfPoint & p1) const                          { return !((fX < 0)      | (fY < 0    ) | (fX >= p1.x)          | (fY >= p1.y)); }
+                                                                                                                
+    __SageInline bool Within(const Point3D_t & p1,const Point3D_t & p2) const   { return !((fX < p1.fX)  | (fY < p1.fY) | (fZ < p1.fZ)          | (fX >= p1.fX + p2.fX) | (fY >= p1.fY + p2.fY) | (fZ >= p1.fZ + p2.fZ)); }
+    __SageInline bool Within(const Point3D_t & p1) const                        { return !((fX < 0)      | (fY < 0    ) | (fZ < 0)              | (fX >= p1.fX)         | (fY >= p1.fY) | (fZ >= p1.fZ)); }
+                                                                                                                
+    __SageInline bool Within2D(const Point3D_t & p1,const Point3D_t & p2) const { return !((fX < p1.fX)  | (fY < p1.fY) | (fX >= p1.fX + p2.fX) | (fY >= p1.fY + p2.fY)); }
+    __SageInline bool Within2D(const Point3D_t & p1) const                      { return !((fX < 0)      | (fY < 0    ) | (fX >= p1.fX)         | (fY >= p1.fY)); }
+
     operator POINT() const { POINT p = { (int) fX,(int) fY }; return p; };
     operator CfPoint() const { CfPoint p = { fX,fY }; return p; };
     operator CPoint() const { CPoint p = { (int) fX,(int) fY }; return p; };
@@ -122,7 +137,6 @@ struct Point3D_t
     static Point3D_t fromRgb(const RgbColor & rgbColor) { return {  (decltype(Point3D_t::fX)) rgbColor.iRed/255.0, 
                                                                     (decltype(Point3D_t::fY)) rgbColor.iGreen/255.0, 
                                                                     (decltype(Point3D_t::fZ)) rgbColor.iBlue/255.0 }; }
-
 };
 
 //#ifdef SAGEBOX_AVX
@@ -450,7 +464,7 @@ public:
  
 
 
-  __SageInline Point3DfSimd8 operator - () const { return { Xor(fX,Vecf(-0.0)), Xor(fY,Vecf(-0.0)), Xor(fZ,Vecf(-0.0)) }; }
+  __SageInline Point3DfSimd8 operator - () const { return { Xor(fX,Vecff(-0.0)), Xor(fY,Vecff(-0.0)), Xor(fZ,Vecff(-0.0)) }; }
 
 };
 

@@ -114,7 +114,7 @@ void CAsciiDonut::FillColorTable(Sage::HSLColor_t stHSL)
 //
 void CAsciiDonut::FillBgTable()
 {
-    cBitmapBg = GetWindowBitmap({0,0},{1,m_szWindowSize.y});
+    cBitmapBg = m_cWin->GetWindowBitmap({0,0},{1,m_szWindowSize.y});
     (*cBitmapBg).ReverseBitmap();
 }
 //CalcBitmap() -- Calculate the bitmap based on the light intensity in the incoming map.
@@ -168,11 +168,13 @@ void CAsciiDonut::CalcSinCosTable()
 
 // Main() -- the actual main() since we've derived from a CWindow (called from main())
 //
-void CAsciiDonut::Main()
+int CAsciiDonut::Main() 
 {
-    Cls(SageColor::Black,SageColor::Blue);
+    m_cWin = &Sagebox::NewWindow("SageBox -- Ascii Donut by Andy Sloan in High Res",opt::NoAutoUpdate()); 
 
-    SetAutoUpdate(false);
+    auto& cWin = *m_cWin;
+
+    cWin.Cls(SageColor::Black,SageColor::Blue);
 
     m_szWindowSize  = { 800, 550 };                             // Set the Window size to something reasonable
     m_pInsetSize    = { 640,352 };                              // Get a 80x24 area, akin to a terminal (just to center the output)
@@ -180,18 +182,18 @@ void CAsciiDonut::Main()
     m_pOffset       = (m_szWindowSize-m_pInsetSize)/2;          // Get the start X,Y for centering the Ascii output.
     m_pOffset.y     -= 30;                                      // Subract a little so isn't so cenered in the Y plan (looks nicer)
 
-    SetWindowSize(m_szWindowSize,true);                         // Set the Window size we decided on (i.e. the Windows window)
+    cWin.SetWindowSize(m_szWindowSize,true);                         // Set the Window size we decided on (i.e. the Windows window)
 
     // Put a text Widget with some text telling the user to click the window to exit
     // The user can also close the window
     
-    auto &StopButton = NewButton(0,m_pOffset.y+m_pInsetSize.y+80,"   Press Button or Close Window to Stop   ",Center());
-    CColorWheelWidget cWheel(this,0,15,Transparent() | opt::JustTopRight() | OffsetX(-20));        // note: "opt::" not needed, but using it will display a list of options
+    auto &StopButton = cWin.NewButton(0,m_szWindowSize.y-30,"   Press Button or Close Window to Stop   ",Center());
+    CColorWheelWidget cWheel(&cWin,0,15,Transparent() | opt::JustTopRight() | OffsetX(-20));        // note: "opt::" not needed, but using it will display a list of options
 
     SIZE szSize     = cWheel.GetWindowSize();
     POINT szPoint   = cWheel.GetWindowPos();
 
-    TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Transparent() | Font("Arial,14,bold") | fgColor(SageColor::NearWhite) | TextCenterX());
+    cWin.TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Transparent() | Font("Arial,14,bold") | fgColor(SageColor::NearWhite) | TextCenterX());
 
     FillColorTable({ 0,1.0,1.0 });        // HSL Color: H = 0, S = 1, L = 1
     FillBgTable();
@@ -265,16 +267,18 @@ void CAsciiDonut::Main()
         }
         
         CalcBitmap(b);                                    // Create the output bitmap based on intensity value. 
-        DisplayBitmapR(m_pOffset.x,m_pOffset.y,m_cOut); // Display bitmap upside-down, becuase it is upside-down in memory, so it is now right-side-up
+        cWin.DisplayBitmapR(m_pOffset.x,m_pOffset.y,m_cOut); // Display bitmap upside-down, becuase it is upside-down in memory, so it is now right-side-up
 
         A += 0.04;
         B += 0.02;
 
-        Update();    // Update the screen with the new bitmap
+        cWin.Update();      // Update the screen with the new bitmap
+        Sleep(0);           // Give the system some time so we don't make it sluggish
 
         if (cWheel.ValueChanged()) FillColorTable(cWheel.GetHSLValues());        // If the color wheel was moved, then change the colors for the next bitmap
-        if (WindowClosing() || StopButton.Pressed()) break;                        // Break out if someone closed the window or pressed the stop button
+        if (cWin.WindowClosing() || StopButton.Pressed()) break;                        // Break out if someone closed the window or pressed the stop button
     }
+    return 0;
 }
 
 // main() entry point.  Note: In a Windows Project (default), this is called from WinMain() automatically, and 
@@ -300,9 +304,7 @@ int main()
     //
     // ** This example will probably be changed to the current format of working with static Sagebox functions and the Window as a separate object.
 
-    CSageBox cSageBox("SageBox -- Ascii Donut by Andy Sloan in High Res");
-    cSageBox.Main(new CAsciiDonut);
-    return 0;
+    return CAsciiDonut::Main();
 }
 
 

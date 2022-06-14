@@ -44,7 +44,7 @@
 int main()
 {
     
-    auto& cWin = Sagebox::NewWindow(100,100,550,270,"Sagebox - Dial Widget Example",InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,550,270,"Sagebox - Dial Widget Example");
     cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                              // Clear screen with a gradient of two stock colors
 
     CDialWidget cDial(&cWin,10,30);                                // Give the dial our parent window and location to put it

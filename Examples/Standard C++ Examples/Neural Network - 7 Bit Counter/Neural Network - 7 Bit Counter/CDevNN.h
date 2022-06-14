@@ -61,13 +61,13 @@
 //             version.  This wouldn't change in a release version, but would be more standardized.
 //          5. More functions specific to intel-based and MSVC platforms would be abstracted, namely the memory allocation and deallocation calls.
 //
-// Speeding up CDevNN.CPP +x10x with SSE and Multi-processing.
+// Speeding up CDevNN.CPP +x10x with AVX and Multi-processing.
 // --------------------------------------------------------
 //
-// Another release for CDevNN.CPP would be the SSE/multi-processor version
+// Another release for CDevNN.CPP would be the AVX/multi-processor version
 //
-// CDevNN.CPP a full C++ version of the CDevNN code, without SSE instrinsics or multi-processing support.
-// See notes on the Forward() and Backward() functions.  As well as being faster, SSE code allows for a much smaller amount of code for most operations, allowing
+// CDevNN.CPP a full C++ version of the CDevNN code, without AVX instrinsics or multi-processing support.
+// See notes on the Forward() and Backward() functions.  As well as being faster, AVX code allows for a much smaller amount of code for most operations, allowing
 // better L1 caching and faster code in additon multiple value operations.
 //
 // With multi-processing, its a simple task to assign more processors (important mostly for the backward() function) when appropriate (for example, after the first
@@ -81,8 +81,7 @@
 #include <io.h>
 #include <float.h>
 
-#if !defined(_CDevNN_H_)
-#define _CDevNN_H_
+#pragma once
 
 #pragma warning(disable:4351)       // Turn off {} initializer warning for MSVC (some sort of legacy issue)
 
@@ -97,25 +96,25 @@
 // purposes and clarity of code, I like the current inline messages, as they provide some self-documentation.  
 //
 
-#define cnnTry cnnErr_t cnnStatus = cnnOk; try{                                                 // basic try() block
+#define cnnTry cnnErr cnnStatus = cnnErr::Ok; try{                                                 // basic try() block
 #define cnnCatch }catch(char * sMessage) { if (sMessage) SetErrorMsg(sMessage); }               // basic catch() block, setting message
 #define cnnCatchNC }catch(char * sMessage) { sMessage; }                                        // Development usage, i.e. outside of CNN (non-CNN Class)
-#define cnnAssert(_x,_y) if (!((int) (_x))) { cnnStatus = cnnErr;  throw((char *) _y); }        // Basic assertion, setting error status
-#define cnnAssertOk(_x,_y) if (_x != cnnOk) { cnnStatus = cnnErr;  throw((char *) _y); }        // Assertion for calling a function that returns a cnnErr_t
-#define cnnAssertNC(_x) if (!((int) (_x))) { cnnStatus = cnnErr;  throw((char *) NULL); }       // Development usage, non-CNN/No class version
-#define cnnPass(_x) if (_x == cnnErr) { cnnStatus = cnnErr;  throw((char *) NULL); }            // Assert passthrough in chain cnnStatus_t functions, allowing
+#define cnnAssert(_x,_y) if (!((_x))) { cnnStatus = cnnErr::Err;  throw((char *) _y); }              // Basic assertion, setting error status
+#define cnnAssertOk(_x,_y) if (_x != cnnOk) { cnnStatus = cnnErr::Err;  throw((char *) _y); }        // Assertion for calling a function that returns a cnnErr_t
+#define cnnAssertNC(_x) if (!((_x))) { cnnStatus = cnnErr::Err;  throw((char *) NULL); }             // Development usage, non-CNN/No class version
+#define cnnPass(_x) if (_x == cnnErr::Err) { cnnStatus = cnnErr::Err;  throw((char *) NULL); }            // Assert passthrough in chain cnnStatus_t functions, allowing
                                                                                                 // original error message and Error code to come down the chain.
 // Exception Handling error type
 //
-enum cnnErr_t
+enum class cnnErr
 {
-    cnnOk       = 0 ,        // Ok = false to allow simple (!Function()) checks for ok/not ok.
-    cnnErr      = 1 ,
+    Ok       ,        // Ok = false to allow simple (!Function()) checks for ok/not ok.
+    Err,
 
     // Error Codes Here (currently implemented as cnnErr only)
 
-    cnnStop     = 2 ,       // Training stopped by user (i.e. not an error)
-    cnnMemError     ,       // for example.
+    Stop     ,       // Training stopped by user (i.e. not an error)
+    MemError ,       // for example.
 };
 
 // Default CNNAccess, used for MSVC.  These are access functions that can be 
@@ -142,7 +141,7 @@ protected:
     // Define maximum error nodes for error calculation. This is done for develpment purpose and, in a standalone/release situation, would otherwse
     // be allocated based on number of outputs.   For now, a practical value is used to help development and debugging.
 
-    static const int kMaxErrorNodes          = 500000;
+    static const int kMaxErrorNodes    = 500000;
 
     // Define maximum hidden layers.  This is just a practical value for debugging, so that we can look at m_stLayers very easily in the
     // debugger.  Otherwise it is more difficult.  In a release situation, m_stLayers would be allocated and kMaxHiddenLayers would not apply.
@@ -273,7 +272,7 @@ protected:
     bool          m_bSoftMax        = false;
 
 
-    cnnErr_t TrainUpdateForward();                                  // Perform a single forward propagation based on specific inputs (m_fUpdateInputs) for an update process
+    cnnErr TrainUpdateForward();                                  // Perform a single forward propagation based on specific inputs (m_fUpdateInputs) for an update process
 
     // Return update memory (input and output) for a Forward() pass (i.e. one dataset).  This is used by 
     // TrainUpdate() (during training) to check on various inputs and compare outputs. 
@@ -290,29 +289,29 @@ protected:
     virtual double DerivativeCustom    (double fValue) { return 1;      } 
 
 private:
-    double      * m_fpDataSet           = NULL  ;   // Location of the data sets
-    double      * m_fpEOutputs          = NULL  ;   // Location of expected output for each training set.
-    bool          m_bLockEnabled        = false ;
-    double        m_fMomentum           = 0     ;
-    const char  * m_sTrainMsg           = NULL  ;   // Message returned from TrainUpdate to pass back to owner if it aborts.
-    unsigned int  m_uiRandSeed          = 1234  ;   // Anything until its replaced by the owning process.
-    double        m_fLastTrendError             ;
-    int           m_iConverge                   ;   // Convergence counter for changing the Learning Rate
-    double      * m_fUpdateInputs       = NULL  ;   // Input and Output for TrainUpdate().  These are just references to the
-    double      * m_fUpdateOutputs      = NULL  ;   //   allocated memory, but are left here in case this changes in the future.
+    const double * m_fpDataSet           = NULL  ;   // Location of the data sets
+    double       * m_fpEOutputs          = NULL  ;   // Location of expected output for each training set.
+    bool           m_bLockEnabled        = false ;
+    double         m_fMomentum           = 0     ;
+    const char   * m_sTrainMsg           = NULL  ;   // Message returned from TrainUpdate to pass back to owner if it aborts.
+    unsigned int   m_uiRandSeed          = 1234  ;   // Anything until its replaced by the owning process.
+    double         m_fLastTrendError             ;
+    int            m_iConverge                   ;   // Convergence counter for changing the Learning Rate
+    double       * m_fUpdateInputs       = NULL  ;   // Input and Output for TrainUpdate().  These are just references to the
+    double       * m_fUpdateOutputs      = NULL  ;   //   allocated memory, but are left here in case this changes in the future.
 
     CDevString    m_lcs;                            // General, loose outputs strings, such as (m_lcs >> "This is epoch #" << iEpoch).s, etc.
                                                     // Used primarily for diagnostics, debug, and general information. 
     double        m_fSoftMaxSum                 ;   // Output Layer output Summation performed for Softmax during forward() function
     bool          m_bWeightInit         = false ;   // Weight Initialized yes/no.  Done on Train() call to make it idempotent
     void Initialize();
-    cnnErr_t Alloc(int iIndex,double * & fMem,int iSize,const char * sName);
-    cnnErr_t CreateMem();
+    cnnErr Alloc(int iIndex,double * & fMem,int iSize,const char * sName);
+    cnnErr CreateMem();
     void FreeMem();
     bool CheckError() { return m_sLastError[0] != 0; }
     void SetErrorMsg(const char * sMsg) { m_sLastError[0] = 0; if (sMsg) { strncpy(m_sLastError,sMsg,kMaxErrMsgLength-1); m_sLastError[kMaxErrMsgLength-1] = 0; }}
-    cnnErr_t ValidateStructure();
-    void FillWeights(double * fWeights = NULL);
+    cnnErr ValidateStructure();
+    void FillWeights(const double * fWeights = NULL);
 
     void AdjustError();
     void AdjustLearnRate(int iEpoch);
@@ -333,7 +332,7 @@ private:
     double LossRMS          (double fOut,double feOut) { return 2*(fOut - feOut); }                       // Canonical form
     double LossSoftMax      (double fOut,double feOut) { return -1*feOut/fOut + (1-feOut)/(1-fOut); }     // Derivative of Entropy loss ($$ check this)                                                
  
-    void    Forward(double * & fpIn);       // N-Layer Forward Propogation
+    void    Forward(const double * & fpIn);       // N-Layer Forward Propogation
     void    Backward(double * & fpOut);     // N-Layer Backward Propogation
     void    ApplyDerivativesStd();
     void    ApplyDerivativesStdLock();
@@ -341,7 +340,7 @@ private:
     double  (CDevNN::*Loss)(double,double);    // See notes in Backward()
     void    (CDevNN::*ApplyDerivatives)(void); // See notes in Train()
      
-    virtual cnnErr_t TrainUpdate(const char * & sMsg) { return cnnOk; }   // Return a message to abort the training
+    virtual cnnErr TrainUpdate(const char * & sMsg) { return cnnErr::Ok; }   // Return a message to abort the training
 
 public:
     // get/set functions.  Added as needed, since this is a development set of code, many things are referenced directly in the protected section
@@ -361,7 +360,7 @@ public:
     // The following are useful for changing run-time Train() training data in TrainUpdate()
 
     inline void setDataSets(int iDataSets) { m_iDataSets = iDataSets; } 
-    inline void setTrainInputMem(double * fpMem) { m_fpDataSet = fpMem; }
+    inline void setTrainInputMem(const double * fpMem) { m_fpDataSet = fpMem; }
     inline void setTrainOutputMem(double * fpMem) { m_fpEOutputs = fpMem; }
 
     // Set the training input and output memory.  This can be used by TrainUpdate() to change how 
@@ -371,22 +370,20 @@ public:
     // This can be paired with other diagnostic tools, such as graphically showing how weights change when the training data 
     // set is changed (DavCNN version, for example).
 
-    inline void SetTrainingMem(double * fIn,double *fOut) { m_fpDataSet = fIn; m_fpEOutputs = fOut; }
+    inline void SetTrainingMem(const double * fIn,double *fOut) { m_fpDataSet = fIn; m_fpEOutputs = fOut; }
 
 public:
     CDevNN(unsigned int uiRandSeed,LockEnable eLockEnable,stLayerInput_t * & stLayers, double * fWeights = NULL);
     ~CDevNN();
 
     void SetMomentum(double fMomentum) { m_fMomentum = fMomentum; }
-    cnnErr_t Train(int iEpochs,int iDataSets,double * fpDataSet,double * fpEOutputs);
+    cnnErr Train(int iEpochs,int iDataSets,double * fpDataSet,double * fpEOutputs);
     void SetLearnRate(double fRate) { if (fRate > 0) m_fLearningRate = fRate; }
     void SetRateChange(bool bAutoChange,double fConvergeIncrease = kdefConvergeIncrease,double fDivergeMultiply = kdefDivergeMult,double fMaxLearnRate = defMaxLearnRate,int iConvergeCount = kdefConvergeCount);
     void SetRateChangeBounds(double fMin,double fMax,int iRateChangeDelay);
     char * GetErrorMsg() { return (char *) &m_sLastError; }
-    cnnErr_t GetMinMaxWeight(int iLayer,double & fMin,double & fMax);
-    cnnErr_t GetMinMaxBias(int iLayer,double & fMin,double & fMax);
-    cnnErr_t LockWeight(int iLayer,int iNode,int iOutputNode,double fWeight);
-    cnnErr_t UnlockWeight(int iLayer,int iNode,int iOutputNode);
+    cnnErr GetMinMaxWeight(int iLayer,double & fMin,double & fMax);
+    cnnErr GetMinMaxBias(int iLayer,double & fMin,double & fMax);
+    cnnErr LockWeight(int iLayer,int iNode,int iOutputNode,double fWeight);
+    cnnErr UnlockWeight(int iLayer,int iNode,int iOutputNode);
 };
-
-#endif      //_CDevNN_H_

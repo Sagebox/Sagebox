@@ -51,7 +51,7 @@ int main()
     // If we get here, then we know we have some good values. 
 
     auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
-    cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor); 
+    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor); 
 
     cWin.ExitButton();   // Now we really need an ExitButton() or WaitforClose() (or some method to pause exit),
                         // because the program is done, and everything will close on exit. 

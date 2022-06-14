@@ -31,7 +31,7 @@ int main()
     // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
 
-    auto& cWin = Sagebox::NewWindow(SIZE{1300,1000},"Sagebox - 3-D Mandelbrot",InnerSize()); 
+    auto& cWin = Sagebox::NewWindow(SIZE{1300,1000},"Sagebox - 3-D Mandelbrot"); 
     
     for (int i=-500;i<500;i++)
         for (int j=-900;j<400;j++)
@@ -40,8 +40,8 @@ int main()
             int iIter = 0;
             while ((z = z*z + c).absSq() < 65536 && ++iIter < 250) dz *= z*2;
             CComplex cVec = (z/dz).Normalize();     // Get the light angle 
-            cWin.DrawPixel(j+900,i+500,iIter == 250 ? 0 :  
-                RGBColor_t().fromGray((int) (90*(cVec.fR + cVec.fI) + 128)));   // Calculate the diffusion
+            cWin.DrawPixel(j+900,i+500,iIter == 250 ? SageColor::Black :  
+                RgbColor::fromGray((int) (90*(cVec.fR + cVec.fI) + 128)));   // Calculate the diffusion
         }
 
     return cWin.WaitforClose(); // Wait for the user to close the window

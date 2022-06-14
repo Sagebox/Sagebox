@@ -116,7 +116,7 @@ int main()
     // Create the window sized to our needs.  InnerSize() is Opt::InnerSize() telling Sagebox we want the interior size to be 320x320
     // (otherwise, the default is to create the window the Width x Height specified, including frame/border). 
 
-    auto& cWin = Sagebox::NewWindow(100,100,320,320,"SageBox - LCD Widget example",InnerSize());
+    auto& cWin = Sagebox::NewWindow(100,100,320,320,"Sagebox - LCD Widget example");
     cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                    // Clear screen with a gradient of two stock colors
     CPoint pLcdLoc = { 10,10 };                                             // Get Start X,Y of Lcd Widget
     CLcdDisplayWidget clcd(&cWin,pLcdLoc.x,pLcdLoc.y,0,Transparent());      // Create the LCD Widget
@@ -215,6 +215,8 @@ int main()
             // A Signal is just a boolean, and the bStop.GetSignal() simply checks the boolean and resets it inline, making no real impact
             // on the loop -- since there is no call and we're just checking a boolean, the processor keeps its cache and doesn't spend time
             // calling down into the system to get a value.
+
+            bStop = {}; 
 
             cButtonCount.SetSignal(bStop);
 

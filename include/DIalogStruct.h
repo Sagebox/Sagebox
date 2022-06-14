@@ -320,7 +320,7 @@ public:
 	bool AddVerticalSpace(int iPixels,const char * sName = nullptr);
 	bool AddTitleIcon(TitleIconType eType,const char * sUserName = nullptr);
 	bool AddTitle(const char * sTitle);
-
+    bool SetButtonMarginX(int iMargin);
 	char * GetText(const char * sName);
 	POINT GetPointX(HDC hdc,Label & stLabel,RECT & rRect,int iDialogY);
 	bool CalcWindow();

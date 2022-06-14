@@ -32,40 +32,37 @@
 
 #pragma once
 
-#if !defined(_CAsciiDonut_h_)
-#define _CAsciiDonut_h_
-
 #include "SageBox.h"
 #include "CColorWheelWidget.h"
 
 typedef RGBColor24 RGB24;
 
-class CAsciiDonut : public CWindow        
+class CAsciiDonut   
 {                                            
     SageControlDelete        
 private:
-    unsigned char m_ucColorTable[257*4];    // Color table for each intensity element in the output map
-                                            // of the donut calculation loop.
-    CBitmap cBitmapBg;                      // 1-pixel wide bitmap with the background of the window.
-    Sage::CPoint m_szWindowSize;
+    static inline unsigned char m_ucColorTable[257*4];      // Color table for each intensity element in the output map
+                                                            // of the donut calculation loop.
+    static inline CBitmap cBitmapBg;                        // 1-pixel wide bitmap with the background of the window.
+    static inline CPoint m_szWindowSize;
 
-    Mem<double> m_fSinIMem = 4000;          // this gets the memory required for the Sin/Cos tables
-    Mem<double> m_fCosIMem = 4000;          // (i.e. 4000 elements of each).
-    Mem<double> m_fSinJMem = 4000;          // We can check the validity of it later with
-    Mem<double> m_fCosJMem = 4000;          // an isValid() call, but we don't worry about it here.
+    static inline Mem<double> m_fSinIMem = 4000;            // this gets the memory required for the Sin/Cos tables
+    static inline Mem<double> m_fCosIMem = 4000;            // (i.e. 4000 elements of each).
+    static inline Mem<double> m_fSinJMem = 4000;            // We can check the validity of it later with
+    static inline Mem<double> m_fCosJMem = 4000;            // an isValid() call, but we don't worry about it here.
 
-    CBitmap m_cOut;                         // Output bitmap for the donut
-    Sage::CPoint m_pInsetSize;              // Size if the area the donut traverses -- this helps so we 
-                                            // only need to worry about Z-Buffer, bitmap, and other memory
-                                            // in that area only, and not the entire window.
-    Sage::CPoint m_pOffset;    
+    static inline CBitmap m_cOut;                           // Output bitmap for the donut
+    static inline CPoint m_pInsetSize;                      // Size if the area the donut traverses -- this helps so we 
+                                                            // only need to worry about Z-Buffer, bitmap, and other memory
+                                                            // in that area only, and not the entire window.
+    static inline CPoint m_pOffset;    
+    static inline CWindow   * m_cWin = nullptr;
 private:
-    void FillColorTable(Sage::HSLColor_t stHSL);    // Fill the color table for the donut (i.e. red, blue, etc.), based on Hue
-    void FillBgTable();                             // Fill the color table for the color of line in the window background
-    void CalcBitmap(int * pMap);                    // Calculate the output bitmap based on the intensity map (i.e. reflection/difusion), etc.
-    void CalcSinCosTable();                         // Calculate tables for sin/cos used multiple times to make things *much* faster
+    static void FillColorTable(Sage::HSLColor_t stHSL);     // Fill the color table for the donut (i.e. red, blue, etc.), based on Hue
+    static void FillBgTable();                              // Fill the color table for the color of line in the window background
+    static void CalcBitmap(int * pMap);                     // Calculate the output bitmap based on the intensity map (i.e. reflection/difusion), etc.
+    static void CalcSinCosTable();                          // Calculate tables for sin/cos used multiple times to make things *much* faster
 public:
-    void Main();                                    // Main called from SageBox, as a SandBox-type class (i.e. derived from CWindow).        
+    static int Main();                                     // Main called from SageBox, as a SandBox-type class (i.e. derived from CWindow).        
 };
 
-#endif // _CAsciiDonut_h_

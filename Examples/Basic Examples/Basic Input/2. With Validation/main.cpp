@@ -53,6 +53,10 @@ int main()
 
     int iRadius1, iRadius2;
 
+    // The "{cyan}" and "{18}" shows using a font and a color.  {cyan} can also be abbreviated as "{c}"
+    
+    cWin << "{16}Let's Draw an Ellipse. {cyan}Enter two radius values between 1 and 400 (try going outside of the range).\n\n";
+
     // Use the window's console i/o versions for input/output.  If the user closes the window the entry falls through with 
     // a return of 0 -- if the user presses control-C, the program exits as in a console program (this can be turned off).
 
@@ -71,7 +75,7 @@ int main()
 
     // If we get here, then we know we have some good values. 
 
-    cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor); 
+    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor); 
 
     cWin.ExitButton();   // Now we really need an ExitButton() or WaitforClose() (or some method to pause exit),
                         // because the program is done, and everything will close on exit. 

@@ -133,14 +133,24 @@ namespace Sage
 class CDevControls
 {
 	// Note: This is still in-progress, and items will be added as needed.
-
+    friend CWindow;
 private:
+    // keep Delete, copy constructor, and move constructor private. The CQuickDialog object is a managed object, and is deleted by the main window class. 
+    CDevControls(const CDevControls &p2) 
+    {
+        FailBox("CDevControls::CopyConstructor","In Copy Constructor")   // In debug mode, lets us know if it is ever used
+    };
+    void operator delete(void * ptr)
+    { 
+        ::operator delete(ptr); 
+    };
 
     class CDevWinHandler : public CWindowHandler
     {
     public:
         MsgStatus OnNCLButtonDown(int iMouseX,int iMouseY) override;
         MsgStatus OnSageEvent() override;
+        MsgStatus OnGlobalEvent(int iEvent) override;
     };
     static constexpr char m_cDefaultOpen = '|';
     static constexpr char m_cDefaultClose = '|'; 
@@ -183,6 +193,7 @@ private:
 		Slider,
 		EditBox,
 		TextWidget,
+        Bitmap,
 		ComboBox,
 		Window,
 		Header,
@@ -220,25 +231,35 @@ private:
 	static constexpr SIZE kMaxWinSize	= { 1920,1080 };	// Max Window Size
 	static constexpr SIZE kMaxSize		= { 800, 700 };		// Max outlay size (in Window)
 	static constexpr int kSectionWidth	= 400;				// TBD when multi-column support is added.
+	static constexpr int kEmbedSectionWidth	= 250;				// TBD when multi-column support is added.
     static constexpr SIZE szIndent      = { 10,10 };        // Indent for X and Y (left and top)
-
+    static constexpr SIZE szEmbedIndent = { 10,10 };        // Indent for X and Y (left and top)
+    static constexpr int kMaxComboboxWidth = 225;
+    RgbColor kDefaultWinBgColor = SageColor::Gray92;        // Default Color Light value (multiplied against bg color) 
     bool m_bWindowClosed    = false;                        // True when close controls are active (either 'X' button and optional Close Button)
     bool m_bCloseX          = false;                        // true when there is an 'x' to close on the window.
     bool m_bAutoHide        = false;                        // Auto-hide the window when the 'x' or close button is pressed.
+    bool m_bDisableClose    = false;                        // Use to disable adding (automatic and otherwise) 'X' and close buttons
     SizeRect m_srClose{};                                   // bounds for close rect, when active.
 
 
 	CWindow * m_cParentWin	= nullptr;
 	CWindow * m_cWin		= nullptr;
-	bool m_bInitialHide		= true;		// Hide the window initially, until we see our first control.
-	bool m_bShowing			= true;		
-	bool m_bTopmost			= false;	// When true, window is forced as top window so other windows won't overlap. 
-    bool m_bWindowCloseEvent = false;   // Set when the 'X' or close button is pressed.  Resets when window is shown.
-
+    bool m_bPrimaryDev      = false;        // True when it is a top-level Dev Window (no parent)
+    SIZE m_szTitleBitmap{};
+	bool m_bInitialHide		    = true;		// Hide the window initially, until we see our first control.
+	bool m_bShowing			    = true;		
+	bool m_bTopmost			    = false;	// When true, window is forced as top window so other windows won't overlap. 
+    bool m_bWindowCloseEvent    = false;   // Set when the 'X' or close button is pressed.  Resets when window is shown.
+    bool m_bEmbedded            = false;    // Dev Window is embedded as child window (i.e. not a popup) when true
+    bool m_bTransparent         = false;    // Only useful for embedded Dev Windows
     CButton * m_cButtonClose    = nullptr;  // Added close button for automatic close controls
 	int m_iCurrentX	= 0;
 	int m_iCurrentY	= 0;
-
+    int m_iStaticWindowWidth = 0;   // Stop-gap item
+    int m_iPadX = 0;
+    int m_iPadY = 0;
+    int m_iRightEdgePadX = 10;           // Default value, TBD
 	int m_iUnNamedComoboxes		= 0;
 	int m_iUnNamedSliders		= 0;
 	int m_iUnNamedButtons		= 0;
@@ -247,23 +268,37 @@ private:
 	int m_iUnnamedEditBoxes		= 0;
 	int m_iUnnamedWindows		= 0;
 	int m_iUnnamedRadioGroups   = 0;
+    CString m_csTitle;
+    SIZE m_szTitleText          = {};
 
     int m_iGroupCount           = 0;
+
+    RgbColor m_rbgBgPlain           = { 48,48, 48 };
+    RgbColor m_rbgBgColor1          = { 72,72,72 }; //{ 48, 48, 48};
+    RgbColor m_rbgBgColor2          = { 32,32,32 }; //{ 32, 32, 32};
+    bool     m_BgGradientStatic     = false;     // Does background gradient adjust as window adjusts (false = growing gradient vs. same gradient)
+    bool     m_bDrawTopBar          = true;
+    CBitmap  m_cBgBitmap;
 
     CDevWinHandler  m_cWindowHandler;
 	
     static constexpr const char * m_sGroupPrefix = "__Sage_DevControls__";
     void InitialShow();
 	void SetWindow();
-	bool AddControl(void * cControl,ControlType type,SIZE szSize);
+    void ClearBg(int iLineStart = 0,bool bOverrideEmbed = false);
+	bool AddControl(void * cControl,ControlType type,SIZE szSize,std::optional<int> iAddY = std::nullopt);
 	void SetTopWindow();
     bool isLastCheckbox(stControl_t * & stCheckbox);
+    bool isLastTextWidget(stControl_t * & stCheckbox);
+    bool isLastButton(stControl_t * & stButton);
     stControl_t * GetLastControl();
     bool DrawCloseX(bool bUpdate); 
     bool HaveCloseX();
     void CheckCheckboxDefault(stCheckboxData_t & stData);
     CString CleanLine(const char * sLine);
     CString GetNewGroupName();
+    static CDevControls m_cEmptyObject; 
+    void BuildBackdrop(bool bOverrideEmebed = false);
 public:
 	// ----------------
 	// Public Interface
@@ -316,10 +351,27 @@ public:
     /// to provide an indication (through WindowClosed()) that the user has pressed a control as a message to terminate the application.
     /// <para></para>&#160;&#160;&#160;
     /// ---> This function is not used to close the Dev Window but as an easy way for the user to signal to close the application.
+    /// Note: To disable the addition of the 'x' and close button, use AllowAutoClose()
     /// </summary>
     /// <param name="bAddCloseButton">when TRUE adds a "Close" button.  Otherwise only the 'X' is placed on the right-top of the window for closure.</param>
     /// <returns></returns>
-    bool AllowClose(bool bAddCloseButton = false); 
+    bool AllowClose(bool bAllowClose = true,bool bAddCloseButton = false); 
+
+    /// <summary>
+    /// When bAllow = false,Disables the Dev Window from closing on its own -- the program must close it purposely. <para></para>
+    /// This will disable the 'x' from appearing when the Dev Window is the only window open, so that the  <para></para>
+    /// user cannot close it with the 'x' button. <para></para>
+    /// . <para></para>
+    /// This function must be called before AllowClose() is called, otherwise results may be unpredictable. <para></para>
+    /// Note: to manually add the 'x' (and Close Button), use AllowClose().
+    /// </summary>
+    /// <returns></returns>
+    bool AllowAutoClose(bool bAllow = true); 
+
+    /// <summary>
+    /// Sets the Y position of the next control added.
+    /// </summary>
+    bool SetNextY(int iY);
 
     // Returns true if a close button or 'x' has been placed.  Used internally to decide when to attach a close button
     // or just stay with a previous configuration.
@@ -392,7 +444,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtonGroup(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
     /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -415,7 +467,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtonGroup(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
     /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -438,7 +490,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtonGroup(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
      /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -461,9 +513,17 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtonGroup(std::vector<char *>  vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
 
-	// AddEditBox() -- Add an EditBox to the quick control Window.  The sEditBoxTitle, while optional, will provide a
+
+    // -- Checkbox groups
+    
+    ButtonGroup AddCheckboxGroup(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddCheckboxGroup(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddCheckboxGroup(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddCheckboxGroup(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+	
+    // AddEditBox() -- Add an EditBox to the quick control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
     // Note: InputBox and EditBox are the same.  EditBox is kept to remain consistent with Windows terminology
@@ -489,8 +549,44 @@ public:
 	//
 	CSlider & AddSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
 
-	CComboBox & AddComboBox(const char * sComboBoxName,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & AddWindow(const char * sTitle,int iNumlines,const cwfOpt & cwOpt = cwfOpt());
+	// AddSliderf() -- Add a floating-point slider to the Quick Controls Window.  The default width is 200 with a 0-100 range.  The Range can be 
+	// changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
+	// -->
+	// The title is displayed beneath the slider, as well as the value. 
+	//
+	CSlider & AddSliderf(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+
+	CComboBox & AddComboBox(const char * sComboBoxItems,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & AddWindow(const char * sTitle = nullptr,int iNumlines = 0,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & AddWindow(const char * sTitle,const cwfOpt & cwOpt);
+	CWindow & AddWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & AddWindow(const cwfOpt & cwOpt);
+
+    /// # AddBitmap
+    /// <summary>
+    /// Adds a bitmap to the window. This bitmap is copied and stored by the Dev Window.  The original bitmap does not need to be kept allocated.<para></para>
+    /// The bitmap can be a 32-bit BMP or .PNG file and will blend in to the background.<para></para>
+    /// --> Bitmaps in the Dev Window are meant to be either icons or small bitmaps for headers.  <para></para>
+    /// A String may be added to the the right of the bitmap.  If the bitmap is not found, the string will still be printed.<para></para>
+    /// Sagebox options can be used to set the Font and color of the text.  The text will be centered vertically to the bitmap's center.<para></para>
+    /// ---> Examples: AddBitmap(MyBitmap)<para></para>
+    /// AddBitmap("c:\\bitmaps\\mybitmap.bmp",false) <para></para>
+    /// AddBitmap("c:\\bitmaps\\mybitmap.png"," Project Controls",opt::PadY(10))        -- add 10 pixels to the Y position in the window after the bitmap.<para></para>
+    /// AddBitmap("c:\\bitmaps\\mybitmap.png"," Project Controls",opt::Font(20 | opt::TextColor("green"))<para></para>
+    /// </summary>   
+    /// <param name="cBitmap">- The bitmap to display.  This can either be a Sage::CBitmap type (with transparencies) or a path to the bitmap.</param>
+    /// <param name="sText">- [optional] Text to the right of the bitmap. Note the space in the example above to add some blank space.</param>
+    /// <param name="bDrawTopBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <param name="cwOpt">- [optional] Options such as opt::Font(), opt::TextColor(), opt::PadY() to control the next and next control position.</param>
+    /// <returns></returns>
+    bool AddBitmap(CBitmap & cBitmap,bool bDrawTopBar = true);                                                               /// # AddBitmap
+    bool AddBitmap(CBitmap & cBitmap,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # AddBitmap
+    bool AddBitmap(CBitmap & cBitmap,const char * sText,const cwfOpt & cwOpt);                                               /// # AddBitmap
+
+    bool AddBitmap(const char * sPath,bool bDrawTopBar = true);                                                               /// # AddBitmap
+    bool AddBitmap(const char * sPath,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # AddBitmap
+    bool AddBitmap(const char * sPath,const char * sText,const cwfOpt & cwOpt);                                               /// # AddBitmap
+
 	// AddSection() -- Adds a text section to the window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
@@ -517,6 +613,68 @@ public:
 	// Hide() -- Show or hide the Quick Controls Window
 	//
 	bool Hide(bool bHide = true);
+    bool Cls();
+
+    /// #SetBgColor
+    /// <summary>
+    /// Sets the background color (or colors) of the Dev Window.<para></para>
+    /// --> Note: This function should be called before any Dev Controls are created (i.e. buttons, sliders, etc.) so that<para></para>
+    /// they will blend properly into the background.<para></para>
+    /// Two colors may be used to form a gradient, which will span the maximum vertical length of the Dev Window (i.e. it will show more as controls are added)
+    /// .<para></para>
+    /// Colors can be Sagebox Rgb Color (i.e. RgbColor(0,255,0), SageColor::Red, PanColor::Green,etc.) or string such as <para></para>
+    /// "Green","red","PanColor:ForestGreen", etc.<para></para>
+    /// .<para></para>
+    /// Examples: SetBgColor(SageColor::Black)<para></para>
+    ///          SetBgColor("black","blue")<para></para>
+    /// </summary>
+    /// <param name="rgbColor1">- Color to clear the dev window</param>
+    /// <param name="rgbColor2">- [optional] Second color to clear the background with a gradient</param>
+    /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <returns></returns>
+    bool SetBgColor(RgbColor rgbColor1,RgbColor rgbColor2 = Sage::Rgb::Undefined,bool bDrawBar = true);  // # SetBgColor
+    bool SetBgColor(RgbColor rgbColor1,bool bDrawBar);                                                   // # SetBgColor
+    bool SetBgColor(const char * sColor1,const char * sColor2 = nullptr,bool bDrawBar = true);           // # SetBgColor
+    bool SetBgColor(const char * sColor1,bool bDrawBar);                                                 // # SetBgColor
+
+    /// #SetBgBitmap
+    /// <summary>
+    /// Sets the background bitmap of the Dev Window.  The bitmap provided should span the <para></para>
+    /// width and height of the full Dev Window, as Dev Windows grow vertically as controls are added.<para></para>
+    /// --> Note: This function should be called before any Dev Controls are created (i.e. buttons, sliders, etc.) so that<para></para>
+    /// .<para></para>
+    /// Options can be used to set a new Y position.  Use opt::PadY() option to set the current Y position<para></para>
+    /// This can be useful if the bitmap has a header, allowing the first control to start beneath it.<para></para>
+    /// .<para></para>
+    /// Examples:  SetBgBitmap(MyBitmap)<para></para>
+    ///            SetBgBitmap("c:\\bitmaps\\MyBitmap.jpg")<para></para>
+    ///            SetBgBitmap(MyBitmap,false,opt::PadY(50))<para></para>
+    /// 
+    /// </summary>
+    /// <param name="cBitmap">- The bitmap to set as background bitmap.  This bitmap may be a Sage::CBitmap type or string containing the bitmap path.</param>
+    /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
+    /// <param name="cwOpt"> - [optional] Options.  The only useful option (right now) is the PadY() option to set the first control Y position in the DevWindow</param>
+    /// <returns></returns>
+    bool SetBgBitmap(CBitmap & cBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());       // # SetBgBitmap
+    bool SetBgBitmap(const char * sBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());    // # SetBgBitmap
+    bool SetBgBitmap(CBitmap & cBitmap,const cwfOpt & cwOpt);                                       // # SetBgBitmap
+    bool SetBgBitmap(const char * sBitmap,const cwfOpt & cwOpt);                                    // # SetBgBitmap
+
+
+    /// <summary>
+    /// Sets the window to close automatically when there are no other windows open. <para></para>
+    /// By default, the Dev Window is a 'primary' window and won't close when <para></para>
+    /// functions such as WaitPending() or GetEvent() are used.<para></para>
+    /// .<para></para>
+    /// When set to false (default), the window won't close until it is closed by the user. 
+    /// or the program exits.
+    /// </summary>
+    bool AutoClose(bool bAutoClose = true);
+
+    static CDevControls & GetEmptyObject() { return m_cEmptyObject; };
+    bool isValid() { return this != nullptr && m_cWin != nullptr; }
+    static void _Deleter(void * pObj);
+    ~CDevControls();
 };
 }; // namespace Sage
 #endif // _CQuickControls_H_y

@@ -46,7 +46,7 @@
 
 int main()
 {
-    auto & cWin = Sagebox::NewWindow(50,50,800,500,InnerSize());   // Since its a small app, create static Sagebox and Window at the same time.
+    auto & cWin = Sagebox::NewWindow(50,50,800,500);   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Start the color selector. Our Window object is passed in as the parent.
     //

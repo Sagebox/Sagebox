@@ -358,6 +358,19 @@ namespace Sage
         bool __printf(POINT pLoc,const char * Format,...)         ;
 
         /// <summary>
+        /// Prints text in a box in the console window.  Pad with spaces to create distance between left and right borders.
+        /// <para></para>
+        /// Use text-based foreground and background colors to make the box more distinctive, such as "blue" for background and "white" for foreground. 
+        /// <para></para>
+        /// Any combination of defined conio colors can be used (i.e. "r","red","g","m", etc.)
+        /// </summary>
+        /// <param name="sText">- Text to print to console.  i.e. "MyText" or "    My Text     ", etc. </param>
+        /// <param name="sFgColor">- [optional] foreground color to use.  Defaults to bright white (i.e. "w')</param>
+        /// <param name="sBgColor">- [optional] background color.  Defaults to current background color of console window.</param>
+        /// <returns></returns>
+        bool Box(const char * sText,const char * sFgColor = nullptr,const char * sBgColor = nullptr);
+
+        /// <summary>
         /// Returns background color.  This is the text attribute ANDed with 0xF0 to form only the background color
         /// </summary>
         /// <returns>Console-Based background color</returns>

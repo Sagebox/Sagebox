@@ -8,7 +8,7 @@
 // ************************************
 // 
 //  This program shows a quick example of  loading an image with the GetFile functionality of SageBox, then 
-//  converting it to a bitmap. 
+//  converting it to a bi tmap. 
 //  
 //  After conversion, a sobel convolution is then applied to calculate the edges. 
 //  
@@ -148,7 +148,7 @@ int Sobel()
         }
     }
 
-    auto & cWin = Sagebox::BitmapWindow(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
+   Sagebox::ImgView(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
     
     return Sagebox::ExitButton("Sobel Color Edge Detection Completed");     // Tell the user we've completed the sobel process. 
                                                                             // The menu was added first so it just didn't "pop up" after the user clicked the 

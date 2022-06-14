@@ -125,6 +125,8 @@ public:
     Event event;
 
     CColorSelector(CWindow * cWin,int iX,int iY,const cwfOpt & cwOpt = cwfOpt()); 
+    CColorSelector(int iX,int iY,const cwfOpt & cwOpt = cwfOpt()); 
+    CColorSelector(const cwfOpt & cwOpt = cwfOpt()); 
     ~CColorSelector();
 
     // Close the window.  This is the same as Hide().

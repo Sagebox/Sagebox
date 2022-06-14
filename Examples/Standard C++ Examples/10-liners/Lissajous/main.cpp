@@ -27,7 +27,7 @@
 //
 int main()
 {
-    auto& cWin = Sagebox::NewWindow(SIZE{850,850}, "Sagebox - 10-Line Liassjous",InnerSize()); 
+    auto& cWin = Sagebox::NewWindow(SIZE{850,850}, "Sagebox - 10-Line Liassjous"); 
 
     double fFreq = 3.01;               // Get initial frequency multiplier
 
@@ -45,7 +45,7 @@ int main()
 
             CfPoint pLoc = { cos(-1.57+i/100*fFreq), sin(-1.57+i/100) };
             auto rgbColor = SageTools::HSLtoRGB({fmod(i/315,1),1,.5});
-            cWin.DrawCircle(pLoc*400+425,2,rgbColor);
+            cWin.FillCircle(pLoc*400+425,2.0,rgbColor);
         }
     }
     while(cWin.dialog.GetFloat("+Lissajous\nEnter Frequency Multiplier\nPress Cancel to quit",

@@ -23,15 +23,15 @@
 #include "c:\SageBox\git\include\Sagebox.h"
 #include <iostream>
 
-#pragma comment(lib,"c:\\Sagebox\\git\\lib\\x32\\Sagebox.lib")
+#pragma comment(lib,"c:\\Sagebox\\git\\lib\\debug\\x32\\Sagebox.lib")
 
 int main()
 {
    auto& cWin = Sagebox::NewWindow();
 
-    cWin.DrawCircle(400,400,100,PanColor::Red);
+    cWin.FillCircle(400,400,150,PanColor::Red);
 
-    int iValue = cWin.GetInteger("Enter a Number...",Range(50,500) | NoCancel());
+    int iValue = cWin.GetInteger("Enter a Number...",Range(50,500));
     
     std::cout << "Number is " << iValue << "\n";
 

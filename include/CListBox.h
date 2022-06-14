@@ -193,6 +193,12 @@ public:
 	// 
 	SIZE GetWindowSize(bool bFrameSize = false);
 
+    /// <summary>
+    /// Clears the list box of all items, leaving a blank list in the window.
+    /// </summary>
+    /// <returns></returns>
+    bool ClearList();
+
 	// Get the rectangular points of the window.
 	//
 	// By default GetWindowRect() returns the RECT of the interior (i.e. canvas space) of the listbox,

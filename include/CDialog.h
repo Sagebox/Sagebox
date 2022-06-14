@@ -16,7 +16,7 @@
 #if !defined(_CDialog_H_)
 #define _CDialog_H_
 #include "CSageBox.h"
-#include "CBitmapWidget.h"
+//#include "CBitmapWidget.h"
 #include "CDialogParser.h"
 
 #include <vector>
