@@ -1,6 +1,6 @@
 
 
-<h1 align="center">Sagebox C/C++</h1>
+<h1 align="center">Sagebox</h1>
 
 
 <p align="center">
