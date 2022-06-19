@@ -11,7 +11,7 @@
    Procedural, Non-Event Driven GUI-based tools for C++
 </h2>
 
-
+[For Python, see Pybox for Python &ndash; click here.](http:://github.com/Pybox)
 
 Sagebox is a set of GUI-based tools to help you add GUI components to your program, all without adding a lot of event-driven or GUI-specific code just to have
 graphics and controls in your program.  
