@@ -348,7 +348,7 @@ and you're done.
 
 As mentioned in the previous section, Sagebox is scalable from simple programs to complex, full-stack, release-level applications, and can be used for Console Mode and Windows programs alike. 
 
-Since Sagebox works in a procedural mode (as well as event-driven when desired) as a library and stays out of your way, with no wrappers and obscure startup or other code, its is a great tool to learn programming as well as creatively develop, rapid prototype, and building long-term applications.
+Since Sagebox works in a procedural mode (as well as event-driven when desired) as a library and stays out of your way, with no wrappers and obscure startup or other code, its is a great tool to learn programming as well as creatively develop, rapid prototyping, and building long-term applications.
 
 
 # Requirements
