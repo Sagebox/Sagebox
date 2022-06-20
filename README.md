@@ -59,7 +59,7 @@ need to write a lot of interface code just to add a button, slider, or other con
   - [Embedding Widgets into Windows](#embedding-widgets-into-windows)
 - [3D Graphics Primitives](#3d-graphics-primitives)
 - [Fast Real-Time 3-D GPU Graphics](#fast-real-time-3-d-gpu-graphics)
-- [Super-Fast Open-Source AVX, Multi-Threading Functions](#super-fast-open-source-avx-multi-threading-functions)
+- [High Performance Computing: Super-Fast AVX Multi-Threading Functions](#high-performance-computing-super-fast-avx-multi-threading-functions)
 
 
 ### Other Things
@@ -282,10 +282,9 @@ Sagebox (most of which are expected to be released into open-source).
 These functions will be released soon, with more coming in the next few months for creating programs with GPU-based real-time graphics. 
 <br /><br />
 
-# Super-Fast Open-Source AVX, Multi-Threading Functions
+# High Performance Computing: Super-Fast AVX, Multi-Threading Functions
 
-![output-collage-avx-dark](https://user-images.githubusercontent.com/70604831/174467063-7ebb5407-b5d5-41eb-ba9a-5193f1955417.png#gh-dark-mode-only)
-![output-collage-avx-light](https://user-images.githubusercontent.com/70604831/174472686-f35a254d-64c2-4c8a-8ca1-edf4b2c99bd1.png#gh-light-mode-only)
+![output-collage-avx-both](https://user-images.githubusercontent.com/70604831/174681183-a4fd9c49-b98c-4247-8817-537682f5a5fa.png)
 
 Sagebox and Sagebox was originally started as a platform to develop and explore a number of different projects, such as GPU-based projects, neural networking
 and so-forth. 
