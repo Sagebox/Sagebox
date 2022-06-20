@@ -2,18 +2,44 @@
 
 <h1 align="center">Sagebox</h1>
 
-
 <p align="center">
     <img src="https://user-images.githubusercontent.com/70604831/174466253-c4310d66-c687-4864-9893-8f0f70dd4084.png">
 </p>
 
 <h2 align="center">
-   Procedural, Non-Event Driven GUI-based tools for C++
+  Procedural, Non-Event Driven GUI-based tools for C++
 </h2>
+
 
 Sagebox is a set of GUI-based tools to help you add GUI components to your program, all without adding a lot of event-driven or GUI-specific code just to have
 graphics and controls in your program.  
 <br />
+
+### Write Programs with GUI Controls and Graphics as Easily as a Scripting Language
+
+With C++, it can be difficult and time-consuming to write a program with controls and graphics.  
+
+**_Sagebox was designed to provide the ability to write both Console Mode and full-on Windows programs as easily as regular C++_** &ndash; as easy as a scripting language, and in many ways easier when combined with the power of C++.
+
+Sagebox can be used in an entirely non-event, procedural fashion just like regular program. 
+
+### No Loss of Efficiency, the Full Power of C++
+
+Sagebox was carefuly crafted with High Performance Computing in mind, and has a core engine that is extremely optimized and efficient.  Even with procedural, non-even-driven code, Sagebox loses no efficiency over event-driven programs. 
+
+
+### No Magic Code, Wrappers, or Force Environment 
+
+Sagebox is written as a set of library calls.  It has no macros or any special code that needs to be written.   You can just call it, and Sagebox manages its own environment.  From simple programs to more complex programs, you can scale Sagebox however you want to. 
+
+Sagebox does not require any type of coding, special wrappers or types.  Sagebox has some great type classes to help with programming, but does not require any of these types to use its functions.  All functions accept and use standard C++ and graphics types (i.e. ***std::string, POINT, SIZE, std::vector,*** etc.). 
+
+Setup is easy in Sagebox:  There is no setup and no magic code or wrappers.   All you have to do is use Sagebox and it self-starts. 
+
+### Adding onto Existing Code 
+
+Sagebox simply adds on to existing code, and is easy to remove when you want to change things.  There are no special setups required.  All you need is to include `Sagebox.h` and `Sagebox.lib` and it will work.
+
 Sagebox is useful for adding onto current packages and other UIs such as OpenCV, SFML, etc. giving easy access 
 to GUI-based controls and other functions with an average of two coding lines per addition -- one line to declare a control or widget, and one line to use it.
 <br /><br />
@@ -25,7 +51,7 @@ need to write a lot of interface code just to add a button, slider, or other con
 
 ### Table of Contents
 - [Fun with Coding (the real reason for Sagebox) - Creative Development and Freeform Programming](#fun-with-coding-the-real-reason-for-sagebox---creative-development-and-freeform-programming)
-- [Easy-to-Use Library GUI Tools](#easy-to-use-library-gui-tools)
+- [Easy-to-Use Procedural Library GUI Tools](#easy-to-use-procedural-library-gui-tools)
   - [Using Sagebox in Console Mode](#using-sagebox-in-console-mode)
 - [Sagebox is also a GUI](#sagebox-is-also-a-gui)
   - [A Simple Example](#a-simple-example)
@@ -39,6 +65,7 @@ need to write a lot of interface code just to add a button, slider, or other con
 ### Other Things
 - [A Project Based on Community Input](#a-project-based-on-community-input)
 - [Making Sagebox Useful for Everyone](#making-sagebox-useful-for-everyone)
+- [Sagebox is useful for Students, Hobbyists, Researchers, and Professionals](#sagebox-is-useful-for-students-hobbyists-researchers-and-professionals)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Support and Donations](#support-and-donations)
@@ -50,7 +77,7 @@ need to write a lot of interface code just to add a button, slider, or other con
 
 ## Fun with Coding (the real reason for Sagebox) - Creative Development and Freeform Programming
 
-![output-hello-world-from-python](https://user-images.githubusercontent.com/70604831/174466465-81a3dde8-cbc8-4bbb-b287-28352ef037af.png)
+![output-hello-world-cpp](https://user-images.githubusercontent.com/70604831/174542392-c60e0b6a-272a-442d-9f74-b25b33107150.png)
 
 Like many programmers, I like to program creatively as I design whatever I am doing, and Sagebox was written as a powerful toolset to quickly add 
 (and just as easily remove) controls, widgets and other elements without having to create a lot of event-driven programming or deal with a GUI.
@@ -64,7 +91,7 @@ to write rather than the interface code just to have a button, slider, color sel
 
 <br />
 
-# Easy-to-Use Library GUI Tools
+# Easy-to-Use Procedural Library GUI Tools
 
 ![collage-generic-sized-flat](https://user-images.githubusercontent.com/70604831/174466534-1a56e6d6-174d-4035-8003-d0d3208c20dd.png)
 
@@ -109,6 +136,14 @@ Sliders, radio buttons, checkboxes, combo-boxes, list-boxes, text widgets, and o
 <br /><br />
 With various widgets, you can call up color selectors, date pickers, formatted message boxes, image view & img before/after windows, and so-forth.
 <br />
+
+![output-cpp-basics](https://user-images.githubusercontent.com/70604831/174547702-6b7b26d6-7c1b-4964-8629-9aba0ff56ab3.png)
+
+The above examples show using Sagebox functions as easy library calls, from basic controls (left), to graphics with and without controls (right) &ndash;
+all with just simple function calls without event-driven or GUI programming, representing a small amount of the overall code that stays out of the way and doesn't require any programming or GUI environment. 
+
+
+<br /><br />
 
 ### Using Sagebox in Console Mode
 
@@ -309,6 +344,13 @@ Sagebox::ImgBeforeAfter(image1,image2)
 and you're done. 
 <br /><br />
 
+# Sagebox is useful for Students, Hobbyists Researchers, and Professionals
+
+As mentioned in the previous section, Sagebox is scalable from simple programs to complex, full-stack, release-level applications, and can be used for Console Mode and Windows programs alike. 
+
+Since Sagebox works in a procedural mode (as well as event-driven when desired) as a library and stays out of your way, with no wrappers and obscure startup or other code, its is a great tool to learn programming as well as creatively develop, rapid prototype, and building long-term applications.
+
+
 # Requirements
 
 Sagebox/Sagebox has just been released.  It was originally started and used as a library package written for professional consulting applications to
@@ -330,23 +372,19 @@ VS Code, Visual Studio 2019 and Visual Studio 2022 work perfectly with Sagebox -
 
 # Installation
 
-Sagebox has just been released and doesn't have a way to install through 'pip' just yet. 
+Sagebox is fairly easy to install.  Just copy the include directory in the project and the Sagebox.lib libraries you want to use. 
 
-To install, simply pick the correct Python directory (i.e. Python37, Python9, Python 10) and copy the `Sagebox.py` and `_Sagebox.pyd` files to the common
-module directory for that Python version.
+For Windows and Console mode programs, the libraries are the same.  The library WinMain.Lib is useful to write your program exactly the same way as a Console Mode program but as a Windows program.
 
-The only files needed are `Sagebox.py` and `_Sagebox.pyd`, where the other .py and .pyd modules are needed for some examples and can be useful for widgets usage, such as the color selector widget.
+See documentation in the github directories for more information
 
-### VS-Code and .env file
+### Release vs. Debug Libraries
 
-With VS Code, you can also create a .env file with `PYTHONPATH=` set to a specific or relative directory contaning the modules &ndash; see the examples directories,
-all of which have a `.env` file specifying a relative location for the Sagebox modules.
+Release and Debug libraries are provided for projects with compiler debug or release settings. 
 
-### Visual Studio
+### AVX vs. Standard Libraries
 
-With Visual Studio, you can add a `Search Path` with a direct or relative path.
-
-Once Sagebox has been released for a while and community feedbacks starts coming in, a pip install version will be created.
+For AVX libraries, simply rename SageboxAVX.lib to Sagebox.lib &ndash; note that the computer running a program linked with an AVX library must be run on a processor with AVX2 support. 
 
 <br /><br />
 
