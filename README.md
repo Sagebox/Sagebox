@@ -135,17 +135,25 @@ which sets the slider with a range of 10-500 and a default value of 150.  You c
 Sliders, radio buttons, checkboxes, combo-boxes, list-boxes, text widgets, and other controls are this easy to use.
 <br /><br />
 With various widgets, you can call up color selectors, date pickers, formatted message boxes, image view & img before/after windows, and so-forth.
-<br />
+<br /><br />
 
-![output-cpp-basics](https://user-images.githubusercontent.com/70604831/174547702-6b7b26d6-7c1b-4964-8629-9aba0ff56ab3.png)
+## Simple and Powerful
+![output-cpp-basics-light](https://user-images.githubusercontent.com/70604831/174572814-6cc3092e-d171-420d-b3e7-a9f73d40992c.png)
+
+By adding just a few more lines of code, more tools can be created. 
 
 The above examples show using Sagebox functions as easy library calls, from basic controls (left), to graphics with and without controls (right) &ndash;
 all with just simple function calls without event-driven or GUI programming, representing a small amount of the overall code that stays out of the way and doesn't require any programming or GUI environment. 
 
+The middle image, for example, is a one-line function call:
 
+```C++
+Sagebox::ImageBeforeAfter(image1,image2);
+```
+
+where elements can be added to extend its functionality, and the return class can be kept (or discarded) to control and manage the created window.
 <br /><br />
-
-### Using Sagebox in Console Mode
+## Using Sagebox in Console Mode
 
 ![output-console-mode](https://user-images.githubusercontent.com/70604831/174466676-d8cec449-a241-4402-9b7e-0e354a4d0777.png)
 
@@ -173,7 +181,7 @@ Sagebox has a lot of graphics and other functions to allow building GUI-based ap
 functions.  For most of these programs,  the Sagebox usage is just a few lines of code, outputting the results of whatever the code is generating.
 <br /><br />
 
-### A Simple Example
+## A Simple Example
 
 You can place specific controls, create graphic buttons, as well as use many drawing graphics functions.
 
