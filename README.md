@@ -34,7 +34,7 @@ Sagebox is written as a set of library calls.  It has no macros or any special c
 
 Sagebox does not require any type of coding, special wrappers or types.  Sagebox has some great type classes to help with programming, but does not require any of these types to use its functions.  All functions accept and use standard C++ and graphics types (i.e. ***std::string, POINT, SIZE, std::vector,*** etc.). 
 
-Setup is easy in Sagebox:  There is no setup and no magic code or wrappers.   All you have to do is use Sagebox and it self-starts. 
+Setup is easy in Sagebox:  There is no setup.   All you have to do is use Sagebox and it self-starts. 
 
 ### Adding onto Existing Code 
 
