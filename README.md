@@ -28,7 +28,7 @@ Sagebox can be used in an entirely non-event, procedural fashion just like regul
 Sagebox was carefuly crafted with High Performance Computing in mind, and has a core engine that is extremely optimized and efficient.  Even with procedural, non-even-driven code, Sagebox loses no efficiency over event-driven programs. 
 
 
-### No Magic Code, Wrappers, or Force Environment 
+### No Magic Code, Wrappers, or Forced Programming Environment 
 
 Sagebox is written as a set of library calls.  It has no macros or any special code that needs to be written.   You can just call it, and Sagebox manages its own environment.  From simple programs to more complex programs, you can scale Sagebox however you want to. 
 
