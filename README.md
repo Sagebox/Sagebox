@@ -48,8 +48,14 @@ need to write a lot of interface code just to add a button, slider, or other con
 <br /><br />
 [For Python version, see Pybox for Python &ndash; click here.](https://github.com/Sagebox/Pybox)
 <br /><br />
+<p align="center"><a href="https://www.projectsagebox.com/DonatePaypal.html">
+  <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
+</a>
+	<br />Please Consider Donating to the Sagebox Project.
+</p>
+<br />
 
-### Table of Contents
+## Table of Contents
 - [Fun with Coding (the real reason for Sagebox) - Creative Development and Freeform Programming](#fun-with-coding-the-real-reason-for-sagebox---creative-development-and-freeform-programming)
 - [Easy-to-Use Procedural Library GUI Tools](#easy-to-use-procedural-library-gui-tools)
   - [Using Sagebox in Console Mode](#using-sagebox-in-console-mode)
@@ -396,7 +402,16 @@ For AVX libraries, simply rename SageboxAVX.lib to Sagebox.lib &ndash; note that
 <br /><br />
 
 # Support and Donations
-<br /><br />
+
+Sagebox is a free product based on donations.  Please consider donating to the project so that more and more can be released.
+
+All donations go to the development of Sagebox. 
+<br />
+<p align="center"><a href="https://www.projectsagebox.com/DonatePaypal.html">
+  <img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="Donate with PayPal" />
+</a>
+</p>
+<br />
 
 # Tip of the Iceberg - Alpha Version and Your Input
 
