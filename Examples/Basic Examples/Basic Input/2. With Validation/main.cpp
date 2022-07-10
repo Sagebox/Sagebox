@@ -39,6 +39,8 @@
 
 #include "Sagebox.h"
 
+using namespace Sage::opt; 
+
 // ** Try entering values out of range (i.e. -10, 500, etc.)
 
 int main()

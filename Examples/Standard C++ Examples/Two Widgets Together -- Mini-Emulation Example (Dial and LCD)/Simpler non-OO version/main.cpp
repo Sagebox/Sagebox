@@ -59,6 +59,8 @@
 #include "..\lcddialtexture.pgr2.h"         // backdrop data file
 #include "..\AboutTwoWidgets.pgr2.h"        // About Box HTML and background image data file
 
+using namespace Sage::opt;      // Sagebox options
+
 int main()
 {
     // Open up the PGR file -- it has the main bitmap but also specified where

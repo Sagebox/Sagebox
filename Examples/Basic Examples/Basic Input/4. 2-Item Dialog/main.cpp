@@ -29,6 +29,8 @@
 
 #include "Sagebox.h"
 
+using namespace Sage::opt; 
+
 int main()
 {   
     auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.

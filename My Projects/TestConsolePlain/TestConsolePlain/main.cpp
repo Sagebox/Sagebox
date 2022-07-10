@@ -31,7 +31,7 @@ int main()
 
     cWin.FillCircle(400,400,150,PanColor::Red);
 
-    int iValue = cWin.GetInteger("Enter a Number...",Range(50,500));
+    int iValue = cWin.GetInteger("Enter a Number...",kw::Range(50,500));
     
     std::cout << "Number is " << iValue << "\n";
 

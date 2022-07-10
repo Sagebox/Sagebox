@@ -75,6 +75,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::opt;      // Sagebox options
+
 // Class Declaration
 //
 // (this would normally be in its own file, but is included in the main

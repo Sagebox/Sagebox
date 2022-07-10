@@ -3225,6 +3225,30 @@ public:
     // will center the text in the X plane.
     //
     __sagestatic bool GetTextSize(const char * sText,SIZE & Size);                                                                                                    
+#if 0
+    // GetFont() -- Get a font created through SageBox.
+    //
+    // Example, GetFont("MyFont") -- retrieves a font created with CreateFont("Arial,20","TestFont"), or SetFont()
+    //
+    // The Font returned is an HFONT which can be used with all font functions
+    //
+    __sagestatic HFONT GetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
+
+    // Create the Font for the window -- this works the same as SetFont(), creating the font but not setting it in the window.
+    // Use SetFont to set the returned font or to Create-and-Set a font simultaneously.
+    //
+    // This can take forms such as Text and HFONT, as well as fonts named by previous CreateFont() or SetFont() calls.
+    //
+    // Bold and italic are created for all fonts. 
+    //
+    // CreateNewFont(MyFont)                            -- Creates the font to the HFONT MyFont Value
+    // CreateNewFont("Arial,20")                        -- Creates the font to Arial,20
+    // CreateNewFont = SetFont("Arial,20","TestFont")   -- Create the font to Arial,20 and name it TestFont.  Store it in MyFont
+    // CreateNewFont("TestFont");                       -- Create the Font named "TestFont"
+    // CreateNewFont(MyFont)                            -- Create the font to the HFONT MyFont Value
+    //
+    __sagestatic HFONT CreateNewFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);    
+#endif
 
     // GetTextSize() -- Get the text size of the text using the current font.
     //

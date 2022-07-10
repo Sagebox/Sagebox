@@ -41,6 +41,8 @@
 #include "SageBox.h"
 #include "Widgets\include\CDialWidget.h"
 
+using namespace Sage::opt;  // Sagebox options/keywords 
+
 int main()
 {
     

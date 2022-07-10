@@ -78,6 +78,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::opt;      // Sagebox options
+
 // Color Table based on Wikipedia Mandelbrot Colors
 
 static double rgbTable[17][3] = 

@@ -28,7 +28,7 @@
 //
 int main()
 {
-    auto &cWin = Sagebox::NewWindow("Sagebox - Square Program",NoClose());      // Open a sample Window
+    auto &cWin = Sagebox::NewWindow("Sagebox - Square Program",kw::NoClose());      // Open a sample Window
                                                                                 // NoClose() -- disallows window closing if the user presses the "X"/Windows close
                                                                                 // button in the upper-right.  This allows us to put the Exit Button out (otherwise it would fall
                                                                                 // through).  If we didn't do this we could also call cWin.ResetWindowClosing()

@@ -9,6 +9,8 @@
 #include "Sagebox.h"
 #include <functional>
 
+using namespace Sage::opt;      // options/keywords namespace
+
 // ------------------------------
 // Fractal Tree - 10 Line Version
 // ------------------------------

@@ -109,7 +109,7 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = Sagebox::NewWindow(SIZE{1000,700},"Sagebox - Fractal Tree", InnerSize() | bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
+    auto& cWin = Sagebox::NewWindow(SIZE{1000,700},"Sagebox - Fractal Tree", kw::InnerSize() | kw::bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
 
     // These values can be changed for a different effect. 
   

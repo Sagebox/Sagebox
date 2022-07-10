@@ -1,6 +1,8 @@
 
 #include "Pendulum.h"
 
+using namespace Sage::opt;  // Sagebox options/keywords
+
 // Sagebox Interactive Pendulum with Dev Controls.  Programming with Sagebox Demonstration Program.
 //
 // Also See: Double Pendulum (Simple Version)           -- Only calculates and renders the double pendulum, with no event handling.

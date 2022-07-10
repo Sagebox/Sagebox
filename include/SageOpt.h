@@ -1933,6 +1933,7 @@ namespace opt
 
 
 };
+namespace kw = opt;
 
 namespace imgOpt
 {

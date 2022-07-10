@@ -110,6 +110,7 @@
 #include "Sagebox.h"
 #include "Widgets\include\CLCDDisplayWidget.h"
 
+using namespace Sage::opt;      // Sagebox options
 int main()
 {
 

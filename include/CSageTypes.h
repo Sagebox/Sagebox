@@ -26,12 +26,16 @@
 #ifndef NoSageSpace
 
 using namespace Sage;
-using namespace opt;
+//using namespace opt;
 
 #elif SageOptOnly
 using opt = Sage::opt;
 #elif SageOnly
 using namespace Sage;
+#endif
+
+#ifdef _MSC_VER
+#define __sagelambdainline__ [[msvc::forceinline]]
 #endif
 
 #endif // _CSageTypes_H_

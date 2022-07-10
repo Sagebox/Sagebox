@@ -31,6 +31,8 @@
 // To do this, go to View->Other Windows->Property Manager and click on the first project in the window.  Then Click on "Property Sheet" and set 
 // User Macros->SageboxRoot to the Sagebox path. By default, this project sets $(SageboxRoot) to the a directory above the current Solution Directory. 
 // 
+// The "kw::Font(30)" below expresses Sagebox options/keywords. 
+// Many examples use "using namespace Sage::kw" so that items may be entered as just "Font(30)" rather than "kw::Font(30)"
 
 #include "Sagebox.h"
 
@@ -42,7 +44,7 @@ int main()
     auto &cWin = Sagebox::NewWindow("My Program");  // Open a sample Window -- Title is not required
     
     cWin.printf("Hello World from the Sagebox Window (printf)\n");
-    cWin << Font(30) << "Hello World from the Sagebox Window (C++-style)\n";
+    cWin << kw::Font(30) << "Hello World from the Sagebox Window (C++-style)\n";
 
     printf("Hello World from the Console Window\n");        // note: does not print when Project is set to Windows
 

@@ -52,6 +52,8 @@
 #include "..\lcddialtexture.pgr2.h"     // backdrop data file
 #include "..\AboutTwoWidgets.pgr2.h"    // About Box HTML and background image data file
 
+using namespace Sage::opt;      // Sagebox options
+
 class CTwoWidgets
 {
     // Texture image and control/window locations read from the PGR file (see LoadTextData() comments)

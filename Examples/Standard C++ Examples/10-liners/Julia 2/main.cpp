@@ -4,6 +4,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::opt;  // Sagebox options (aka Sage::kw)
+
 // -----------------------
 // 10-Line Julia Output #2
 // -----------------------

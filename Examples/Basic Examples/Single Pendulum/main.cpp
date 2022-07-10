@@ -104,8 +104,9 @@ int main()
 
         // Write a title in the bottom-center of the window with a size 20 font.
         // PadY(-10) brings the message up by 10 pixels so it isn't right at the bottom.
+        // uses kw:: namespace for keywords (i.e. Sage::kw namespace)
 
-        cWin.Write("Sagebox C++ Pendulum Example",Font(20) | opt::JustBottomCenter() | PadY(-10)); 
+        cWin.Write("Sagebox C++ Pendulum Example",kw::Font(20) | kw::JustBottomCenter() | kw::PadY(-10)); 
 
         // Calculate the new Angle Acceleration, add it to the angle velocity, and then
         // add all of that to the current angle. 

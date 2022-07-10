@@ -58,6 +58,8 @@
 #include "Calculator.h"
 #include "calctexture.pgr2.h"       // PGR (Graphics Resource) file containing the background texture.
 
+using namespace Sage::opt;          // Sagebox options
+
 #pragma warning(disable: 4996)      // Stop MSVC complaining about my use of strncat 
 
 // PrintValue() -- Print the current value in the edit box

@@ -26,6 +26,8 @@
 // To do this, go to View->Other Windows->Property Manager and click on the first project in the window.  Then Click on "Property Sheet" and set 
 // User Macros->SageboxRoot to the Sagebox path. By default, this project sets $(SageboxRoot) to the a directory above the current Solution Directory. 
 // 
+// The "kw::Font(30)" below expresses Sagebox options/keywords. 
+// Many examples use "using namespace Sage::kw" so that items may be entered as just "Font(30)" rather than "kw::Font(30)"
 
 #include "Sagebox.h"
 
@@ -36,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     auto& cWin = Sagebox::NewWindow();              // Create as many of these as you like.
  
     cWin.printf("Hello World! -- Press Window Close Button to End Program. (printf)\n");
-    cWin << Font(30) << "Hello World! -- Press Window Close Button to End Program. (C++-Style)\n";
+    cWin << kw::Font(30) << "Hello World! -- Press Window Close Button to End Program. (C++-Style)\n";
 
     return cWin.ExitButton();   // Put up an exit button and wait for the button press.
                                 // cWin.WaitforClose() can also be called without the while loop. 

@@ -31,6 +31,8 @@
 #include "CDrawCube.h"
 #include "3DCubeTexture.pgr2.h"
 
+using namespace Sage::kw; 
+
 void DrawCube::Main()
 {
     if (!m_cWin) return;            // It's always good to do an initial check on whether or not we have 

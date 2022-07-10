@@ -26,6 +26,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::opt;      // Sagebox options
+
 int main()
 {
     auto& cWin = Sagebox::NewWindow();

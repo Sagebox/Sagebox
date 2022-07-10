@@ -1,5 +1,5 @@
 #pragma once
-#ifdef _LOCALTEST
+//#ifdef _LOCALTEST
 
 #include "Sage.h"
 #include "Point3D.h"
@@ -37,6 +37,8 @@ public:
     Point3D_t       pLightNormalized { 0,0,1 };       // Facing object directly (this is also a specific number not an angle)
 
     double          m_fViewDiv;
+    double          m_fCamera = 1000;
+
     Point3D_t       pViewerNormal;
     double          fViewDistance = 0;
     double          m_fBaseHeight; 
@@ -53,19 +55,27 @@ public:
     Point3D_t       Translateto2DV(const Point3D_t & pPoint) const; 
     double          Get2DMul(const Point3D_t & pPoint) const; 
     double          Get2DMulV(const Point3D_t & pPoint) const; 
+    double GetViewerDist() { return fViewDistance; }
     void SetViewpoint(const Point3D_t & pViewer);
     void SetViewerAngles(double fPan,double fPitch,double fRoll); 
 
+    __forceinline double GetCameraDist() { return m_fCamera; }
+    void SetCameraDist(double fCameraDist)
+    {
+        m_fCamera = fCameraDist; 
+        SetViewAngle(m_fViewAngle);
+    }
     void SetLightPos(const Point3D_t pLight); 
+    Point3D_t GetLightPos(); 
     void SetViewAngle(double fAngle)
     {
         if (fAngle <= 0) fAngle = 45*3.14159/180; 
-        if (fAngle >= 89) fAngle = 89; 
+        if (fAngle >= 89 * 3.14159 / 180) fAngle = 89 * 3.14159 / 180;
 
         m_fViewAngle = fAngle;
         m_fTanAngle = tan(fAngle);
-        m_fViewDiv = m_fBaseHeight/m_fTanAngle;
-        m_fTanAngle = 1;    // Remove to keep points at 0 in the Z plane the same size as the window when viewing distance is the 
+        m_fViewDiv = m_fCamera/ m_fTanAngle ; // / m_fTanAngle; // --> m_fBaseHeight / m_fTanAngle;
+        //m_fTanAngle = 1;    // Remove to keep points at 0 in the Z plane the same size as the window when viewing distance is the 
                             // Same height
     }
     void Init(double fHeight,double fAngle = 45*3.14159/180)
@@ -75,12 +85,13 @@ public:
         if (fAngle <= 0) fAngle = 45*3.14159/180; 
         if (fHeight <= 0) fHeight = 100; 
 
-        m_fBaseHeight = fHeight;
+        m_fBaseHeight = fHeight;        // Base Height is no longer used ($$ not sure if temporary)
 
         SetViewAngle(fAngle);
         SetViewpoint(pViewInit);    
         SetLightPos(pLightInit);
     }
+  
     CView3D(double fHeight = 0,double fAngle = 45*3.14159/180)
     {
         Init(fHeight,fAngle); 
@@ -98,4 +109,4 @@ public:
 
 } // namespace Sage
 
-#endif // _LOCALTEST
+//#endif // _LOCALTEST

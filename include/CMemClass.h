@@ -485,7 +485,7 @@ template <class _t>
                         CString() << "Mem::[] Value out of range.\n\nValue = " << i << "\nMax Size = " << iSize,__FILE__,__LINE__);
                 throw std::exception(cs.str()); 
              }
-             return pMem[i];  
+             return pMem[i];
          }
 #endif
 

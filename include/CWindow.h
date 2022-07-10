@@ -273,6 +273,8 @@ private:
     stControlLabel_t CalcControlLabel(SizeRect srSize,const char * sText,LabelJust justType,bool bDraw,const cwfOpt & cwOpt = cwfOpt());
     
 
+    void __NewWrite(const char * sText,const char * sOptions = nullptr); // $$ Temporary while Window Write functions are refactored.
+
 // kAdvPublic:
 // This is defaulted to private to disallow CWindow class/object copying and deleting.
 //
@@ -6854,6 +6856,14 @@ public:
     // The Font returned is an HFONT which can be used with all font functions
     //
     HFONT GetFont(const char * sFont,const char * sNewFontName = nullptr,unsigned char * ucStatus = nullptr);     // $QC
+
+    // Returns specific font name only if it exists
+    //
+    // GetFont() will create the font if it does not find it, where GetFontOnly() will only return the specific font name is found,
+    // 
+    // GetFontOnly() returns a nullptr if the font is not found.
+    //
+    HFONT GetFontOnly(const char * sFont);
 
     // Create the Font for the window -- this works the same as SetFont(), creating the font but not setting it in the window.
     // Use SetFont to set the returned font or to Create-and-Set a font simultaneously.

@@ -4,6 +4,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::kw;       // For keywords in Sage::kw (also Sage::opt) namespace
+
 // -----------------------
 // 10-Line Circles Program
 // -----------------------

@@ -10,7 +10,7 @@
 
 int main()
 {
-    auto& cWin = Sagebox::NewWindow("Sagebox -- 3-D Cube",NoAutoUpdate());
+    auto& cWin = Sagebox::NewWindow("Sagebox -- 3-D Cube",kw::NoAutoUpdate());
     DrawCube cDrawCube(&cWin);
     cDrawCube.Main();
 }

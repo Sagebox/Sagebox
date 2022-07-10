@@ -104,6 +104,8 @@
 
 #include "SageBox.h"
 
+using namespace Sage::opt;      // Sagebox options
+
 int main()
 {
     auto& cWin = Sagebox::NewWindow("SageBox - Ascii Donut by Andy Sloan"); 

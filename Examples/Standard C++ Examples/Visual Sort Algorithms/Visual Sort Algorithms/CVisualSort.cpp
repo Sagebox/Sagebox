@@ -140,6 +140,8 @@
 #include "sort-texture.pgr2.h"
 #include "AboutSorting.pgr2.h"
 
+using namespace Sage::opt;      // Sagebox options
+
 // InitDataArray() -- Fill the random array with unique values, 0-(kSortSize-1)
 //
 // This fills the array with values from 0-(kSortSize-1) in an array of kSortSize.

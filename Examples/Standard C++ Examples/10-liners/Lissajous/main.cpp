@@ -49,7 +49,7 @@ int main()
         }
     }
     while(cWin.dialog.GetFloat("+Lissajous\nEnter Frequency Multiplier\nPress Cancel to quit",
-                                                                            fFreq,Default(fFreq)));
+                                                                            fFreq,kw::Default(fFreq)));
 
     // In the GetFloat() call above:
     //

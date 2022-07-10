@@ -829,6 +829,8 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * NoSysMenu         = "NoSysMenu";   
         static constexpr const char * AllowDrag         = "AllowDrag";   
         static constexpr const char * XPos              = "XPos";   
+        static constexpr const char * Tab               = "Tab";   
+        static constexpr const char * TabPos            = "TabPos";   
         static constexpr const char * YPos              = "YPos";   
         static constexpr const char * XYPos             = "GotoXY";   
         static constexpr const char * WinLoc            = "GotoXY";   

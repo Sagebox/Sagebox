@@ -90,7 +90,7 @@ int main()
     // (which was much wider before).  We can also use Write() or printf(), but the TextWidget is overall more useful for labels
     // and persistent text. 
 
-    cWin.TextWidget(0,15,"Dial Widget",opt::CenterX() | Font("arial,23")); 
+    cWin.TextWidget(0,15,"Dial Widget",kw::CenterX() | kw::Font("arial,23")); 
 
     // Look for any events.  We only want the dial event, so that's all we look for.
     // GetEvent() returns false (and the while loop exits) when the window is closed (this action can be disabled)

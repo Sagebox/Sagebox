@@ -148,7 +148,7 @@ int Sobel()
         }
     }
 
-   Sagebox::ImgView(cBitmapOut,Title("Sobel Result"));    // Show the new bitmap
+   Sagebox::ImgView(cBitmapOut,kw::Title("Sobel Result"));    // Show the new bitmap
     
     return Sagebox::ExitButton("Sobel Color Edge Detection Completed");     // Tell the user we've completed the sobel process. 
                                                                             // The menu was added first so it just didn't "pop up" after the user clicked the 

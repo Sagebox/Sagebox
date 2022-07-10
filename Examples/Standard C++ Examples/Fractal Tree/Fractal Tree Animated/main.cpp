@@ -66,6 +66,8 @@
 #include "CAviFile.h"
 #include <functional>
 
+using namespace Sage::opt;  // Sagebox options/keywords
+
 // Note: iMaxDepth is initially set to 11 (for faster speed) and WriteFrames = false (to avoid writing to an AVI file)
 //  
 // Set iMaxDepth = 14 and bWriteFrames to true to write an AVI, and also specify the AVI path

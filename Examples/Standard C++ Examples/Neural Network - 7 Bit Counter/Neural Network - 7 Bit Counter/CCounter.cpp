@@ -128,6 +128,8 @@
 
 #include <vector>
 
+using namespace Sage::opt;      //Sagebox options
+
 // -----------------------------------------------------------------
 // Original notes for the Console Version (before SageBox additions)
 // -----------------------------------------------------------------
