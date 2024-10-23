@@ -3,15 +3,34 @@
 
 #pragma once
 
-#if !defined(_CColorSelector_h_)
-#define _CColorSelector_h_
+#if !defined(_ColorSelector_h_)
+#define _ColorSelector_h_
 #include "CSageBox.h"
 #include "CColorWheelWidget.h"
+#include "CSageTools.h"
 
 namespace Sage
 {
-class CColorSelector : private CWindowHandler
+class CColorWheelWidget;
+class ColorSelector : private CWindowHandler
 {
+public:
+  class CWidget : public Sage::CWidget
+  {
+  public:
+      ColorSelector * m_cObj = nullptr;
+  
+      CWidget(ColorSelector * m_cObj);
+  
+      CWindow * GetWindow();
+      bool SetLocation(int iX,int iY);
+      bool isValid();
+      bool Show(bool bShow);
+      bool Hide(bool bHide);
+      int GetID();
+      const char * GetName();
+  };
+
 private:
 
     // Messages we send to ourself.  This is done to avoid multi-threading.  For some functions, such as setting the location,
@@ -42,7 +61,6 @@ private:
         Cls             // Set backgrond color or gradient
     };
     
-    CColorSelector(const CColorSelector &p2) {}        // Keep copy constructor private so no one copies the object
 
     // Message Handler overrides (since we subclassed it rather than making our own)
 
@@ -50,6 +68,10 @@ private:
     MsgStatus OnSageEvent()    override;                                    // When We receive an event caused by our controls
                                                                             // This is the same as GetEvent() but without a while loop.
     void Init(void * pClassInfo)    override;                               // Initializes the Message Handler with our object so we know how to call
+
+    CWidget     m_cWidget2;
+    ColorSelector(const ColorSelector &p2) : m_cWidget2(this) {}        // Keep copy constructor private so no one copies the object
+
 
     HWND m_hWnd = nullptr;                                  // Used to verify Windows Window is still active or not
     CSageBox      * m_cSageBox          = nullptr;          // Main Sagebox object -- used to make sure things are still there on destruction
@@ -69,7 +91,7 @@ private:
     CPoint    m_pLoc;                                       // Location of the box we draw on an update
 
     CPoint m_pSetLocation;                                  // Point for Widget messages to re-locate the window (SelfSetLocation())
-    Gradient m_gClsColor;                                   // Color used when setting the window's background color
+    ColorGradient m_gClsColor;                              // Color used when setting the window's background color
 
     bool m_bNoClose            = false;                     // When TRUE, the window will not automatically close when pressed, though a 
                                                             // close message is sent so the parent can decide what to do
@@ -82,11 +104,13 @@ private:
     bool m_bWindowClosed        = false;                    // TRUE when the close button was pressed.
     bool m_bTransparent         = false;                    // TRUE when window is embedded and transparent (i.e. copies parent's background)
     bool m_bInvalid             = true;
+    bool m_bDisableHide         = false;                    // Use by DevWindow/external controls to precent hiding of the colors
+    bool m_bisTopMost           = false;                    // Set as a topmost window when true (i.e. other window's cannot cover or obscure Color Selector Window)
     int m_iWindowX;
     int m_iWindowY;
 
     void HandleEvent();                                     // Check any events.
-    void InitWindow(CWindow * cWin,int iX,int iY,const char * sOptions);
+    void InitWindow(CWindow * cWin,int iX,int iY,const kwOpt & keywords = kw::none);
     void UpdateWindow();
     void SendLocalMessage(LocalMessage message);            // Send ourselves a message to do something. 
     static void Deleter(void * pThis);                      // Deleter so the user doesn't have to delete us even if it was allocated with new()
@@ -98,10 +122,10 @@ private:
 
     void LocalUpdateBg();
     void LocalSetLocation(POINT pLoc);
-    void LocalCls(Gradient gColor);
+    void LocalCls(ColorGradient gColor);
 public:
 
-
+    static ColorSelector m_cEmpty;
     // This duplicates all event-related functions.  These can be accessed through the main class.
     // The event structure is here for clarity of code, so that "event." can be pressed and a list of all available functions
     // appears
@@ -109,12 +133,12 @@ public:
     struct Event
     {
     private:
-        friend CColorSelector;
-        CColorSelector * cColor;
+        friend ColorSelector;
+        ColorSelector * cColor;
     public:
         bool WindowClosed(Peek peek = Peek::No);
-        bool ValueChanged(Peek peek = Peek::No);
-        bool ValueChanged(RGBColor_t & rgbColor,Peek peek = Peek::No);
+        bool ColorChanged(Peek peek = Peek::No);
+        bool ColorChanged(RGBColor_t & rgbColor,Peek peek = Peek::No);
         bool DisableClose(bool bDisable = true);
         bool OkButtonPressed(Peek peek = Peek::No);
         bool CancelButtonPressed(Peek peek = Peek::No);
@@ -124,10 +148,11 @@ public:
 
     Event event;
 
-    CColorSelector(CWindow * cWin,int iX,int iY,const cwfOpt & cwOpt = cwfOpt()); 
-    CColorSelector(int iX,int iY,const cwfOpt & cwOpt = cwfOpt()); 
-    CColorSelector(const cwfOpt & cwOpt = cwfOpt()); 
-    ~CColorSelector();
+    ColorSelector(CWindow & cWin,int iX,int iY,const kwOpt & keywords = kw::none); 
+    ColorSelector(CWindow & cWin,POINT loc,const kwOpt & keywords = kw::none); 
+    ColorSelector(int iX,int iY,const kwOpt & keywords = kw::none); 
+    ColorSelector(const kwOpt & keywords = kw::none); 
+    ~ColorSelector();
 
     // Close the window.  This is the same as Hide().
     // This can be used when the Ok Button or Cancel button was pressed, or the window was closed 
@@ -147,13 +172,13 @@ public:
     // rgbColor may be specified so that the color filled with the current value (only if the color was changed; if not, rgbcolor is
     // not changed
     //
-    bool ValueChanged(Peek peek = Peek::No);
+    bool ColorChanged(Peek peek = Peek::No);
 
     // Returns true as an event if the value as changed by changing an edit box or moving the rings in the color wheel.
     // rgbColor may be specified so that the color filled with the current value (only if the color was changed; if not, rgbcolor is
     // not changed
     //
-    bool ValueChanged(Sage::RGBColor_t & rgbColor,Peek peek = Peek::No);
+    bool ColorChanged(Sage::RGBColor_t & rgbColor,Peek peek = Peek::No);
 
     // Disables the window from closing -- the Window Close is reported as an event, but the window does not close. 
     // (use the opt::NoClose() option when creating the control
@@ -182,15 +207,15 @@ public:
     __forceinline bool EventActive() { bool bReturn = m_bEventActive; if (bReturn) m_bEventActive = false; return bReturn; }
 
 
-    // Public Functions from CColorWheelWidget passed through to CColorSelector
+    // Public Functions from CColorWheelWidget passed through to ColorSelector
 
     // Returns the RGB Values of the current selection
     //
-    RGBColor_t GetRGBValues();
+    RGBColor_t GetRgbColor();
 
     // Returns the HSL values of the current selection
     //
-    HSLColor_t GetHSLValues();
+    HSLColor_t GetHslValue();
 
     // Sets the window location of the Color Selector Window, relative to the parent window
     //
@@ -208,6 +233,24 @@ public:
     //
     void Hide(bool bHide = true);
 
+    /// <summary>
+    /// Brings the window the top of the all windows (except Topmost Windows) for visibility.
+    /// <para></para>
+    /// ** note: using Show() to show the window will also bring the window to the top. 
+    /// <para></para>
+    /// --> Also see: SetWindowTopmost()
+    /// </summary>
+    void BringWindowtoTop(); 
+
+    /// <summary>
+    /// Sets the Color Selector as a 'topmost' window, which means that other windows cannot be placed over it, and the Color Selector
+    /// Window will remain at the top, preventing other windows from covering or obscuring the Color Selector Window.
+    /// <para></para>
+    /// --> Only topmost windows declared after using SetWindowTopMost() will be able to obscure the window.
+    /// </summary>
+    /// <param name="bSetasTopMost"> - when true (default), the Color Selector is set as TopMost.  When 'false', this status is removed (without changing the window's position)</param>
+    void SetWindowTopmost(bool bSetasTopMost); 
+
     // Updates the background for transparent windows.  This copies the background of the parent and updates the window and colorwheel.
     // This can be used when the parent background has changed to update the blending of the transparent parts of the Color Selector Window
     //
@@ -224,7 +267,7 @@ public:
 
     // Set the current RGB value showing in the Color Selector Window.  This updates the colors and edit boxes.
     //
-    bool SetRGBValue(RGBColor_t rgbColor);
+    bool SetRgbColor(RGBColor_t rgbColor);
 
     // Get the size of the Color Selector Window
     //
@@ -233,6 +276,8 @@ public:
     // Returns the window location of Color Selector Window relative to the parent window
     //
     POINT GetWinLocation();
+
+    CWindow & GetWindow();
 
     // Cls() -- Sets the baackground color of the window.  Providing two colors
     // gives the background a gradient.  For example, Cls({0,0,0},{0,0,255}) sets a
@@ -272,8 +317,15 @@ public:
     // Cls(rgbMyColor);    
     //
     bool SetBgColor(const char * sColor1,const char * sColor2 = nullptr);
-};
 
-#endif // _CColorSelector_h_
+    /// <summary>
+    /// This is used by external controls (such as the DevWindow) to prevent the Color Selector from being hidden from view. 
+    /// </summary>
+    /// <returns></returns>
+    bool DisableHide(bool bDisable = true); 
+    Sage::CWidget * GetWidgetObj() { return this ? &m_cWidget2 : nullptr; }
+
+};
+#endif // _ColorSelector_h_
 } // namespace Sage
 

@@ -1,7 +1,3 @@
-// SageBox Mouse Drawing Example -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // *****************************
 // SageBox Mouse Drawing Example
@@ -26,22 +22,22 @@
 
 #include "SageBox.h"
 
-using namespace Sage::opt;      // Sagebox options
+using namespace Sage::kw;      // Sagebox keyword options
 
 int main()
 {
-    auto& cWin = Sagebox::NewWindow();
+    auto& win = Sagebox::NewWindow();
 
     // Cycle through colors for each time the mouse is lifted and then pressed again.
     
     int iColorIndex     = 0;    // Initial Color Index
-    int iPenThickness   = 4;    // Initial Pen Thickness
+    int penThickness   = 4;    // Initial Pen Thickness
 
-    RGBColor_t rgbCurColor;        
+    RgbColor curColor{};        
 
-    cWin.SetPenThickness(iPenThickness);    // Set the initial pen thickness. 
+    win.SetPenThickness(penThickness);    // Set the initial pen thickness. 
 
-    cWin.Cls(PanColor::Black,PanColor::DarkBlue);            // Clear the screen with a gradient 
+    win.Cls("black,darkblue");            // Clear the screen with a gradient 
 
     // Create a text Widget to display information and the pen thickness.
     //
@@ -56,40 +52,39 @@ int main()
 
     // The Text Widget allows us to clear the screen without losing the text or worrying about how to update it. 
 
-    auto& cText = cWin.TextWidget(0,0,cWin.GetWindowSize().cx,0,TextCenterX() | Font("Arial,16") | TextColor("Cyan") | Transparent());
+    auto& text = win.TextWidget(0,0,win.GetWindowSize().cx,0,TextCenterX() | Font("Arial,16") | TextColor("Cyan") | Transparent());
 
     // A lambda function to show the banner, since we display it in two places (initially and when we change the pen thickness).
 
-    auto ShowBanner=[&] { cText.Write(CString() >> "Pen Thickness = " << iPenThickness << " -- Use Mousewheel to change thickness, right-click to clear screen"); };
+    auto ShowBanner=[&] { text.Write(CString() >> "Pen Thickness = " << penThickness << " -- Use Mousewheel to change thickness, right-click to clear screen"); };
 
     ShowBanner();    // Show initial banner. 
 
     // The main Event Loop -- Get events (such as mouse movements, mouse scroll wheel, etc.) 
     // GetEvent() returns false and exits the loop when the Window is closed by pressing the "X" button.
 
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
         // If the mouse is clicked, consider this the starting point for the mouse, since it was previously not pressed.
 
-        if (cWin.MouseClicked()) rgbCurColor = RgbColor::fromHSL(rand() % 360);   // Get a random color at full saturation
-        if (cWin.MouseRButtonClicked()) cWin.Cls();         // If the Right Mouse Buttton was clicked, clear the screen
+        if (win.MouseClicked()) curColor = RgbColor::fromHSL(rand() % 360);   // Get a random color at full saturation
+        if (win.MouseRButtonClicked()) win.Cls();         // If the Right Mouse Buttton was clicked, clear the screen
 
         // If the MouseWheel was moved, then increase or decrease the pen thickness depending on the direction.
         // iMouseWheel will be a positive value, usually -1 or 1, but sometimes -2 or 2 if the mousewheel was moved quickly.
 
-        int iMouseWheel;
-        if (cWin.MouseWheelMoved(iMouseWheel)) 
+        if (auto mouseWheel = win.opMouseWheelMoved()) 
         {    
             // Set the pen thickness, but read it back to correct going below the minimum.
 
-            iPenThickness = cWin.SetPenThickness(iPenThickness + iMouseWheel); 
+            penThickness = win.SetPenThickness(penThickness + *mouseWheel); 
             ShowBanner();        // Update the banner to show the new pen thickness
         }
 
         // If the mouse was moved and the mouse button is down, draw a line from the last mouse
         // position to the current one.
 
-        if (cWin.MouseDragEvent(true)) cWin.DrawLine(cWin.MouseDragPrev(),cWin.MouseDragPos(),rgbCurColor);
+        if (win.MouseDragEvent(true)) win.DrawLine(win.MouseDragPrev(),win.MouseDragPos(),curColor);
     }
     return 0;
 }

@@ -193,4 +193,5 @@ public:
 
 };
 
+using SageTimer = CSageTimer;
 } // namespace Sage

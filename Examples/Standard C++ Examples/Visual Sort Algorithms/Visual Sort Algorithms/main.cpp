@@ -27,9 +27,9 @@ int main(int argc,char * argv[])
     // that we can determine this before we create the CSagebox object, whichis createed
     // in CVisualSort::main().
 
-    bool bConsoleApp = SageBox::isConsoleApp();
+    bool consoleApp = SageBox::isConsoleApp();
 
-    CVisualSort cSort;
-    cSort.main(bConsoleApp);    
+    CVisualSort sort;
+    sort.main(consoleApp);    
 }
 

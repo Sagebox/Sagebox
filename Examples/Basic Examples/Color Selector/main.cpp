@@ -42,11 +42,12 @@
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
 #include "Sagebox.h"
-#include "CColorSelector.h"
+
+using namespace Sage::kw;       // Sagebox Keywords
 
 int main()
 {
-    auto & cWin = Sagebox::NewWindow(50,50,800,500);   // Since its a small app, create static Sagebox and Window at the same time.
+    auto & win = Sagebox::NewWindow(50,50,800,500);   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Start the color selector. Our Window object is passed in as the parent.
     //
@@ -54,20 +55,20 @@ int main()
     //            of the parent window.  See the Color Wheel example for an embedded example.
     //
  
-    CColorSelector cColorSelect(&cWin,870,50,opt::Popup() | opt::NoCancel());
+    ColorSelector cColorSelect(win,870,50,kw::Popup() | kw::NoCancel());
 
     // Print a mesage out to the screen (which will automatically show the window)
     //
     // The first message centers itself in the screen (XY dimension, i.e. CenterXY())
     // The second one centers itself only in the X plane on the next line from the last mesage.
 
-    cWin << CenterXY() << Font("Arial,20") << "Use Color Wheel to Change Color of Screen\n";
+    win << CenterXY() << Font("Arial,20") << "Use Color Wheel to Change Color of Screen\n";    // Demonstration of streaming output method.
 
     // With the first one, we used streaming akin to "cout", but with options.
     // With this one, do the same thing, but using the function Write() instead, with similar options/
     // (note the "|" is the same as "<<", and just tends to look better when used as options to functions)
 
-    cWin.Write("Close Window to end program",Center() | Font("Arial,16")); 
+    win.Write("{16}Close Window to end program",CenterX());    // {16} sets font to Arial, 16
 
     // Wait for an event to occur.  We only care about the Color Selector and if its value has changed.
     // GetEvent() will return false when the window is closed (this can be disabled). 
@@ -75,21 +76,21 @@ int main()
     // While events (such as mousemoves, presses, etc.) are not occuring, the loop below is dormant and using no CPU time.
     //
     //      cColorSelect->WindowClosed() is called and will return true (and cause an event) when the user closes
-    //      the Color Selector Window.  Closing the Color Selector Window can be disabled by passing opt::NoClose() when
+    //      the Color Selector Window.  Closing the Color Selector Window can be disabled by passing kw::NoClose() when
     //      initialized (and then we don't need to check if it is closed).
     //
     //      If we don't look for cColorSelect->WindowClosed(), the only thing that happens is that the Color Selector
     //      Window closes, and we remain in the loop -- no error will occur, the Color Selector Window will just disappear,
     //      and the user can still exit the loop by closing the window.
 
-    while(cWin.GetEvent() && !cColorSelect.WindowClosed())
+    while(win.GetEvent() && !cColorSelect.WindowClosed())
     {
         RgbColor rgbColor;
 
         // The Color Selector will cause an event if the color has changed, and 
         // we can check that with "ValueChanged()" (or event.ValueChanged()) in the color selector object.
 
-        if (cColorSelect.ValueChanged(rgbColor)) cWin.Cls(rgbColor);
+        if (cColorSelect.ColorChanged(rgbColor)) win.Cls(rgbColor);
 
         // If the user pressed OK or cancel, just exit like a window close.
         // --> For normal uses, these would be handled as separate issues.

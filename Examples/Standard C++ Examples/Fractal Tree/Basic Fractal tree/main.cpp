@@ -1,5 +1,3 @@
-// File Copyright (c) 2021 Rob Nelson, All Rights Reserved.    Sagebox is free for personal use. 
-// Please feel free to use and copy-paste elements of this program for your own programs that use Sagebox.
 
 // ----------------------------
 // Fractal Tree - Basic Version
@@ -26,14 +24,14 @@
 
 // DrawTre() -- Draw the tree recursively
 //
-// This function is passed a lot of data.  Alternatives are to make some of the data global (like cWin,_ang, fMul),
+// This function is passed a lot of data.  Alternatives are to make some of the data global (like win,_ang, fMul),
 // or to make this part of a class so that it can use class members that are not passed.
 //
 // In the "Fancy Fractal Tree", this function is converted into a lambda that resides in the FractalTree()
 // function -- this solves the problem of having to pass so much without having to make a class structure
 // or make values global (and assign them).
 //
-void DrawTree(CWindow & cWin,Point3D_t & sp, double _ang,double fMul,double line_len, double a, double rg)
+void DrawTree(CWindow & win,Point3D_t & sp, double _ang,double fMul,double line_len, double a, double rg)
 {
     static int iDepth = 0;  // We could pass this, too, but it is fine here (as a single-threaded application)
 
@@ -53,26 +51,26 @@ void DrawTree(CWindow & cWin,Point3D_t & sp, double _ang,double fMul,double line
 
     // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
 
-    cWin.DrawLineFast((CfPoint) sp,(CfPoint) r);
+    win.DrawLineFast((CfPoint) sp,(CfPoint) r);
 
-	DrawTree(cWin,r, _ang,fMul, line_len*fMul, a, -1 );
-	DrawTree(cWin,r, _ang,fMul, line_len*fMul, a, 1 );
+	DrawTree(win,r, _ang,fMul, line_len*fMul, a, -1 );
+	DrawTree(win,r, _ang,fMul, line_len*fMul, a, 1 );
     iDepth--;
 };
 
 // FracalTree()) -- Main Tree-drawing function. 
 //
-void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,double fMul,bool bShadow = false)
+void FractalTree(CWindow & win,CfPoint szWinSize,double _ang,double line_len,double fMul,bool bShadow = false)
 {
-    Point3D_t sp{szWinSize.x/2,szWinSize.y-1 - line_len};
+    Point3D_t sp{szWinSize.x/2,szWinSize.y-1 - line_len - 30};
 
     // DrawLine2() is the same as DrawLine() except that you only need to specify length rather
     // than the actual endpoints, which is often convenience. 
 
-    cWin.DrawLine2(sp,{0,(int) line_len});
+    win.DrawLine2(sp,{0,(int) line_len});
  
-	DrawTree(cWin,sp, _ang,fMul,line_len, 0, -1 );
-	DrawTree(cWin,sp, _ang,fMul,line_len, 0, 1 );
+	DrawTree(win,sp, _ang,fMul,line_len, 0, -1 );
+	DrawTree(win,sp, _ang,fMul,line_len, 0, 1 );
 }
 
 
@@ -89,19 +87,21 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = Sagebox::NewWindow(CSize(1000,700),"Basic Fractal Tree",kw::InnerSize() | kw::bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
+    auto& win = Sagebox::NewWindow("Basic Fractal Tree",kw::SetSize(1000,700)); 
+
+    win.ClsRadial("darkblue,black");    // Do a nice radial clear-screen effect (for each cls() call)
 
     // These values can be changed for a different effect. 
   
-    double fAngle       = 24;   // Higher Values will generate more block-like trees( i.e. try 45)
-    double fLineLen     = 140;  // Makes the tree smaller or larger. 
-    double fLineMult    = .758; // Controls how much shorter each segment gets
+    double angle       = 24;   // Higher Values will generate more block-like trees( i.e. try 45)
+    double lineLen     = 140;  // Makes the tree smaller or larger. 
+    double lineMult    = .758; // Controls how much shorter each segment gets
 
     // Draw the Fractal Tree
 
-    FractalTree(cWin,cWin.GetWindowSize(),fAngle*3.14159/180,fLineLen,fLineMult); 
-    cWin.ExitButton();                      // Put a button at the bottom of the window and wait for it to be pressed, 
-                                            // then exit.  (To get rid of the button but still wait, use WaitforClose(), which 
-                                            // will wait for the window to be closed without adding the button)
+    FractalTree(win,win.GetWindowSize(),angle*3.14159/180,lineLen,lineMult); 
+    return win.ExitButton();                    // Put a button at the bottom of the window and wait for it to be pressed, 
+                                                // then exit.  (To get rid of the button but still wait, use WaitforClose(), which 
+                                                // will wait for the window to be closed without adding the button)
 }
 

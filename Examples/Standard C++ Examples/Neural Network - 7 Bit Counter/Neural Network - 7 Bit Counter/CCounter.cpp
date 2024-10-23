@@ -1,7 +1,3 @@
-// CCounter.Cpp -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // *****************************************************
 // CCounter.Cpp -- SageBox Neural Network 7-Bit Counter
@@ -128,7 +124,7 @@
 
 #include <vector>
 
-using namespace Sage::opt;      //Sagebox options
+using namespace kw;      //Sagebox Keywords
 
 // -----------------------------------------------------------------
 // Original notes for the Console Version (before SageBox additions)
@@ -392,18 +388,19 @@ void CCounterNN::UpdateValueBox()
 
 void CCounterNN::InitUI()
 {
-    cwfOpt cwOpt;
-    cwOpt << Font("Arial,14") | Transparent();  // Set options for the Text Widgets
                                                 // i.e. Font Size and Transparent (i.e. copy background of parent window)
+    SageKeys<10> keywords;                      // Use some persistent keywords we can transfer for easier usage
+
+    keywords << Font("Arial,14") | Transparent();    // Set Font and Transparent() status for our keywords to pass to TextWidget
 
     // Put out the Text Widgets that display real-time information. 
     // The values (930,50) we're just eyeballed after the graph window was created.
 
-    m_cTextIteration    = &m_cWin->TextWidget(930,50+22*0,260,0,cwOpt);
-    m_cTextError        = &m_cWin->TextWidget(930,50+22*1,260,0,cwOpt);
-    m_cTextPercent      = &m_cWin->TextWidget(930,50+22*2,260,0,cwOpt);
-    m_cTextTrend        = &m_cWin->TextWidget(930,50+22*3,260,0,cwOpt);
-    m_cTextLR           = &m_cWin->TextWidget(930,50+22*4,260,0,cwOpt);
+    m_cTextIteration    = &m_cWin->TextWidget(930,50+22*0,260,0,keywords);
+    m_cTextError        = &m_cWin->TextWidget(930,50+22*1,260,0,keywords);
+    m_cTextPercent      = &m_cWin->TextWidget(930,50+22*2,260,0,keywords);
+    m_cTextTrend        = &m_cWin->TextWidget(930,50+22*3,260,0,keywords);
+    m_cTextLR           = &m_cWin->TextWidget(930,50+22*4,260,0,keywords);
 
     // Create the Bar Graph Window -- Add a border and shut off Automatic Updating (default)
     //                                to avoid flickering since it is erased and re-printed in realtime (same for the Results Window)
@@ -468,7 +465,7 @@ void CCounterNN::Go(CWindow & cWin)
    
     // Enter the event loop, waiting for the start button press or a window close ("X" button on the window)
     // If the window is closing, simply return.  GetEvent() returns false when the window is closign
-    // (cWin.DisableClose() -- or opt::NoClose() on creation) will disable the window from closing when the
+    // (cWin.DisableClose() -- or kw::NoClose() on creation) will disable the window from closing when the
     // user presses the 'X' button on the window.
 
     auto cMsg = RunNeuralNetwork();         // Run the Neural Network
@@ -478,7 +475,7 @@ void CCounterNN::Go(CWindow & cWin)
     // Put up a Info Dialog.  CenterWin() centers the dialog in the current window (otherwise it is 
     // centered in the screen.  Hover the mouse over "CenterWin" for details.
 
-    cWin.dialog.InfoWindow(CString () << "7-Bit Counter Finished\n" << *cMsg,opt::CenterWin());
+    cWin.dialog.InfoWindow(CString () << "7-Bit Counter Finished\n" << *cMsg,kw::CenterWin());
 }
 
 // main() -- Create neural network object and run it.

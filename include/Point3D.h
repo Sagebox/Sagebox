@@ -48,7 +48,7 @@ struct Point3Df_t
 	__SageInline Point3Df_t operator * (float fValue) const { Point3Df_t pTemp; pTemp.fX = fX*fValue; pTemp.fY = fY*fValue; pTemp.fZ = fZ*fValue; return pTemp; }
 	__SageInline Point3Df_t & operator *= (float fValue) { fX *= fValue; fY *= fValue; fZ *= fValue; return *this; }
 	__SageInline Point3Df_t operator * (Point3Df_t const &obj) const { return { fX*obj.fX, fY*obj.fY, fZ*obj.fZ }; }
-	__SageInline float operator | (Point3Df_t const &obj) const { return fX*obj.fX + fY*obj.fY + fZ*obj.fZ; }	// Dot Product
+	__SageInline float operator | (Point3Df_t const &obj) const { return fX*obj.fX + fY*obj.fY + fZ*obj.fZ; }	// UnNormalized Dot Product
 	__SageInline float Mag() const { return std::sqrt(fX*fX + fY*fY + fZ*fZ); }							// Magnitude of vector
 	__SageInline float MagSq() const { return fX*fX + fY*fY + fZ*fZ; }									// Magnitude of vector ^2
     __SageInline Point3Df_t Normalize() const { float fMag = Mag(); return fMag ? Point3Df_t{ fX / fMag, fY / fMag, fZ / fMag } : Point3Df_t{ 0,0,0}; }	// Normalize
@@ -60,6 +60,20 @@ struct Point3Df_t
 	__SageInline Point3Df_t & selfRotateY(float fAngle) { float fX2 = fZ *sinf(fAngle) + fX*cosf(fAngle); fZ = fZ *cosf(fAngle) - fX*sinf(fAngle); fX = fX2; return *this; }	// Rotate point around Y-Axis
 	__SageInline Point3Df_t & selfRotateZ(float fAngle) { float fX2 = fX *cosf(fAngle) - fY*sinf(fAngle); fY = fX *sinf(fAngle) + fY*cosf(fAngle); fX = fX2; return *this; }	// Rotate point around Z-Axis
 	__SageInline RGBColor_t toRGB() const { return RGBColor_t{(int) fX,(int) fY,(int) fZ}; };
+
+    static Point3Df_t RetType() { return {}; }  // For decltype usage, etc.
+
+    // Unnormalized dot product of current point and input point
+    //
+    __SageInline decltype(fX)  Dot(decltype(RetType()) & in) const { return fX*in.fX + fY*in.fY + fZ*in.fZ; };
+  //  __SageInline decltype(fX)  DotUn(decltype(RetType()) && in) const { return fX*in.fX + fY*in.fY + fZ*in.fZ; };
+
+    // Normalized dot product of current point and input point
+    //
+    __SageInline decltype(fX)  DotNormal(decltype(RetType()) & in) const { auto fMag = Mag()*in.Mag(); return fMag ? (fX*in.fX + fY*in.fY + fZ*in.fZ)/fMag : 0; };
+    // Unnormalized 2D Determinant dot product of current point and input point
+    //
+    __SageInline decltype(fX)  Det2D(decltype(RetType()) & in) const { return fX*in.fY - fY*in.fX; };
 	__SageInline DWORD toColorRef() const { return RGB((int) fX,(int) fY,(int) fZ); };
     operator POINT() const { POINT p = { (int) fX,(int) fY }; return p; };
     operator CfPoint() const { CfPoint p = { fX,fY }; return p; };
@@ -74,7 +88,6 @@ struct Point3Df_t
                                                                     (decltype(Point3Df_t::fZ)) rgbColor.iBlue/255.0f }; };
 
 };
-using Point3D = Point3D_t;
 struct Point3D_t
 {
 	double fX,fY,fZ;
@@ -96,7 +109,7 @@ struct Point3D_t
 	__SageInline Point3D_t operator * (double fValue) const { Point3D_t pTemp; pTemp.fX = fX*fValue; pTemp.fY = fY*fValue; pTemp.fZ = fZ*fValue; return pTemp; }
 	__SageInline Point3D_t & operator *= (double fValue) { fX *= fValue; fY *= fValue; fZ *= fValue; return *this; }
 	__SageInline Point3D_t operator * (Point3D_t const &obj) const { return { fX*obj.fX, fY*obj.fY, fZ*obj.fZ }; }
-	__SageInline double operator | (Point3D_t const &obj) const { return fX*obj.fX + fY*obj.fY + fZ*obj.fZ; }	// Dot Product
+	__SageInline double operator | (Point3D_t const &obj) const { return fX*obj.fX + fY*obj.fY + fZ*obj.fZ; }	// Unnormalized Dot Product
 	__SageInline double Mag() const { return std::sqrt(fX*fX + fY*fY + fZ*fZ); }							// Magnitude of vector
 	__SageInline double MagSq() const { return fX*fX + fY*fY + fZ*fZ; }									// Magnitude of vector ^2
     __SageInline Point3D_t Normalize() const { double fMag = Mag(); return fMag ? Point3D_t{ fX / fMag, fY / fMag, fZ / fMag } : Point3D_t{ 0,0,0}; }	// Normalize
@@ -114,7 +127,25 @@ struct Point3D_t
             return *this; 
         }	
 	__SageInline Point3D_t & selfRotateXYZ(Point3D_t pAngles) { selfRotateX(pAngles.fX).selfRotateY(pAngles.fY).selfRotateZ(pAngles.fZ); return *this; }	// Rotate point around X-Axis
-	__SageInline RGBColor_t toRGB() const { return RGBColor_t{(int) fX,(int) fY,(int) fZ}; };
+
+    static Point3D_t RetType() { return {}; }  // For decltype usage, etc.
+
+    // Unnormalized dot product of current point and input point
+    //
+    __SageInline decltype(fX)  Dot(decltype(RetType()) & in) const { return fX*in.fX + fY*in.fY + fZ*in.fZ; };
+  //  __SageInline decltype(fX)  DotUn(decltype(RetType()) && in) const { return fX*in.fX + fY*in.fY + fZ*in.fZ; };
+
+    // Normalized dot product of current point and input point
+    //
+    __SageInline decltype(fX)  DotNormal(decltype(RetType()) & in) const { auto fMag = Mag()*in.Mag(); return fMag ? (fX*in.fX + fY*in.fY + fZ*in.fZ)/fMag : 0; };
+    // Unnormalized 2D Determinant dot product of current point and input point
+    //
+
+    // Unnormalized 2D Determinant dot product of current point and input point
+    //
+    __SageInline decltype(fX)  Det2D(decltype(RetType()) & in) const { return fX*in.fY - fY*in.fX; };
+    
+    __SageInline RGBColor_t toRGB() const { return RGBColor_t{(int) fX,(int) fY,(int) fZ}; };
 	__SageInline DWORD toColorRef() const { return RGB((int) fX,(int) fY,(int) fZ); };
 
     // Experimental functions -- if they work out, then they will be added to CPoint, cfPoint, etc. 
@@ -645,5 +676,9 @@ public:
   __SageInline Point3DfSimd16 operator - () const { return { Xor(fX,Vecf(-0.0)), Xor(fY,Vecf(-0.0)), Xor(fZ,Vecf(-0.0)) }; }
 
 };
+
+using Point3D = Point3D_t;
+using Point3Df = Point3Df_t;
+
 }; // namespace Sage
 #endif		// _Point3D_h_

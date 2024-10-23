@@ -13,6 +13,7 @@
 
 #pragma once
 #include <Windows.h>
+#include <cmath>
 
 // If SDL Support is enabled, include SDL.H
 // If SDL has been included elsewhere, this is not needed.
@@ -35,8 +36,10 @@ namespace Sage
 {
 
 struct Point3D_t;
+struct Point3Df_t;
 struct CfPoint;
 struct CfPointf;
+struct CSize;
 
 // CSize struct -- right now, this structure exists for the sole purpose of converting to SIZE 
 // more easily, so that CSize(x,y) can be entered on a parameter list, for instance.
@@ -79,48 +82,58 @@ struct CPoint
 	__forceinline CPoint & operator += (int iValue) { x += iValue; y += iValue; return *this; }
 	__forceinline CPoint & operator -= (int iValue) { x -= iValue; y -= iValue; return *this; }
 
+    // All non-POINT types are deprecated to avoid collisions and make programming more streamlined.
+    // All relavent types (CSize, CPoint, CfPoint, etc.) resolve to POINT. 
+    // The only outsider is SIZE, which would be nice to support, but it's probably better to enforce POINT vs SIZE types, especially since SIZE is size_t, and 
+    // POINT types are currently integer (e.g. integer vs. long), making an error more appropriate here viz. loss of precision with no announced warning.
 
-	__forceinline CPoint operator * (const CPoint & p2) { return { x * p2.x, y * p2.y }; }
-	__forceinline CPoint operator / (const CPoint & p2) { return { x / p2.x, y / p2.y }; }
-	__forceinline CPoint operator + (const CPoint & p2) { return { x + p2.x, y + p2.y }; }
-	__forceinline CPoint operator - (const CPoint & p2) { return { x - p2.x, y - p2.y }; }
+//	__forceinline CPoint operator * (const CPoint & p2) { return { x * p2.x, y * p2.y }; }
+//	__forceinline CPoint operator / (const CPoint & p2) { return { x / p2.x, y / p2.y }; }
+//	__forceinline CPoint operator + (const CPoint & p2) { return { x + p2.x, y + p2.y }; }
+//	__forceinline CPoint operator - (const CPoint & p2) { return { x - p2.x, y - p2.y }; }
+//
+//	__forceinline CPoint & operator *= (const CPoint & p2) { x *= p2.x; y *= p2.y; return *this; }
+//	__forceinline CPoint & operator /= (const CPoint & p2) { x /= p2.x; y /= p2.y; return *this; }
+//	__forceinline CPoint & operator += (const CPoint & p2) { x += p2.x; y += p2.y; return *this; }
+//	__forceinline CPoint & operator -= (const CPoint & p2) { x -= p2.x; y -= p2.y; return *this; }
 
-	__forceinline CPoint & operator *= (const CPoint & p2) { x *= p2.x; y *= p2.y; return *this; }
-	__forceinline CPoint & operator /= (const CPoint & p2) { x /= p2.x; y /= p2.y; return *this; }
-	__forceinline CPoint & operator += (const CPoint & p2) { x += p2.x; y += p2.y; return *this; }
-	__forceinline CPoint & operator -= (const CPoint & p2) { x -= p2.x; y -= p2.y; return *this; }
-
-	__forceinline CPoint operator * (const POINT & p2) { return { x * p2.x, y * p2.y }; }
-	__forceinline CPoint operator / (const POINT & p2) { return { x / p2.x, y / p2.y }; }
-	__forceinline CPoint operator + (const POINT & p2) { return { x + p2.x, y + p2.y }; }
-	__forceinline CPoint operator - (const POINT & p2) { return { x - p2.x, y - p2.y }; }
+	__forceinline CPoint operator * (const POINT & p2) const { return { x * p2.x, y * p2.y }; }
+	__forceinline CPoint operator / (const POINT & p2) const { return { x / p2.x, y / p2.y }; }
+	__forceinline CPoint operator + (const POINT & p2) const { return { x + p2.x, y + p2.y }; }
+	__forceinline CPoint operator - (const POINT & p2) const { return { x - p2.x, y - p2.y }; }
 
 	__forceinline CPoint & operator *= (const POINT & p2) { x *= p2.x; y *= p2.y; return *this; }
 	__forceinline CPoint & operator /= (const POINT & p2) { x /= p2.x; y /= p2.y; return *this; }
 	__forceinline CPoint & operator += (const POINT & p2) { x += p2.x; y += p2.y; return *this; }
 	__forceinline CPoint & operator -= (const POINT & p2) { x -= p2.x; y -= p2.y; return *this; }
 
-	__forceinline CPoint operator * (const SIZE & p2) { return { x * p2.cx, y * p2.cy }; }
-	__forceinline CPoint operator / (const SIZE & p2) { return { x / p2.cx, y / p2.cy }; }
-	__forceinline CPoint operator + (const SIZE & p2) { return { x + p2.cx, y + p2.cy }; }
-	__forceinline CPoint operator - (const SIZE & p2) { return { x - p2.cx, y - p2.cy }; }
-
-	__forceinline CPoint & operator *= (const SIZE & p2) { x *= p2.cx; y *= p2.cy; return *this; }
-	__forceinline CPoint & operator /= (const SIZE & p2) { x /= p2.cx; y /= p2.cy; return *this; }
-	__forceinline CPoint & operator += (const SIZE & p2) { x += p2.cx; y += p2.cy; return *this; }
-	__forceinline CPoint & operator -= (const SIZE & p2) { x -= p2.cx; y -= p2.cy; return *this; }
+//	__forceinline CPoint operator * (const SIZE & p2) { return { x * p2.cx, y * p2.cy }; }
+//	__forceinline CPoint operator / (const SIZE & p2) { return { x / p2.cx, y / p2.cy }; }
+//	__forceinline CPoint operator + (const SIZE & p2) { return { x + p2.cx, y + p2.cy }; }
+//	__forceinline CPoint operator - (const SIZE & p2) { return { x - p2.cx, y - p2.cy }; }
+//
+//	__forceinline CPoint & operator *= (const SIZE & p2) { x *= p2.cx; y *= p2.cy; return *this; }
+//	__forceinline CPoint & operator /= (const SIZE & p2) { x /= p2.cx; y /= p2.cy; return *this; }
+//	__forceinline CPoint & operator += (const SIZE & p2) { x += p2.cx; y += p2.cy; return *this; }
+//	__forceinline CPoint & operator -= (const SIZE & p2) { x -= p2.cx; y -= p2.cy; return *this; }
 
     
     
      __forceinline CPoint operator = (Point3D_t & p);
+     __forceinline CPoint operator = (Point3Df_t & p);
 
 	__forceinline POINT operator * () { return { x,y }; }
 	__forceinline CPoint(int iX,int iY) { x = iX;    y = iY;    }
-	__forceinline CPoint(const POINT p) { x = p.x;   y = p.y;   }
-    __forceinline CPoint(const SIZE sz) { x = sz.cx; y = sz.cy; }
+	__forceinline CPoint(const POINT & p) { x = p.x;   y = p.y;   }
+    __forceinline CPoint(const SIZE & sz) { x = sz.cx; y = sz.cy; }
 
 	__forceinline operator POINT() const { POINT p = { x,y }; return p; };
 	__forceinline operator SIZE() const { SIZE p = { x,y }; return p; };
+
+#ifdef SupportGDI
+    __forceinline operator Gdiplus::Point() const {  return { (int) x, (int) y }; }
+
+#endif
     __forceinline CPoint & operator = (const CPoint & p2)
     {
         x = p2.x;
@@ -144,11 +157,26 @@ struct CPoint
         x = p2.x;
         y = p2.y;
     }
+    CPoint(const CSize & p);
     CPoint(const Point3D_t & p);
+    CPoint(const Point3Df_t & p);
     CPoint(const CfPointf & p);
     CPoint(const CfPoint & p);
+    
+    CPoint RotateXY(double fAngle) const { return { (decltype(x)) ((double) x *cos(fAngle) - (double) y*sin(fAngle)), (decltype(y)) ((double) x *sin(fAngle) + (double) y*cos(fAngle)) }; };  
+    CPoint & SelfRotateXY(double fAngle) { auto fTemp = (double) x *cos(fAngle) - (double) y*sin(fAngle); y =  (decltype(y)) (x*sin(fAngle) + (double) y*cos(fAngle)); x = (decltype(x)) fTemp; return *this; }
 
-	CPoint() { }
+    double Mag() const { return sqrt((double) x*(double) x+(double) y*(double) y); }
+    double MagSq() const { return ((double) x*(double) x+(double) y*(double) y); }
+
+    CPoint & SelfAbs()  { x = abs(x); y = abs(y); return *this; }
+
+    __forceinline bool operator == (const CPoint & p2) { x == p2.x && y == p2.y; }
+    __forceinline bool operator != (const CPoint & p2) { x != p2.x || y != p2.y; }
+
+
+	CPoint() = default;
+    CPoint operator-()  { return { -x, -y }; }
 
     __forceinline CPoint _min(CPoint & c) { return {min(x,c.x),min(y,c.y)}; }
     __forceinline CPoint _max(CPoint & c) { return {max(x,c.x),max(y,c.y)}; }
@@ -161,6 +189,7 @@ struct CPoint
 
 };
 
+struct CfPointf;
 struct CfPoint
 {
 	double x;
@@ -245,6 +274,7 @@ struct CfPoint
          y = p2.y;
      }
     CfPoint operator = (Point3D_t& p);
+    CfPoint operator = (Point3Df_t& p);
 
 	__forceinline CfPoint operator * (int iValue) { return { x * (double) iValue,y * (double) iValue }; }
 	__forceinline CfPoint operator / (int iValue) { return { x / (double) iValue,y / (double) iValue }; }
@@ -265,10 +295,20 @@ struct CfPoint
 	__forceinline CfPoint & operator /= (double fValue) { x /= fValue; y /= fValue; return *this; }
 	__forceinline CfPoint & operator += (double fValue) { x += fValue; y += fValue; return *this; }
 	__forceinline CfPoint & operator -= (double fValue) { x -= fValue; y -= fValue; return *this; }
+    
+
+    CfPoint RotateXY(double fAngle) const { return { x *cos(fAngle) - y*sin(fAngle), x *sin(fAngle) + y*cos(fAngle) }; };  
+    CfPoint & SelfRotateXY(double fAngle) { auto fTemp = x *cos(fAngle) - y*sin(fAngle); y =  x* sin(fAngle) + y*cos(fAngle); x = fTemp; return *this; }
+
+    double Mag() const { return sqrt(x*x+y*y); }
+    double MagSq() const { return (x*x+y*y); }
+
+    CfPoint & SelfAbs()  { x = fabs(x); y = fabs(y); return *this; }
 
     CfPoint(const Point3D_t & p);
+    CfPoint(const Point3Df_t & p);
     CfPoint(const CfPointf & p);
-	CfPoint() { };
+	CfPoint() = default;
 	CfPoint(double fx,double fy)
     { 
         x = fx; y = fy; 
@@ -294,16 +334,27 @@ struct CfPoint
 		x = (double) szSize.cx;
 		y = (double) szSize.cy;
 	}
+
+    __forceinline bool operator == (const CfPoint & p2) { x == p2.x && y == p2.y; }
+    __forceinline bool operator != (const CfPoint & p2) { x != p2.x || y != p2.y; }
+
 	__forceinline POINT operator * () { return { (int) x,(int) y }; }
 	__forceinline operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
 
     __forceinline bool WithinRect(CfPoint tl, CfPoint br) {  return (x >= tl.x && y >= tl.y && x < br.x && y < br.y); }
     operator Point3D_t() const;
+    operator Point3Df_t() const;
+    CfPoint operator-()  { return { -x, -y }; }
+
+   // operator CfPointf() const;
 };
 
 
 struct CfPointf
 {
+    // $$ Do not change the order of these values, their type, or add any other values here unless:
+    //      1. Change C#/VB DrawPolygon() functions to not cast to CfPointf(), which is currently being used in an unsafe fashion to 
+    //         handle an array of float(x,y) values as DrawPolygon() functons have no support for a raw float(x,y) structure, e.g. POINTF
 	float x;
 	float y;
 
@@ -325,11 +376,11 @@ struct CfPointf
 		y = (float) p.y;
 		return (*this);
 	}
-	__forceinline CfPointf operator + (const CfPointf & p2)
+	__forceinline CfPointf operator + (const CfPointf & p2) const
 	{
 		return { x + p2.x, y+p2.y };
 	}
-	__forceinline CfPointf operator / (const CfPointf & p2)
+	__forceinline CfPointf operator / (const CfPointf & p2) const
 	{
 		return { x / p2.x, y/p2.y };
 	}
@@ -340,15 +391,15 @@ struct CfPointf
 		return *this;
 	}
 
-	__forceinline CfPointf operator - (const CfPointf & p2)
+	__forceinline CfPointf operator - (const CfPointf & p2) const
 	{
 		return { x - p2.x, y-p2.y };
 	}
-	__forceinline CfPointf operator - (const CPoint & p2)
+	__forceinline CfPointf operator - (const CPoint & p2) const
 	{
 		return { x - (double) p2.x, y- (double) p2.y };
 	}
-	__forceinline CfPointf & operator += (const CfPointf & p2)
+	__forceinline CfPointf & operator += (const CfPointf & p2) 
 	{
 		x += p2.x;
 		y += p2.y;
@@ -360,7 +411,7 @@ struct CfPointf
 		y *= p2.y;
 		return *this;
 	}
-	__forceinline CfPointf operator * (const CfPointf & p2)
+	__forceinline CfPointf operator * (const CfPointf & p2) const
 	{
 		return { x * p2.x, y * p2.y };
 	}
@@ -396,31 +447,50 @@ struct CfPointf
          y = (decltype(y)) p2.y;
      }
     __forceinline CfPointf operator = (Point3D_t & p);
+    __forceinline CfPointf operator = (Point3Df_t & p);
 
-	__forceinline CfPointf operator * (int iValue) { return { x * (float) iValue,y * (float) iValue }; }
-	__forceinline CfPointf operator / (int iValue) { return { x / (float) iValue,y / (float) iValue }; }
-	__forceinline CfPointf operator + (int iValue) { return { x + (float) iValue,y + (float) iValue }; }
-	__forceinline CfPointf operator - (int iValue) { return { x - (float) iValue,y - (float) iValue }; }
+	__forceinline CfPointf operator * (int iValue) const { return { x * (float) iValue,y * (float) iValue }; }
+	__forceinline CfPointf operator / (int iValue) const { return { x / (float) iValue,y / (float) iValue }; }
+	__forceinline CfPointf operator + (int iValue) const { return { x + (float) iValue,y + (float) iValue }; }
+	__forceinline CfPointf operator - (int iValue) const { return { x - (float) iValue,y - (float) iValue }; }
 
 	__forceinline CfPointf & operator *= (int iValue) { x *= (float) iValue; y *= (float) iValue; return *this; }
 	__forceinline CfPointf & operator /= (int iValue) { x /= (float) iValue; y /= (float) iValue; return *this; }
 	__forceinline CfPointf & operator += (int iValue) { x += (float) iValue; y += (float) iValue; return *this; }
 	__forceinline CfPointf & operator -= (int iValue) { x -= (float) iValue; y -= (float) iValue; return *this; }
 
-	__forceinline CfPointf operator * (float fValue) { return { x * fValue,y * fValue }; }
-	__forceinline CfPointf operator / (float fValue) { return { x / fValue,y / fValue }; }
-	__forceinline CfPointf operator + (float fValue) { return { x + fValue,y + fValue }; }
-	__forceinline CfPointf operator - (float fValue) { return { x - fValue,y - fValue }; }
+	__forceinline CfPointf operator * (float fValue) const { return { x * fValue,y * fValue }; }
+	__forceinline CfPointf operator / (float fValue) const { return { x / fValue,y / fValue }; }
+	__forceinline CfPointf operator + (float fValue) const { return { x + fValue,y + fValue }; }
+	__forceinline CfPointf operator - (float fValue) const { return { x - fValue,y - fValue }; }
+
+	__forceinline CfPointf operator * (double fValue) const { return { x * (float) fValue,y * (float) fValue }; }
+	__forceinline CfPointf operator / (double fValue) const { return { x / (float) fValue,y / (float) fValue }; }
+	__forceinline CfPointf operator + (double fValue) const { return { x + (float) fValue,y + (float) fValue }; }
+	__forceinline CfPointf operator - (double fValue) const { return { x - (float) fValue,y - (float) fValue }; }
 
 	__forceinline CfPointf & operator *= (float fValue) { x *= fValue; y *= fValue; return *this; }
 	__forceinline CfPointf & operator /= (float fValue) { x /= fValue; y /= fValue; return *this; }
 	__forceinline CfPointf & operator += (float fValue) { x += fValue; y += fValue; return *this; }
 	__forceinline CfPointf & operator -= (float fValue) { x -= fValue; y -= fValue; return *this; }
 
+
     CfPointf(const Point3D_t & p);
-	CfPointf() { };
+    CfPointf(const Point3Df_t & p);
+	CfPointf() = default;
 	CfPointf(double fx,double fy) { x = (decltype(x)) fx;y = (decltype(x)) fy; };
-	__forceinline CfPointf(const CPoint & p)
+    CfPointf operator-()  { return { -x, -y }; }
+
+
+    CfPointf RotateXY(float fAngle) const { return { x *cos(fAngle) - y*sin(fAngle), x *sin(fAngle) + y*cos(fAngle) }; };  
+    CfPointf & SelfRotateXY(float fAngle) { auto fTemp = x *cos(fAngle) - y*sin(fAngle); y =  x*sin(fAngle) + y*cos(fAngle); x = fTemp; return *this; }
+
+    float Mag() const { return sqrt(x*x+y*y); }
+    float MagSq() const { return (x*x+y*y); }
+
+    CfPointf & SelfAbs()  { x = fabs(x); y = fabs(y); return *this; }
+
+	__forceinline CfPointf(const CPoint & p) 
 	{
 		x = (decltype(x)) p.x;
 		y = (decltype(y)) p.y;
@@ -441,10 +511,15 @@ struct CfPointf
 		x = (decltype(x)) szSize.cx;
 		y = (decltype(y)) szSize.cy;
 	}
+
+    __forceinline bool operator == (const CfPointf & p2) { x == p2.x && y == p2.y; }
+    __forceinline bool operator != (const CfPointf & p2) { x != p2.x || y != p2.y; }
+
 	__forceinline POINT operator * () { return { (int) x,(int) y }; }
 	__forceinline operator POINT() const { POINT p = { (int) x,(int) y }; return p; };
     __forceinline bool WithinRect(CfPointf tl, CfPointf br) {  return (x >= tl.x && y >= tl.y && x < br.x && y < br.y); }
     operator Point3D_t() const;
+    operator Point3Df_t() const;
 
 };
 
@@ -622,25 +697,83 @@ public:
 };
 //#endif SAGEBOX_AVX
 
-struct SizeRect
+class SizeRect
 {
 public:
 	POINT loc;
 	SIZE size;
-	bool Empty() { return !loc.x && !loc.y && !size.cx && !size.cy; };
-	bool EmptySize() {return !size.cx && !size.cy; };
-	bool EmptyPoint() {return !loc.x && !loc.y; };
-	bool EmptyAny() { return (!size.cx && !size.cy) || ( !loc.x && !loc.y); };
-	operator POINT() const { POINT p = { loc.x,loc.y }; return p; };
-	operator CPoint() const { CPoint p = { loc.x,loc.y }; return p; };
-	operator SIZE() const { SIZE p = { size.cx,size.cy }; return p; };
-	operator RECT() const { RECT p = { loc.x,loc.y,loc.x+size.cx,loc.y+size.cy }; return p; };
+	__forceinline bool Empty() { return !loc.x && !loc.y && !size.cx && !size.cy; };
+	__forceinline bool EmptySize() {return !size.cx && !size.cy; };
+	__forceinline bool EmptyPoint() {return !loc.x && !loc.y; };
+	__forceinline bool EmptyAny() { return (!size.cx && !size.cy) || ( !loc.x && !loc.y); };
+	__forceinline operator POINT() const { POINT p = { loc.x,loc.y }; return p; };
+	__forceinline operator CPoint() const { CPoint p = { loc.x,loc.y }; return p; };
+	__forceinline operator SIZE() const { SIZE p = { size.cx,size.cy }; return p; };
+	__forceinline operator RECT() const { RECT p = { loc.x,loc.y,loc.x+size.cx,loc.y+size.cy }; return p; };
+    __forceinline SizeRect operator = (const RECT & p) { return { (int) p.left, (int) p.top, (int) (p.left-p.right), (int) (p.bottom-p.top) }; }
+    __forceinline static SizeRect fromRect(const RECT & p) { return { (int) p.left, (int) p.top, (int) (p.left-p.right), (int) (p.bottom-p.top) }; }
+
+#ifdef SupportGDI
+    __forceinline operator Gdiplus::Rect() const { return { (int) loc.x, (int) loc.y, (int) size.cx,  (int) size.cy }; }
+#endif
 #ifdef SDLCALL
     operator SDL_Rect() { SDL_Rect p = { loc.x,loc.y,size.cx,size.cy }; return p; };
 #endif
+    SizeRect() = default; 
+    SizeRect(POINT loc,SIZE size) { this->loc = loc; this->size = size; }
+    SizeRect(int x,int y,int width,int height) { loc = POINT{x,y}; size = SIZE{width,height}; }
+
+    __forceinline SizeRect operator + (const SizeRect & sr) const { return SizeRect(loc.x + sr.loc.x,loc.y + sr.loc.y,size.cx + sr.size.cx,size.cy + sr.size.cy); }
+    __forceinline SizeRect operator - (const SizeRect & sr) const { return SizeRect(loc.x - sr.loc.x,loc.y - sr.loc.y,size.cx - sr.size.cx,size.cy - sr.size.cy); }
+    __forceinline SizeRect operator * (const SizeRect & sr) const { return SizeRect(loc.x * sr.loc.x,loc.y * sr.loc.y,size.cx * sr.size.cx,size.cy * sr.size.cy); }
+    __forceinline SizeRect operator / (const SizeRect & sr) const { return SizeRect(loc.x / sr.loc.x,loc.y / sr.loc.y,size.cx / sr.size.cx,size.cy / sr.size.cy); }
+
+    __forceinline SizeRect & operator += (const SizeRect & sr) { loc.x += sr.loc.x; loc.y += sr.loc.y; size.cx += sr.size.cx; size.cy += sr.size.cy; return *this; }
+    __forceinline SizeRect & operator -= (const SizeRect & sr) { loc.x -= sr.loc.x; loc.y -= sr.loc.y; size.cx -= sr.size.cx; size.cy -= sr.size.cy; return *this; }
+    __forceinline SizeRect & operator *= (const SizeRect & sr) { loc.x *= sr.loc.x; loc.y *= sr.loc.y; size.cx *= sr.size.cx; size.cy *= sr.size.cy; return *this; }
+    __forceinline SizeRect & operator /= (const SizeRect & sr) { loc.x /= sr.loc.x; loc.y /= sr.loc.y; size.cx /= sr.size.cx; size.cy /= sr.size.cy; return *this; }
+
+    __forceinline SizeRect operator + (int value) const { return SizeRect(loc.x + value,loc.y + value,size.cx + value,size.cy + value); }
+    __forceinline SizeRect operator - (int value) const { return SizeRect(loc.x - value,loc.y - value,size.cx - value,size.cy - value); }
+    __forceinline SizeRect operator * (int value) const { return SizeRect(loc.x * value,loc.y * value,size.cx * value,size.cy * value); }
+    __forceinline SizeRect operator / (int value) const { return SizeRect(loc.x / value,loc.y / value,size.cx / value,size.cy / value); }
+
+    __forceinline SizeRect & operator += (int value) { loc.x += value; loc.y += value; size.cx += value; size.cy += value; return *this; }
+    __forceinline SizeRect & operator -= (int value) { loc.x -= value; loc.y -= value; size.cx -= value; size.cy -= value; return *this; }
+    __forceinline SizeRect & operator *= (int value) { loc.x *= value; loc.y *= value; size.cx *= value; size.cy *= value; return *this; }
+    __forceinline SizeRect & operator /= (int value) { loc.x /= value; loc.y /= value; size.cx /= value; size.cy /= value; return *this; }
+
+    __forceinline SizeRect operator + (const POINT & sr) const { return SizeRect(loc.x + sr.x,loc.y + sr.y,size.cx,size.cy); }
+    __forceinline SizeRect operator - (const POINT & sr) const { return SizeRect(loc.x - sr.x,loc.y - sr.y,size.cx,size.cy); }
+    __forceinline SizeRect operator * (const POINT & sr) const { return SizeRect(loc.x * sr.x,loc.y * sr.y,size.cx,size.cy); }
+    __forceinline SizeRect operator / (const POINT & sr) const { return SizeRect(loc.x / sr.x,loc.y / sr.y,size.cx,size.cy); }
+
+    __forceinline SizeRect & operator += (const POINT & sr) { loc.x += sr.x; loc.y += sr.y; return *this; }
+    __forceinline SizeRect & operator -= (const POINT & sr) { loc.x -= sr.x; loc.y -= sr.y; return *this; }
+    __forceinline SizeRect & operator *= (const POINT & sr) { loc.x *= sr.x; loc.y *= sr.y; return *this; }
+    __forceinline SizeRect & operator /= (const POINT & sr) { loc.x /= sr.x; loc.y /= sr.y; return *this; }
+
+    __forceinline SizeRect operator + (const SIZE & sr) const { return SizeRect(loc.x,loc.y,size.cx + sr.cx,size.cy + sr.cy); }
+    __forceinline SizeRect operator - (const SIZE & sr) const { return SizeRect(loc.x,loc.y,size.cx - sr.cx,size.cy - sr.cy); }
+    __forceinline SizeRect operator * (const SIZE & sr) const { return SizeRect(loc.x,loc.y,size.cx * sr.cx,size.cy * sr.cy); }
+    __forceinline SizeRect operator / (const SIZE & sr) const { return SizeRect(loc.x,loc.y,size.cx / sr.cx,size.cy / sr.cy); }
+
+    __forceinline SizeRect & operator += (const SIZE & sr) { size.cx += sr.cx; size.cy += sr.cy; return *this; }
+    __forceinline SizeRect & operator -= (const SIZE & sr) { size.cx -= sr.cx; size.cy -= sr.cy; return *this; }
+    __forceinline SizeRect & operator *= (const SIZE & sr) { size.cx *= sr.cx; size.cy *= sr.cy; return *this; }
+    __forceinline SizeRect & operator /= (const SIZE & sr) { size.cx /= sr.cx; size.cy /= sr.cy; return *this; }
+
+    __forceinline bool operator == (const SizeRect & sr) { loc.x == sr.loc.x && loc.y == sr.loc.y && size.cx == sr.size.cx && size.cy == sr.size.cy; }
+    __forceinline bool operator != (const SizeRect & sr) { loc.x != sr.loc.x || loc.y != sr.loc.y || size.cx != sr.size.cx || size.cy != sr.size.cy; }
+
+
 };
 
 }; // namespace Sage
+
+Sage::CfPoint abs(Sage::CfPoint cfPoint);
+Sage::CfPointf abs(Sage::CfPointf cfPoint);
+Sage::CPoint abs(Sage::CPoint cPoint);
 
 #pragma warning(pop)
 

@@ -320,6 +320,24 @@ public:
     //
 	//CBitmap ReverseBitmap();                                                                              $$ CBitmap32 TBD
 
+   // ReverseBitmapInline() -- Turns the bitmap upside-down inline (i.e. the same bitmap).  This is helpful for many operations, since
+    // Windows bitmaps are upside-down in memory.  This makes the bitmap right-side up and easier to deal with. 
+    //
+    // This returns the current bitmap (which has now been turned upside-down). 
+    //
+	CBitmap32 & ReverseBitmapInline() { stBitmap.ReverseBitmap(); return *this; }
+
+    // ReverseBitmap() -- Turns the bitmap upside-down inline (i.e. the same bitmap).  This is helpful for many operations, since
+    // Windows bitmaps are upside-down in memory.  This makes the bitmap right-side up and easier to deal with. 
+    //
+    // This functions returns a new CBitmap, leaving the current bitmap untouched. 
+    // 
+    // note; ReverseBitmapInline() can be used to reverse the bitmap without creating a new one.
+    //
+	CBitmap32 ReverseBitmap();
+
+
+
 
     // ********************************* MASK FUNCTIONS NOT YET IMPLEMENTED FOR CBitmap32
 
@@ -374,13 +392,9 @@ public:
 	// Using FillColo(Color) with no other parameters fills the entire bitmap.
 	// Using pStart and szSize to set a start location and rectangular area allows only a certain area to be filled with the supplied color.
 	//
-	bool _sageinline FillColor(RGBColor_t rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(*rgbColor,pStart,szSize); }
-
-	// FillColor() -- Fill the entire bitmap, or a section of it, with a specific color
-	// Using FillColo(Color) with no other parameters fills the entire bitmap.
-	// Using pStart and szSize to set a start location and rectangular area allows only a certain area to be filled with the supplied color.
-	//
-	bool _sageinline FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(dwColor,pStart,szSize); }
+	bool _sageinline FillColor(CRgbColor rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(rgbColor,pStart,szSize); }
+	bool _sageinline FillColorA(CRgbColor rgbColor, int iMaskValue,POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColorA(rgbColor,iMaskValue,pStart,szSize); }
+	bool _sageinline FillColorA(RgbColorA rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(rgbColor,pStart,szSize); }
 
 	void Delete(){ stBitmap.Delete(); }
 	/// <summary>

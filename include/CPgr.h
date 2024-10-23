@@ -19,6 +19,8 @@
 #include <Windows.h>
 #include "Sage.h"
 #include "CString.h"
+#include "CRawBitmap32.h"
+
 namespace Sage
 {
 
@@ -253,6 +255,10 @@ public:
 	unsigned char * ReadFile(const char * sTopKey,const char * sFile,int & iFilesize,bool bRawFile = false);
 	[[nodiscard]] Sage::RawBitmap_t ReadRawBitmap(const char * sFile);
 	[[nodiscard]] Sage::RawBitmap_t ReadRawBitmap(const char * sTopKey,const char * sFile);
+	[[nodiscard]] Sage::RawBitmap32_t ReadRawBitmap32(const char * sFile);
+	[[nodiscard]] Sage::RawBitmap32_t ReadRawBitmap32(const char * sTopKey,const char * sFile);
+	CBitmap32 ReadBitmap32(const char * sFile);
+	CBitmap32 ReadBitmap32(const char * sTopKey,const char * sFile);
 	CBitmap ReadBitmap(const char * sFile);
 	CBitmap ReadBitmap(const char * sTopKey,const char * sFile);
 	bool FileExists(const char * sTopKey,const char * sFile);

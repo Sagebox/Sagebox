@@ -432,6 +432,7 @@ public:
     }
     CBitmap& operator=(CBitmap&& p2) noexcept
     {
+        stBitmap.Delete();
         stBitmap = p2.stBitmap;
         iCurrentLine = p2.iCurrentLine;
 
@@ -488,6 +489,9 @@ public:
 
     __forceinline int GetWidthBytes() const { return this ? stBitmap.iWidthBytes : 0; }
     __forceinline int GetRowStride() const { return GetWidthBytes(); }
+    __forceinline size_t GetMemSize() const { return (size_t) GetWidthBytes()*(size_t) Height(); }
+
+
     __forceinline int RowStride() const { return GetWidthBytes(); }
     __forceinline int GetChannelStride() const { return this ? 3 : 0; }     // Split RGB not supported for unisgned char (yet anyway).
     __forceinline int ChannelStride() const { return GetChannelStride(); }
@@ -569,13 +573,13 @@ public:
 	// Using FillColo(Color) with no other parameters fills the entire bitmap.
 	// Using pStart and szSize to set a start location and rectangular area allows only a certain area to be filled with the supplied color.
 	//
-	bool __forceinline FillColor(RGBColor_t rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(*rgbColor,pStart,szSize); }
+	bool __forceinline FillColor(CRgbColor rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return this ? stBitmap.FillColor(*rgbColor.rgbColor,pStart,szSize) : false; }
 
-	// FillColor() -- Fill the entire bitmap, or a section of it, with a specific color
-	// Using FillColo(Color) with no other parameters fills the entire bitmap.
-	// Using pStart and szSize to set a start location and rectangular area allows only a certain area to be filled with the supplied color.
-	//
-	bool __forceinline FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(dwColor,pStart,szSize); }
+//	// FillColor() -- Fill the entire bitmap, or a section of it, with a specific color
+//	// Using FillColo(Color) with no other parameters fills the entire bitmap.
+//	// Using pStart and szSize to set a start location and rectangular area allows only a certain area to be filled with the supplied color.
+//	//
+//	bool __forceinline FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 }) { return stBitmap.FillColor(dwColor,pStart,szSize); }
 
 	void Delete(){ stBitmap.Delete(); }
 	/// <summary>

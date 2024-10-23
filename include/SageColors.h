@@ -3,6 +3,7 @@
 namespace Sage
 {
 
+
     // Note: Original format with inline moved out to keep goal of C++11 compatibility with the library (for now anyway, since there 
     //       are quite a few reasons to move into at least C++17)
     class PanColor
@@ -150,7 +151,153 @@ namespace Sage
         static RgbColor  Yellow               ;//=  _ccc(0xFFFFFF00);
         static RgbColor  YellowGreen          ;//=  _ccc(0xFF9ACD32);
     };
+    class PanColorA
+    {
+    public: 
+#define __DeclPanColorA(_x)  static constexpr RgbColorA _x(int iAlpha = 255) { return {PanColor::_x.iRed,   PanColor::_x.iGreen, PanColor::_x.iBlue, iAlpha }; } 
 
+        __DeclPanColorA(AliceBlue            );//=  _ccc(0xFFF0F8FF);
+        __DeclPanColorA(AntiqueWhite         );//=  _ccc(0xFFFAEBD7);
+        __DeclPanColorA(Aqua                 );//=  _ccc(0xFF00FFFF);
+        __DeclPanColorA(Aquamarine           );//=  _ccc(0xFF7FFFD4);
+        __DeclPanColorA(Azure                );//=  _ccc(0xFFF0FFFF);
+        __DeclPanColorA(Beige                );//=  _ccc(0xFFF5F5DC);
+        __DeclPanColorA(Bisque               );//=  _ccc(0xFFFFE4C4);
+        __DeclPanColorA(Black                );//=  _ccc(0xFF000000);
+        __DeclPanColorA(BlanchedAlmond       );//=  _ccc(0xFFFFEBCD);
+        __DeclPanColorA(Blue                 );//=  _ccc(0xFF0000FF);
+        __DeclPanColorA(BlueViolet           );//=  _ccc(0xFF8A2BE2);
+        __DeclPanColorA(Brown                );//=  _ccc(0xFFA52A2A);
+        __DeclPanColorA(BurlyWood            );//=  _ccc(0xFFDEB887);
+        __DeclPanColorA(CadetBlue            );//=  _ccc(0xFF5F9EA0);
+        __DeclPanColorA(Chartreuse           );//=  _ccc(0xFF7FFF00);
+        __DeclPanColorA(Chocolate            );//=  _ccc(0xFFD2691E);
+        __DeclPanColorA(Coral                );//=  _ccc(0xFFFF7F50);
+        __DeclPanColorA(CornflowerBlue       );//=  _ccc(0xFF6495ED);
+        __DeclPanColorA(Cornsilk             );//=  _ccc(0xFFFFF8DC);
+        __DeclPanColorA(Crimson              );//=  _ccc(0xFFDC143C);
+        __DeclPanColorA(Cyan                 );//=  _ccc(0xFF00FFFF);
+        __DeclPanColorA(DarkBlue             );//=  _ccc(0xFF00008B);
+        __DeclPanColorA(DarkCyan             );//=  _ccc(0xFF008B8B);
+        __DeclPanColorA(DarkGoldenrod        );//=  _ccc(0xFFB8860B);
+        __DeclPanColorA(DarkGray             );//=  _ccc(0xFFA9A9A9);
+        __DeclPanColorA(DarkGreen            );//=  _ccc(0xFF006400);
+        __DeclPanColorA(DarkKhaki            );//=  _ccc(0xFFBDB76B);
+        __DeclPanColorA(DarkMagenta          );//=  _ccc(0xFF8B008B);
+        __DeclPanColorA(DarkOliveGreen       );//=  _ccc(0xFF556B2F);
+        __DeclPanColorA(DarkOrange           );//=  _ccc(0xFFFF8C00);
+        __DeclPanColorA(DarkOrchid           );//=  _ccc(0xFF9932CC);
+        __DeclPanColorA(DarkRed              );//=  _ccc(0xFF8B0000);
+        __DeclPanColorA(DarkSalmon           );//=  _ccc(0xFFE9967A);
+        __DeclPanColorA(DarkSeaGreen         );//=  _ccc(0xFF8FBC8B);
+        __DeclPanColorA(DarkSlateBlue        );//=  _ccc(0xFF483D8B);
+        __DeclPanColorA(DarkSlateGray        );//=  _ccc(0xFF2F4F4F);
+        __DeclPanColorA(DarkTurquoise        );//=  _ccc(0xFF00CED1);
+        __DeclPanColorA(DarkViolet           );//=  _ccc(0xFF9400D3);
+        __DeclPanColorA(DeepPink             );//=  _ccc(0xFFFF1493);
+        __DeclPanColorA(DeepSkyBlue          );//=  _ccc(0xFF00BFFF);
+        __DeclPanColorA(DimGray              );//=  _ccc(0xFF696969);
+        __DeclPanColorA(DodgerBlue           );//=  _ccc(0xFF1E90FF);
+        __DeclPanColorA(Firebrick            );//=  _ccc(0xFFB22222);
+        __DeclPanColorA(FloralWhite          );//=  _ccc(0xFFFFFAF0);
+        __DeclPanColorA(ForestGreen          );//=  _ccc(0xFF228B22);
+        __DeclPanColorA(Fuchsia              );//=  _ccc(0xFFFF00FF);
+        __DeclPanColorA(Gainsboro            );//=  _ccc(0xFFDCDCDC);
+        __DeclPanColorA(GhostWhite           );//=  _ccc(0xFFF8F8FF);
+        __DeclPanColorA(Gold                 );//=  _ccc(0xFFFFD700);
+        __DeclPanColorA(Goldenrod            );//=  _ccc(0xFFDAA520);
+        __DeclPanColorA(Gray                 );//=  _ccc(0xFF808080);
+        __DeclPanColorA(Green                );//=  _ccc(0xFF008000);
+        __DeclPanColorA(GreenYellow          );//=  _ccc(0xFFADFF2F);
+        __DeclPanColorA(Honeydew             );//=  _ccc(0xFFF0FFF0);
+        __DeclPanColorA(HotPink              );//=  _ccc(0xFFFF69B4);
+        __DeclPanColorA(IndianRed            );//=  _ccc(0xFFCD5C5C);
+        __DeclPanColorA(Indigo               );//=  _ccc(0xFF4B0082);
+        __DeclPanColorA(Ivory                );//=  _ccc(0xFFFFFFF0);
+        __DeclPanColorA(Khaki                );//=  _ccc(0xFFF0E68C);
+        __DeclPanColorA(Lavender             );//=  _ccc(0xFFE6E6FA);
+        __DeclPanColorA(LavenderBlush        );//=  _ccc(0xFFFFF0F5);
+        __DeclPanColorA(LawnGreen            );//=  _ccc(0xFF7CFC00);
+        __DeclPanColorA(LemonChiffon         );//=  _ccc(0xFFFFFACD);
+        __DeclPanColorA(LightBlue            );//=  _ccc(0xFFADD8E6);
+        __DeclPanColorA(LightCoral           );//=  _ccc(0xFFF08080);
+        __DeclPanColorA(LightCyan            );//=  _ccc(0xFFE0FFFF);
+        __DeclPanColorA(LightGoldenrodYellow );//=  _ccc(0xFFFAFAD2);
+        __DeclPanColorA(LightGray            );//=  _ccc(0xFFD3D3D3);
+        __DeclPanColorA(LightGreen           );//=  _ccc(0xFF90EE90);
+        __DeclPanColorA(LightPink            );//=  _ccc(0xFFFFB6C1);
+        __DeclPanColorA(LightSalmon          );//=  _ccc(0xFFFFA07A);
+        __DeclPanColorA(LightSeaGreen        );//=  _ccc(0xFF20B2AA);
+        __DeclPanColorA(LightSkyBlue         );//=  _ccc(0xFF87CEFA);
+        __DeclPanColorA(LightSlateGray       );//=  _ccc(0xFF778899);
+        __DeclPanColorA(LightSteelBlue       );//=  _ccc(0xFFB0C4DE);
+        __DeclPanColorA(LightYellow          );//=  _ccc(0xFFFFFFE0);
+        __DeclPanColorA(Lime                 );//=  _ccc(0xFF00FF00);
+        __DeclPanColorA(LimeGreen            );//=  _ccc(0xFF32CD32);
+        __DeclPanColorA(Linen                );//=  _ccc(0xFFFAF0E6);
+        __DeclPanColorA(Magenta              );//=  _ccc(0xFFFF00FF);
+        __DeclPanColorA(Maroon               );//=  _ccc(0xFF800000);
+        __DeclPanColorA(MediumAquamarine     );//=  _ccc(0xFF66CDAA);
+        __DeclPanColorA(MediumBlue           );//=  _ccc(0xFF0000CD);
+        __DeclPanColorA(MediumOrchid         );//=  _ccc(0xFFBA55D3);
+        __DeclPanColorA(MediumPurple         );//=  _ccc(0xFF9370DB);
+        __DeclPanColorA(MediumSeaGreen       );//=  _ccc(0xFF3CB371);
+        __DeclPanColorA(MediumSlateBlue      );//=  _ccc(0xFF7B68EE);
+        __DeclPanColorA(MediumSpringGreen    );//=  _ccc(0xFF00FA9A);
+        __DeclPanColorA(MediumTurquoise      );//=  _ccc(0xFF48D1CC);
+        __DeclPanColorA(MediumVioletRed      );//=  _ccc(0xFFC71585);
+        __DeclPanColorA(MidnightBlue         );//=  _ccc(0xFF191970);
+        __DeclPanColorA(MintCream            );//=  _ccc(0xFFF5FFFA);
+        __DeclPanColorA(MistyRose            );//=  _ccc(0xFFFFE4E1);
+        __DeclPanColorA(Moccasin             );//=  _ccc(0xFFFFE4B5);
+        __DeclPanColorA(NavajoWhite          );//=  _ccc(0xFFFFDEAD);
+        __DeclPanColorA(Navy                 );//=  _ccc(0xFF000080);
+        __DeclPanColorA(OldLace              );//=  _ccc(0xFFFDF5E6);
+        __DeclPanColorA(Olive                );//=  _ccc(0xFF808000);
+        __DeclPanColorA(OliveDrab            );//=  _ccc(0xFF6B8E23);
+        __DeclPanColorA(Orange               );//=  _ccc(0xFFFFA500);
+        __DeclPanColorA(OrangeRed            );//=  _ccc(0xFFFF4500);
+        __DeclPanColorA(Orchid               );//=  _ccc(0xFFDA70D6);
+        __DeclPanColorA(PaleGoldenrod        );//=  _ccc(0xFFEEE8AA);
+        __DeclPanColorA(PaleGreen            );//=  _ccc(0xFF98FB98);
+        __DeclPanColorA(PaleTurquoise        );//=  _ccc(0xFFAFEEEE);
+        __DeclPanColorA(PaleVioletRed        );//=  _ccc(0xFFDB7093);
+        __DeclPanColorA(PapayaWhip           );//=  _ccc(0xFFFFEFD5);
+        __DeclPanColorA(PeachPuff            );//=  _ccc(0xFFFFDAB9);
+        __DeclPanColorA(Peru                 );//=  _ccc(0xFFCD853F);
+        __DeclPanColorA(Pink                 );//=  _ccc(0xFFFFC0CB);
+        __DeclPanColorA(Plum                 );//=  _ccc(0xFFDDA0DD);
+        __DeclPanColorA(PowderBlue           );//=  _ccc(0xFFB0E0E6);
+        __DeclPanColorA(Purple               );//=  _ccc(0xFF800080);
+        __DeclPanColorA(Red                  );//=  _ccc(0xFFFF0000);
+        __DeclPanColorA(RosyBrown            );//=  _ccc(0xFFBC8F8F);
+        __DeclPanColorA(RoyalBlue            );//=  _ccc(0xFF4169E1);
+        __DeclPanColorA(SaddleBrown          );//=  _ccc(0xFF8B4513);
+        __DeclPanColorA(Salmon               );//=  _ccc(0xFFFA8072);
+        __DeclPanColorA(SandyBrown           );//=  _ccc(0xFFF4A460);
+        __DeclPanColorA(SeaGreen             );//=  _ccc(0xFF2E8B57);
+        __DeclPanColorA(SeaShell             );//=  _ccc(0xFFFFF5EE);
+        __DeclPanColorA(Sienna               );//=  _ccc(0xFFA0522D);
+        __DeclPanColorA(Silver               );//=  _ccc(0xFFC0C0C0);
+        __DeclPanColorA(SkyBlue              );//=  _ccc(0xFF87CEEB);
+        __DeclPanColorA(SlateBlue            );//=  _ccc(0xFF6A5ACD);
+        __DeclPanColorA(SlateGray            );//=  _ccc(0xFF708090);
+        __DeclPanColorA(Snow                 );//=  _ccc(0xFFFFFAFA);
+        __DeclPanColorA(SpringGreen          );//=  _ccc(0xFF00FF7F);
+        __DeclPanColorA(SteelBlue            );//=  _ccc(0xFF4682B4);
+        __DeclPanColorA(Tan                  );//=  _ccc(0xFFD2B48C);
+        __DeclPanColorA(Teal                 );//=  _ccc(0xFF008080);
+        __DeclPanColorA(Thistle              );//=  _ccc(0xFFD8BFD8);
+        __DeclPanColorA(Tomato               );//=  _ccc(0xFFFF6347);
+        __DeclPanColorA(Transparent          );//=  _ccc(0x00FFFFFF);
+        __DeclPanColorA(Turquoise            );//=  _ccc(0xFF40E0D0);
+        __DeclPanColorA(Violet               );//=  _ccc(0xFFEE82EE);
+        __DeclPanColorA(Wheat                );//=  _ccc(0xFFF5DEB3);
+        __DeclPanColorA(White                );//=  _ccc(0xFFFFFFFF);
+        __DeclPanColorA(WhiteSmoke           );//=  _ccc(0xFFF5F5F5);
+        __DeclPanColorA(Yellow               );//=  _ccc(0xFFFFFF00);
+        __DeclPanColorA(YellowGreen          );//=  _ccc(0xFF9ACD32);
+    };
     // Other colors not aligned with Pantone colors, as well as internal colors such as button text colors, etc. 
     // Most colors in this section are "aesthetically pleasing" colors more aligned with their names (i.e. dark blue), whereas
     // the Pantone colors with similar names can look, well, awful. 
@@ -171,8 +318,11 @@ namespace Sage
 	    static RgbColor  DarkGreen                       ; // RGB(0,128,0));
 	    static RgbColor  LightGreen                      ; // RGB(128,255,128));
 	    static RgbColor  Blue                            ; // RGB(0,0,255));
+	    static RgbColor  Blue32                          ; // {0,0,32};
+	    static RgbColor  Blue48                          ; // {0,0,48};
+	    static RgbColor  Blue64                          ; // {0,0,64};
 	    static RgbColor  DarkBlue                        ; // RGB(0,0,92));
-	    static RgbColor  MidBlue                         ; // RGB(0,0,128));
+	    static constexpr RgbColor  MidBlue     = {0,0,255};                    ; // RGB(0,0,128));
 	    static RgbColor  LightBlue                       ; // RGB(128,128,255));
 	    static RgbColor  SkyBlue                         ; // RGB(40,145,255));
 	    static RgbColor  SkyBlueDark                     ; // RGB(0,30,128));
@@ -181,6 +331,9 @@ namespace Sage
 	    static RgbColor  PaleBlue                        ; // RGB(103,179,217));
 	    static RgbColor  PaleBlueLight                   ; // RGB(145,190,215));
 	    static RgbColor  Cyan                            ; // RGB(0,255,255)); 
+	    static RgbColor  MidCyan                         ; // RGB(15,200,200); 
+	    static RgbColor  DarkCyan                        ; // RGB(30,130,130); 
+	    static RgbColor  LightCyan                       ; // RGB(128,255,255)); 
 	    static RgbColor  Red                             ; // RGB(255,0,0));
 	    static RgbColor  LightRed                        ; // RGB(255,128,128));
 	    static RgbColor  LightYellow                     ; // RGB(255,255,128));
@@ -220,5 +373,81 @@ namespace Sage
 	    static RgbColor  CheckboxTextColorChecked        ; // RGB(220,220,220));
 	    static RgbColor  CheckboxTextColorCheckedHigh    ; // RGB(220,220,220));
 	    static RgbColor  CheckboxTextColorDisabled       ; // RGB(170,170,170));
+	    static RgbColor  Orange                          ; // RGB(255,115,0  ));
+	    static RgbColor  LightOrange                     ; // RGB(255,130,0  ));
+	    static RgbColor  DarkOrange                      ; // RGB(255,85 ,0  ));
+    };
+
+    class SageColorA
+    {
+    public:
+#define __DeclSageColorA(_x)  static constexpr RgbColorA _x(int iAlpha = 255) { return {SageColor::_x.iRed,   SageColor::_x.iGreen, SageColor::_x.iBlue, iAlpha }; } 
+
+	    __DeclSageColorA(DefaultBgColor                  ); // RGB(20,40,121));
+	    __DeclSageColorA(DefaultFgColor                  ); // RGB(255,255,255));
+	    __DeclSageColorA(SliderTextColor                 ); // RGB(128,128,128));
+	    __DeclSageColorA(Green                           ); // RGB(0,255,0));
+	    __DeclSageColorA(DarkGreen                       ); // RGB(0,128,0));
+	    __DeclSageColorA(LightGreen                      ); // RGB(128,255,128));
+	    __DeclSageColorA(Blue                            ); // RGB(0,0,255));
+	    __DeclSageColorA(Blue32                          ); // {0,0,32};
+	    __DeclSageColorA(Blue48                          ); // {0,0,48};
+	    __DeclSageColorA(Blue64                          ); // {0,0,64};
+	    __DeclSageColorA(DarkBlue                        ); // RGB(0,0,92));
+	    __DeclSageColorA(MidBlue                         ); // RGB(0,0,128));
+	    __DeclSageColorA(LightBlue                       ); // RGB(128,128,255));
+	    __DeclSageColorA(SkyBlue                         ); // RGB(40,145,255));
+	    __DeclSageColorA(SkyBlueDark                     ); // RGB(0,30,128));
+	    __DeclSageColorA(SkyBlueLight                    ); // RGB(75,165,255));
+	    __DeclSageColorA(PaleBlueDark                    ); // RGB(40,100,140));
+	    __DeclSageColorA(PaleBlue                        ); // RGB(103,179,217));
+	    __DeclSageColorA(PaleBlueLight                   ); // RGB(145,190,215));
+	    __DeclSageColorA(Cyan                            ); // RGB(0,255,255)); 
+	    __DeclSageColorA(MidCyan                         ); // RGB(15,200,200); 
+	    __DeclSageColorA(DarkCyan                        ); // RGB(30,130,130); 
+	    __DeclSageColorA(LightCyan                       ); // RGB(128,255,255)); 
+	    __DeclSageColorA(Red                             ); // RGB(255,0,0));
+	    __DeclSageColorA(LightRed                        ); // RGB(255,128,128));
+	    __DeclSageColorA(LightYellow                     ); // RGB(255,255,128));
+	    __DeclSageColorA(Yellow                          ); // RGB(255,255,0));
+	    __DeclSageColorA(Magenta                         ); // RGB(255,0,255));
+	    __DeclSageColorA(MediumMagenta                   ); // RGB(255,92,255));
+	    __DeclSageColorA(LightMagenta                    ); // RGB(255,128,255));
+	    __DeclSageColorA(Purple                          ); // RGB(255,0,255));
+	    __DeclSageColorA(LightPurple                     ); // RGB(255,128,255));
+	    __DeclSageColorA(MediumPurple                    ); // RGB(255,92,255));
+	    __DeclSageColorA(White                           ); // RGB(255,255,255)); 
+	    __DeclSageColorA(Gray172                         ); // RGB(172,172,172)); 
+	    __DeclSageColorA(Gray192                         ); // RGB(192,192,192)); 
+	    __DeclSageColorA(Gray220                         ); // RGB(220,220,220)); 
+	    __DeclSageColorA(Gray128                         ); // RGB(128,128,128)); 
+	    __DeclSageColorA(Gray32                          ); // RGB(32,32,32)); 
+	    __DeclSageColorA(Gray42                          ); // RGB(42,42,42)); 
+	    __DeclSageColorA(Gray64                          ); // RGB(64,64,64)); 
+	    __DeclSageColorA(Gray72                          ); // RGB(72,72,72)); 
+	    __DeclSageColorA(Gray92                          ); // RGB(92,92,92)); 
+	    __DeclSageColorA(Black                           ); // RGB(0,0,0)); 
+	    __DeclSageColorA(LightGray                       ); // RGB(200,200,200));
+	    __DeclSageColorA(LightGrey                       ); // RGB(200,200,200));
+	    __DeclSageColorA(MidGray                         ); // RGB(64,64,64));
+	    __DeclSageColorA(MidGrey                         ); // RGB(64,64,64));
+	    __DeclSageColorA(DarkGray                        ); // RGB(32,32,32));
+	    __DeclSageColorA(DarkGrey                        ); // RGB(32,32,32));
+	    __DeclSageColorA(Gray                            ); // RGB(128,128,128));
+	    __DeclSageColorA(Grey                            ); // RGB(128,128,128));
+	    __DeclSageColorA(NearWhite                       ); // RGB(220,220,220));
+	    __DeclSageColorA(ButtonTextColorNormal           ); // RGB(220,220,220));
+	    __DeclSageColorA(ButtonTextColorHighlighted      ); // RGB(255,255,255));
+	    __DeclSageColorA(ButtonTextColorPressed          ); // RGB(255,255,255));
+	    __DeclSageColorA(ButtonTextColorDisabled         ); // RGB(170,170,170));
+	    __DeclSageColorA(CheckboxTextColorNormal         ); // RGB(220,220,220));
+	    __DeclSageColorA(CheckboxTextColorHighlighted    ); // RGB(255,255,255));
+	    __DeclSageColorA(CheckboxTextColorChecked        ); // RGB(220,220,220));
+	    __DeclSageColorA(CheckboxTextColorCheckedHigh    ); // RGB(220,220,220));
+	    __DeclSageColorA(CheckboxTextColorDisabled       ); // RGB(170,170,170));
+	    __DeclSageColorA(Orange                          ); // RGB(255,115,0  ));
+	    __DeclSageColorA(LightOrange                     ); // RGB(255,130,0  ));
+	    __DeclSageColorA(DarkOrange                      ); // RGB(255,85 ,0 ));
+
     };
 }

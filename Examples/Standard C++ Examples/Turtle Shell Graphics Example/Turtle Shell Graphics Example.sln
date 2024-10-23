@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34928.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Turtle Shell Graphics Example", "Turtle Shell Graphics Example.vcxproj", "{1AC6A274-AA0E-4B76-8B6B-65817C300B46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug|x64.ActiveCfg = Debug|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug|x64.Build.0 = Debug|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug|x86.ActiveCfg = Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Debug|x86.Build.0 = Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{1AC6A274-AA0E-4B76-8B6B-65817C300B46}.Windows Debug|x86.ActiveCfg = Windows Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9F3F4DF8-7DCB-4AC5-B850-5CC9EFB3E072}
+	EndGlobalSection
+EndGlobal

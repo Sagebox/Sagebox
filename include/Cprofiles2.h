@@ -97,14 +97,25 @@ public:
 	} stControlRawData_t;
 
 private:
-	char					* m_sOutputFileData	= nullptr;
-	int						  m_iOutputFileSize = 0;
-	char					* m_sOutputFilename		;
-	int						  m_bOutputFile			;
-	unsigned char			* m_sFileMemory			;
-	int						  m_iFileExpectedLength	;
-	int						  m_iFileLength			;
-	unsigned int			  m_uiFileCRC			;
+	//char					* m_sOutputFileData	= nullptr;
+	//int						  m_iOutputFileSize = 0;
+	//char					* m_sOutputFilename		;
+	//int						  m_bOutputFile			;
+
+    struct OutDataFile
+    {
+        CString             csOutputFilename        ; 
+        CString             csComment               ; 
+    	//char	          * sOutputFileData         ;   // $$ Same as sFileMemory
+	    //int		            iOutputFileSize       ;     // $$ Same as iFileLength
+
+	    char	          * sFileMemory			;
+	    int				    iFileExpectedLength	;       // $$ same as iFileLength?
+	    int				    iFileLength			;
+	    unsigned int	    uiFileCRC			    ;
+    };
+    std::vector<OutDataFile> m_vOutDataFiles; 
+
 
 	int						  m_bReturnCancel		;
 	int						  m_iHtmlType			;
@@ -142,10 +153,12 @@ private:
 	eUserProfileInput_t		  HandleLoadProfile(int bReturnCancel = 0);
 	eUserProfileInput_t		  HandleSaveProfile(int bReturnCancel = 0);
 	int						  DeleteUserProfileWindow();
-	bool						  CreateOutputFileMemory(unsigned char * sInMemory,int iInMemorySize);
+	bool						  CreateOutputFileMemory(OutDataFile & stOut,unsigned char * sInMemory,int iInMemorySize);
 	int GetTagString(char * sTag,char * & sTagReturn);
-	int GetTagBoolean(char * sTag,int bDefault);
+	bool GetTagBoolean(char * sTag,bool bDefault);
+	std::optional<bool> GetTagBoolean_optional(char * sTag);
 	int GetTagInteger(char * sTag,int bDefault);
+	std::optional<int> GetTagInteger_optional(char * sTag);
 	double GetTagFloat(char * sTag,double fDefault);
 	int						  PutTagString(char * sTag,char * sString);
 	int						  PutTag(char * sTag,char * sString);
@@ -168,10 +181,19 @@ public:
 	Status ReadFile(char * sFile = NULL,int iMemLength = 0);
 	Status ReadMemoryFile(char * sFile,int iMemLength);
 	CString GetString(const char * sTag,const char * sDefault = nullptr);
+	std::optional<CString> opGetString(const char * sTag);
 	CfPoint GetCfPoint(const char * sTag,CfPoint & cfDefault = CfPoint{});
+	SizeRect GetSizeRect(const char * sTag,const SizeRect & cfDefault);
+	CPoint GetCPoint(const char * sTag,CPoint & cfDefault);
+	std::optional<CPoint> GetCPoint(const char * sTag);
 
-	int GetBool(const char * sTag,bool bDefault = false);
-	int GetInteger(const char * sTag,int iDefault = 0);
+    
+    std::optional<SizeRect> GetSizeRect(const char * sTag);
+
+	bool GetBool(const char * sTag,bool bDefault);
+	std::optional<bool> GetBool(const char * sTag);
+	int GetInteger(const char * sTag,int iDefault);
+	std::optional<int> GetInteger(const char * sTag);
 	double GetFloat(const char * sTag,double fDefault = 0);
 //	int	TransferExtraFileData(stProfileTransferPackage_t & stFileData);
 	int GetTagPointer(char * sTag,char * & sTagReturn,char * sStartLocation = NULL);
@@ -189,6 +211,7 @@ public:
 	bool	  PutInteger(const char * sTag,int iValue);
 	bool	  PutBool(const char * sTag,bool bValue);
 	bool	  PutCfPoint(const char * sTag,CfPoint cPoint);
+	bool	  PutCPoint(const char * sTag,const CPoint cPoint);
 
 
 	char * GetVerifyName(int iVerify);
@@ -208,7 +231,7 @@ public:
 	static int						  DeleteExtraFileData(stProfileTransferPackage_t & stFileData);
 	int						  SetProfileName(char * sFile);
 	void					  SetProfileMemory(unsigned char * sProfileMemory);
-	bool					  AddDataFile(const char * sFilename, void * sFileMemory,int iFileLength);
+	bool					  AddDataFile(const char * sFilename, void * sFileMemory,int iFileLength,const char * sComment = nullptr);
 	[[nodiscard]] Mem<char>				  GetFileData(const char * sFilename,bool * bSuccess = nullptr);
 
 

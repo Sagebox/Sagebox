@@ -37,14 +37,14 @@
 // ---------------
 // 
 //      This program works by waiting for the vertical resync, then drawing the pendulum and updating the window. 
-//      The opt::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
+//      The kw::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
 //      real-time display
 //
 // --------------
 // Timing Display 
 // --------------
 //
-//      When bShowTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
+//      When showTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
 //      taken to calculate and draw the pendulum.
 //
 // --------------
@@ -53,90 +53,92 @@
 //
 // See the Python version of the single pendulum.
 //
+
 int main()
 {
-    auto& cWin = Sagebox::NewWindow(SIZE{500,400},"Sagebox C++ Pendulum Example",opt::RealTime()); 
+    auto& win = Sagebox::NewWindow("Sagebox C++ Pendulum Example",kw::SetSize(500,400) + kw::Realtime()); 
 
-    double fAngle   = 45*Math::PI/180.0;    // Get a starting angle (try higher angles, such as 120 or 170)
-    double fDamp    = .999;                 // Add a small amount of friction so pendulum slowly comes to a stop.
-    double fAngleV  = 0;
-    double fAccel   = 0;
-    double fLen     = (double) (cWin.Height()-100);     // Sets the length based on the window height.
+    double angle   = 45*Math::PI/180.0;    // Get a starting angle (try higher angles, such as 120 or 170)
+    double damp    = .999;                 // Add a small amount of friction so pendulum slowly comes to a stop.
+    double angleV  = 0;
+    double accel   = 0;
+    double len     = (double) (win.Height()-100);     // Sets the length based on the window height.
 
-    CfPoint cfOrigin = { (double) cWin.Width()/2.0, 0 };        // Sets the top rod vertex.
+    CfPoint origin = { (double) win.Width()/2.0, 0 };        // Sets the top rod vertex.
 
-    cWin.Cls(PanColor::Black,PanColor::DarkBlue);   // In case the bitmap fails to load, a black-blue gradient will occur
-                                                    // in future Cls() calls. 
+    win.Cls("black,darkblue");      // Set a black-blue, vertical gradient for the background (ever time cls() is called)
     
-    // Set a bitmap to display when the window is cleared.  Remove this if you increase the size of the window, as it doesn't
-    // stretch to fit.
-
-    cWin.SetClsBitmap(Sagebox::ReadImageFile("texture-pendulum.jpg"),true); 
-
-    bool bShowTiming = false;       // When true, shows time it takes to calculate and draw the pendulum (in milliseconds)
-    bool bShowValues = true;        // When true, shows real-time values via DisplayValues() function
+    auto showTiming = false;       // When true, shows time it takes to calculate and draw the pendulum (in milliseconds)
+    auto showValues = true;        // When true, shows real-time values via DisplayValues() function
 
     // DisplayValues() - Local/lambda function to display the changing values in real-time
     //
     auto DisplayValues = [&]()
     {
-        cWin.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
-        cWin.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
+        win.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
+        win.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
 
         // {g}  green, {c} = cyan.  {x=110) sets the X write position to that value so things line up
 
-        cWin.SetWritePos(10,10); 
+        win.SetWritePos(10,10); 
 
-        cWin.printf("Rod Length:{x=110}{g}%.2f\n",  (float) (fLen)); 
-        cWin.printf("Dampening:{x=110}{g}%g\n\n",   (float) (1.0-(fDamp))); 
-        cWin.printf("Ang Accel:{x=110}{c}%f\n",     (float) fAccel); 
-        cWin.printf("Ang Velocity:{x=110}{c}%f\n",  (float) fAngleV); 
-        cWin.printf("Angle:{x=110}{c}%.2f\xb0\n",   (float) (fAngle*180.0/Sage::Math::PI)); 
+        win.printf("Rod Length:{x=110}{g}%.2f\n",  (float) (len)); 
+        win.printf("Dampening:{x=110}{g}%g\n\n",   (float) (1.0-(damp))); 
+        win.printf("Ang Accel:{x=110}{c}%f\n",     (float) accel); 
+        win.printf("Ang Velocity:{x=110}{c}%f\n",  (float) angleV); 
+        win.printf("Angle:{x=110}{c}%.2f\xb0\n",   (float) (angle*180.0/Sage::Math::PI)); 
     };
 
     // Wait for the vertical retrace.    Exits when the window is closed.
 
-    while(cWin.VsyncWait())
+    while(win.VsyncWait())
     {
-        CSageTimer csTimer;     // Start a timer so we can time the process
+        SageTimer timer;        // Start a timer so we can time the process
 
-        cWin.Cls();             // Clear the window (either the set bitmap or gradient if bitmap is not loaded)
+        win.Cls();              // Clear the window (either the set bitmap or gradient if bitmap is not loaded)
 
         // Write a title in the bottom-center of the window with a size 20 font.
         // PadY(-10) brings the message up by 10 pixels so it isn't right at the bottom.
         // uses kw:: namespace for keywords (i.e. Sage::kw namespace)
 
-        cWin.Write("Sagebox C++ Pendulum Example",kw::Font(20) | kw::JustBottomCenter() | kw::PadY(-10)); 
+        win.Write("Sagebox C++ Pendulum Example",kw::Font(20) | kw::JustBottomCenter() | kw::PadY(-10)); 
 
         // Calculate the new Angle Acceleration, add it to the angle velocity, and then
         // add all of that to the current angle. 
 
-        fAccel =  (-sin(fAngle)) / fLen;
-        fAngleV += fAccel;
-        fAngle += fAngleV;
+        accel =  (-sin(angle)) / len;
+        angleV += accel;
+        angle += angleV;
 
-        fAngle *= fDamp;        // Apply dampening/friction
+        angle *= damp;        // Apply dampening/friction
         
         // Get the point of the pendulum bob (and end of the rod) based on the angle & length of the rod. 
 
-        auto fPoint = CfPoint(sin(fAngle), cos(fAngle)) * fLen + cfOrigin; 
-        cWin.DrawLine(cfOrigin,fPoint,PanColor::White,5.0);                        // Draw the rod
+        auto fPoint = CfPoint(sin(angle), cos(angle)) * len + origin; 
+        win.DrawLine(origin,fPoint,"white",kw::PenSize(5.0));                        // Draw the rod. Symbolic PanColor::White can also be used.
 
-        cWin.FillCircle(cfOrigin,7.0,PanColor::White);       // Display a center peg
 
+        win.FillCircle_f(origin,7.0,PanColor::White);       // Display a center peg (floating-point version of FillCircle)
+                                                            // We can also use "white" here, (or "beige" below), but symbolic is faster, so for real-time loops,
+                                                            // it's nicer to use the symbolic values (though for this example, it doesn't matter since it doesn't
+                                                            // take much processing time for what it does)
+                                                               
         // Draw the pendulum bob with MediumVioletRed at 40 pixels, and a border of
         // 5 pixels in Beige.
+        // --> We can also use symbolic PanColor::MediumVioletRed and PanColor::Beige here, rather than strings . 
+        //     --> Using symbolic colors is much faster for real-time displays.  Since this is a small example, it 
+        //         doesn't really matter here, so the string color values are used instead for clarity. 
 
-        cWin.FillCircle(fPoint,40.0,PanColor::MediumVioletRed,PanColor::Beige,5.0);
+        win.FillCircle_f(fPoint,40.0,"MediumVioletRed",kw::BorderColor("beige") << kw::PenSize(5.0));  // (floating-point version of FillCircle)
         
-        if (bShowValues) DisplayValues();
-        int iUS = (int) csTimer.ElapsedUs(); 
+        if (showValues) DisplayValues();
+        auto iUS = (int) timer. ElapsedUs(); 
  
-        cWin.Update();      // Send the image we created to the window
+        win.Update();      // Send the image we created to the window
 
         // If we're showing timing, put out the milliseconds to the Sagebox Process Window
 
-        if (bShowTiming) SageDebug::printf("Us = {p}%d\n",iUS); 
+        if (showTiming) SageDebug::printf("us = {p}%d\n",iUS); 
     }
 
     return 0;

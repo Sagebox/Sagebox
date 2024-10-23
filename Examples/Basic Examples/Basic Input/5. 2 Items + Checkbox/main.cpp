@@ -33,20 +33,20 @@
 
 #include "Sagebox.h"
 
-using namespace Sage::opt; 
+using namespace Sage::kw;       // Sagebox Keyword Options 
 
 int main()
 {   
-    auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
+    auto &win = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
 
-    constexpr int iRadiusMin    = 1;
-    constexpr int iRadiusMax    = 500;
+    constexpr int RadiusMin     = 1;
+    constexpr int RadiusMax     = 500;
     constexpr int iDefault1     = 100;      // Now we have some defaults we want to add.
     constexpr int iDefault2     = 50;       // (we could have done it with the windows-based console version, too)
 
-    RgbColor rgbColor = PanColor::Red; // We could use { 255,0,0 }; 
-                                        // We can also use a standard Windows COLORREF RGB(255,0,0); 
-    int iRadius1,iRadius2;
+    RgbColor rgbColor = Rgb("Red");         // We can also use PanColor::Red, SageColor;:Red, {255,0,0} or Windows COLORREF RGB(255,0,0)                                            // We can also use a standard Windows COLORREF RGB(255,0,0); 
+
+    int Radius1,Radius2;
     bool bFilled;
 
     // Use a Quick Dialog so we can get the number of edit boxes we want. 
@@ -57,10 +57,10 @@ int main()
     // The user can press ^C to exit the entire program (this can also be disabled)
     //
 
-    auto& cDialog = cWin.QuickDialog("Enter two radius values\n(values should be between 1 and 100)",NoCancel()); 
+    auto& cDialog = win.QuickDialog("Enter two radius values\n(values should be between 1 and 100)",NoCancel()); 
 
-    cDialog.AddEditbox(iRadius1,"Radius 1",Range(iRadiusMin,iRadiusMax) | Default(iDefault1));
-    cDialog.AddEditbox(iRadius2,"Radius 2",Range(iRadiusMin,iRadiusMax) | Default(iDefault2));
+    cDialog.AddInputBox(Radius1,"Radius 1",Range(RadiusMin,RadiusMax) + Default(iDefault1));
+    cDialog.AddInputBox(Radius2,"Radius 2",Range(RadiusMin,RadiusMax) + Default(iDefault2));
 
     cDialog.AddCheckbox(bFilled,"Fill Circle",Checked());   // Add a checkbox, with "Fill Circle" checked as default
 
@@ -72,14 +72,14 @@ int main()
     //                                     we want to do, looking for the Close() event on the dialog, and then read the 
     //                                     control values. 
 
-    cDialog.WaitforClose();         // Wait for the user to press OK (or Cancel, but we disabled  it)
+    cDialog.WaitforClose();             // Wait for the user to press OK (or Cancel, but we disabled  it)
        
-    // We already have the radius values in iRadius1 and iRadius2.  We also have the checked status of the checkbox in bFilled
+    // We already have the radius values in Radius1 and Radius2.  We also have the checked status of the checkbox in bFilled
    
     // Draw open or filled ellipse, depending on the checkbox value.
 
-    bFilled ? cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor)
-            : cWin.DrawEllipse(400,400,iRadius1,iRadius2,rgbColor,2);
+    bFilled ? win.FillEllipse(400,400,Radius1,Radius2,rgbColor)
+            : win.DrawEllipse(400,400,Radius1,Radius2,rgbColor,PenSize(2));  // Can also set Filled(bFilled) here, too.
 
-    cWin.ExitButton();               // Wait for user input so the whole program doesn't close down, since we have no input loop or event structure.
+    return win.ExitButton();            // Wait for user input so the whole program doesn't close down, since we have no input loop or event structure.
 }

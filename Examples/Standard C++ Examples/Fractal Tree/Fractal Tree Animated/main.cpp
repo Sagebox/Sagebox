@@ -66,7 +66,7 @@
 #include "CAviFile.h"
 #include <functional>
 
-using namespace Sage::opt;  // Sagebox options/keywords
+using namespace Sage::kw;  // Sagebox options/keywords
 
 // Note: iMaxDepth is initially set to 11 (for faster speed) and WriteFrames = false (to avoid writing to an AVI file)
 //  
@@ -83,7 +83,7 @@ static constexpr bool   bWriteFrames    = false;    // Set this to true to write
 // Set these paths as appropriate
 
 static constexpr const char * sAviOutputFile    = "c:\\sagebox\\avi\\avitest.avi";
-static constexpr const char * sBackgroundImage  = "C:\\SageBox\\git\\Examples\\Standard C++ Examples\\Fractal Tree\\Fractal Tree Animated\\texture-fractal-tree.jpg";
+static constexpr const char * sBackgroundImage  = "texture.jpg";
 
 // Set a color table for each depth.  If the max depth limitation moves past 15, extra RGB values need to be added.
 //
@@ -126,11 +126,11 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
         // Draw a line in the window. Get an RGB value from a HUE, Saturation, and luminance value
         // SageTools has various tools.  This also sets a pen size that is a smaller as the depth is greater
 
-        cWin.SetPenSize((15-iDepth)/7);  
+        cWin.SetPenSize((15-iDepth)/7+1);  
 
         // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
 
-        cWin.DrawLineFast((POINT) sp,(POINT) r,rgbColors[(int)++iDepth]);
+        cWin.DrawLine_f((CfPointf) sp,(CfPointf) r,rgbColors[(int)++iDepth]);
 
 	    DrawTree(r, line_len*fMul, a, -1 );
 	    DrawTree(r, line_len*fMul, a, 1 );
@@ -142,7 +142,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
     // DrawLine2() is the same as DrawLine() except that you only need to specify length rather
     // than the actual endpoints, which is often convenience. 
 
-    cWin.SetPenSize(2);     // Draw the larger branches a little bigger, so start with a pen size of 2
+    cWin.SetPenSize(3);     // Draw the larger branches a little bigger, so start with a pen size of 2
 
     cWin.DrawLine2(sp,{0,(int) line_len},rgbColors[0]);
  
@@ -156,7 +156,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
 //
 // 1. Setting up the DevWindow
 //
-//    There are a few calls to DevText(), DevWindow(), DevButton(), to set up a dev window.
+//    There are a few calls to DevTextWidget(), DevWindow(), DevButton(), to set up a dev window.
 //    The dev window is used to show the staus and to look for a cancel button press.
 //
 //    Some fonts are created that are used as controls in text strings to the Dev Window and
@@ -202,15 +202,15 @@ int main( int argc, char* argv[] )
     // The '|' function as << (which can also be used), as in Title("My Title)" << bgGradient("color1","color2"); 
     // the '|' just make the code more readable (for me, anyway)
     //
-    // Note the opt::NoClose() -- when opt:: is specified, Microsoft Visual Studio will give you a list of all available options, so
+    // Note the kw::NoClose() -- when kw:: is specified, Microsoft Visual Studio will give you a list of all available options, so
     // you don't have to remember them all.  
     //
-    // opt:: is a namespace that is being used, so NoAutoUpdate() is actually opt::NoAutoUpdate(), and I probably used opt::NoClose() because I 
-    // wasn't sure of the name I wanted.  Try putting opt:: in the line below for Visual Studio to present you with a list of options you 
+    // kw:: is a namespace that is being used, so NoAutoUpdate() is actually kw::NoAutoUpdate(), and I probably used kw::NoClose() because I 
+    // wasn't sure of the name I wanted.  Try putting kw:: in the line below for Visual Studio to present you with a list of options you 
     // can send to controls and other functions.
     // 
 
-    auto& cWin = Sagebox::NewWindow(CSize(650,450+50),"Sagebox - Fractal Tree",InnerSize() | bgGradient(SageColor::Black,SageColor::DarkBlue) | NoAutoUpdate() | NoClose()); 
+    auto& cWin = Sagebox::NewWindow("Sagebox - Fractal Tree",InnerSize() | bgColor(SageColor::Black,SageColor::DarkBlue) | Realtime() | NoClose()); 
 
     // Put a Text Widget with the title.  We can just print it out if we want, but the TextWidget is easy
     // to use.  In this case, the returned object isn't saved because we don't need it once we displayed it.
@@ -227,12 +227,14 @@ int main( int argc, char* argv[] )
     //
     // The first two parameters (X,Y) are zero because JustBottomCenter() sets X and Y itself.
     //
-    auto & cText = cWin.TextWidget(0,0,0,30," C++ Fractal Tree ",Font("Arial,33") | JustBottomCenter() | OffsetY(-25) | Transparent(90) | AddShadow());
+    auto & cText = cWin.TextWidget(0,0,0,30," C++ Fractal Tree ",Font("Arial,33") | JustBottomCenter() | PadY(-25) | Opacity(90) | AddShadow());
 
+
+    
     // This originally used a larger font.  Now that its smaller, we don't really need the blending value in the Transparent() option; we
     // could now just use a mid-gray.  But I left it in anyway. 
 
-    auto & cText2 = cWin.TextWidget(0,cText.EndY(),"github.com/Sagebox/FractalTree",Font("Arial,15") | JustCenterX() | Transparent(45));
+    auto & cText2 = cWin.TextWidget(0,cText.EndY(),"github.com/Sagebox/FractalTree",Font("Arial,15") | JustCenterX() | Opacity(45));
 
 
     CAviFile cLocalAvi;         // Instantiate the AVI reader/writer. 
@@ -245,11 +247,11 @@ int main( int argc, char* argv[] )
 
     // Get a generic Text Widget in the Dev Window -- Set it to a large font to display the frame number 
 
-    auto& cDevText = cWin.DevText(Font("Arial,25")); 
+    auto& cDevText = cWin.DevTextWidget(Font("Arial,25")); 
 
     // Put out some static data.  It never changes, so we don't save the returned text widget object reference (i.e. fire-and-forget)
 
-    cWin.DevText(CString() << "Frames Per Second: {y} " << iFps << "{/}\n" 
+    cWin.DevTextWidget(CString() << "Frames Per Second: {y} " << iFps << "{/}\n" 
                            << "Writing output .AVI: {y} " << BoolStringYU(bWriteFrames) << "{/}\n"
                            << "Depth Limit: {g}" << iMaxDepth << "{/} (out of 14 max)");
 
@@ -266,9 +268,9 @@ int main( int argc, char* argv[] )
     // for code-demonstration purposes, this was left as a direct load of a jpeg.  If it fails, the call to DisplayBitmap() calls through
     // (cBg.isValid()) can be checked to make sure the bitmap was loaded)
 
-    auto cBg = cWin.ReadImageFile(sBackgroundImage); 
+    cWin.ClsRadial("darkblue,black"); // Used if the background bitmap file isn't found
 
-    cWin.SetClsBitmap(cBg);     // When we do it this way, the screen clears even when we fail to load the bitmap.
+    cWin.SetClsBitmap(sBackgroundImage);     // When we do it this way, the screen clears even when we fail to load the bitmap.
 
     CPoint szWinSize = cWin.GetWindowSize();
 
@@ -282,17 +284,17 @@ int main( int argc, char* argv[] )
     {
         double i = (fTotalFrames*pow((double) j/fTotalFrames,2.5));
 
-        cWin.Cls(cBg);        // Display the background bitmap to clear the last output
+        cWin.Cls();        // Display the background bitmap to clear the last output
 
         // Just some setup for easy changes if we want to experiment
 
         double fAngle       = (24+(double) (i*450/fTotalFrames)/3);
-        double fLineLen     = 130.0f*1.7/2.46;
+        double fLineLen     = 130.0f*1.7/2.46*1.75;
         double fLineMult    = .758;
 
         // Draw the Fractal Tree
 
-        FractalTree(cWin,CPoint(0,-50) + cWin.GetWindowSize(),fAngle*3.14159/180,fLineLen,fLineMult); //.4 + (double) i/1000);
+        FractalTree(cWin,CPoint(0,-50) + (CPoint) cWin.GetWindowSize(),fAngle*3.14159/180,fLineLen,fLineMult); //.4 + (double) i/1000);
 
         // Put some data out to the DevWindow we created.
 
@@ -318,6 +320,9 @@ int main( int argc, char* argv[] )
         // we we can check it outside of the loop. 
 
         if (cButtonCancel.Pressed(Peek::Yes)) break;
+
+        cWin.VsyncWait();   // Wait for the Vsync.  60fps is the general assumption. 
+                            // This can also use a timer to ensure a specific frame rate.
 
     }
 

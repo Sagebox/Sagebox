@@ -13,7 +13,6 @@
 
 #pragma once
 #include "CSageBox.h"
-
 //****************************************************************************************************************
 // CDevControls -- Fast, Windows Based controls for console mode and windows program prototyping and development
 //****************************************************************************************************************
@@ -130,6 +129,7 @@
 #define _CQuickControls_H_
 namespace Sage
 {
+class CColorSelector;
 class CDevControls
 {
 	// Note: This is still in-progress, and items will be added as needed.
@@ -198,6 +198,7 @@ private:
 		Window,
 		Header,
 		Divider,
+		ColorSelector,
 		Unknown,
 	};
 
@@ -228,17 +229,24 @@ private:
 	int m_iVecEntries = 0;			// i.e. entries in vControls
 	int m_iNumControls = 0;			// i.e. actual controls
 
+    static constexpr int kMinDevWindowWidth = 100;
+    static constexpr int kMaxDevWindowWidth = 1000;
 	static constexpr SIZE kMaxWinSize	= { 1920,1080 };	// Max Window Size
 	static constexpr SIZE kMaxSize		= { 800, 700 };		// Max outlay size (in Window)
 	static constexpr int kSectionWidth	= 400;				// TBD when multi-column support is added.
+    static constexpr int kDefaultDevWindowWidth = kSectionWidth + 10;       // $$ +10 is some leftover, legacy code that should be corrected (this has to do with m_iCurrentX and how it is used)
 	static constexpr int kEmbedSectionWidth	= 250;				// TBD when multi-column support is added.
     static constexpr SIZE szIndent      = { 10,10 };        // Indent for X and Y (left and top)
     static constexpr SIZE szEmbedIndent = { 10,10 };        // Indent for X and Y (left and top)
     static constexpr int kMaxComboboxWidth = 225;
+    static constexpr int kDefaultColorSelectFontSize = 16; 
+
     RgbColor kDefaultWinBgColor = SageColor::Gray92;        // Default Color Light value (multiplied against bg color) 
     bool m_bWindowClosed    = false;                        // True when close controls are active (either 'X' button and optional Close Button)
     bool m_bCloseX          = false;                        // true when there is an 'x' to close on the window.
     bool m_bAutoHide        = false;                        // Auto-hide the window when the 'x' or close button is pressed.
+    bool m_bAutoCloseHide   = false;                        // ** This may be innefective (or maybe it works)... 
+                                                            //    Replaced (possibly supplemented) with directly signalling that an 'x' button has been pressed.
     bool m_bDisableClose    = false;                        // Use to disable adding (automatic and otherwise) 'X' and close buttons
     SizeRect m_srClose{};                                   // bounds for close rect, when active.
 
@@ -272,7 +280,9 @@ private:
     SIZE m_szTitleText          = {};
 
     int m_iGroupCount           = 0;
+    static constexpr const char * kDefaultLabelColor = "Cyan";
 
+    RgbColor m_rgbLabelColor        = {}; // Do not set here with text.  Set in constructor. Rgb(kDefaultLabelColor); 
     RgbColor m_rbgBgPlain           = { 48,48, 48 };
     RgbColor m_rbgBgColor1          = { 72,72,72 }; //{ 48, 48, 48};
     RgbColor m_rbgBgColor2          = { 32,32,32 }; //{ 32, 32, 32};
@@ -289,6 +299,7 @@ private:
 	bool AddControl(void * cControl,ControlType type,SIZE szSize,std::optional<int> iAddY = std::nullopt);
 	void SetTopWindow();
     bool isLastCheckbox(stControl_t * & stCheckbox);
+    bool isLastInputBox(stControl_t * & stCheckbox);
     bool isLastTextWidget(stControl_t * & stCheckbox);
     bool isLastButton(stControl_t * & stButton);
     stControl_t * GetLastControl();
@@ -299,6 +310,7 @@ private:
     CString GetNewGroupName();
     static CDevControls m_cEmptyObject; 
     void BuildBackdrop(bool bOverrideEmebed = false);
+    int GenerateAddWindowWidth(SIZE & szWin);
 public:
 	// ----------------
 	// Public Interface
@@ -318,7 +330,7 @@ public:
     // that is automatically deleted when the current function (or class) goes out of scope.
     // (However, since this is usually only used for develpment, leaving it allocated prior to program end causes no problems)
     //
-	CDevControls(CWindow * cWin,const char * sTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+	CDevControls(CWindow * cWin,const char * sTitle = nullptr,const kwOpt & keywords = kw::none); 
 
     // GetWindow() -- Returns the Window object pointer (i.e. CWindow object) of the Dev Controls Window.
     // This can be used for various operations with the window.
@@ -414,14 +426,14 @@ public:
 	//
 	// The Name used as a title for the button, but is optional. 
 	//
-	CButton & AddButton(const char * sButtonText = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+	CButton & AddButton(const char * sButtonText = nullptr,const kwOpt & keywords = kw::none); 
 
 	// AddCheckbox() -- Add a checkbox to the Quick Control Window. This accepts all options as normal buttons, but 
 	// the default will add a regular button. 
 	//
 	// The Name used as a title for the button, but is optional. 
 	//
-	CButton & AddCheckbox(const char * sButtonText = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+    CButton& AddCheckbox(const char* sButtonText = nullptr, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -444,7 +456,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtons(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(const char * sButtonNames,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -467,7 +479,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtons(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(const char * * sButtonNames,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -490,7 +502,7 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtons(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(int iNumButtons,const char * * sButtonNames,const kwOpt & keywords = kw::none);
 
      /// <summary>
     /// Adds a RadioGroup to the DevWindow.  See different prototypes for different methods (const char *, const char **, vector&lt;char *&gt;
@@ -513,54 +525,92 @@ public:
     /// <param name="sButtonNames">String of button names, or char * * list, or std::vector&lt;const char *&gt; of names.</param>
     /// <param name="cwOpt">Options such as Default() and Title()</param>
     /// <returns></returns>
-    ButtonGroup AddRadioButtons(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+    ButtonGroup AddRadioButtons(std::vector<char *> & vButtonNames,const kwOpt & keywords = kw::none);
 
 
     // -- Checkbox groups
     
-    ButtonGroup AddCheckboxGroup(const char * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
-    ButtonGroup AddCheckboxGroup(const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
-    ButtonGroup AddCheckboxGroup(int iNumButtons,const char * * sButtonNames,const cwfOpt & cwOpt = cwfOpt());
-    ButtonGroup AddCheckboxGroup(std::vector<char *> & vButtonNames,const cwfOpt & cwOpt = cwfOpt());
+	
+    ButtonGroup AddCheckboxGroup(const char * sButtonNames,const kwOpt & keywords = kw::none);
+    ButtonGroup AddCheckboxGroup(const char * * sButtonNames,const kwOpt & keywords = kw::none);
+    ButtonGroup AddCheckboxGroup(int iNumButtons,const char * * sButtonNames,const kwOpt & keywords = kw::none);
+    ButtonGroup AddCheckboxGroup(std::vector<char *> & vButtonNames,const kwOpt & keywords = kw::none);
 	
     // AddEditBox() -- Add an EditBox to the quick control Window.  The sEditBoxTitle, while optional, will provide a
 	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal EditBox options
 	//
     // Note: InputBox and EditBox are the same.  EditBox is kept to remain consistent with Windows terminology
     //
-	CEditBox & AddEditBox(const char * sEditBoxTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+	CEditBox & AddInputBox(const char * sEditBoxTitle = nullptr,const kwOpt & keywords = kw::none); 
 
-	// AddInputBox() -- Add an Input Box to the quick control Window.  The sEditBoxTitle, while optional, will provide a
-	// label to the left of the edit box.  The default width is 150 pixels or so, but can be changed with normal InputBox options
-	//
-    // Note: InputBox and EditBox are the same.  EditBox is kept to remain consistent with Windows terminology
-    //
-	CEditBox & AddInputBox(const char * sInputBoxTitle = nullptr,const cwfOpt & cwOpt = cwfOpt()); 
+	CTextWidget & AddTextWidget(const char * sText,const kwOpt & keywords = kw::none);
+	CTextWidget & AddTextWidget(const char * sText,int iHeight,const kwOpt & keywords = kw::none);
+	CTextWidget & AddTextWidget(int iHeight,const kwOpt & keywords = kw::none);
+	CTextWidget & AddTextWidget(const kwOpt & keywords = kw::none);
 
-	CTextWidget & AddText(const char * sText,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & AddText(const char * sText,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & AddText(int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & AddText(const cwfOpt & cwOpt = cwfOpt());
+    /// @AddColorSelect
+    /// <summary>
+    /// Adds a Color Selector Control to the DevWindow. 
+    /// <para></para>
+    /// A color selector control allows the user to visually select a color and/or set the RGB values of the color
+    /// independently in a control panel embedded in the dev window.
+    /// <para></para>
+    /// --> A ColorSelector reference is returned to control the Color Selector in the Dev Window
+    /// <para></para>
+    /// --> See ColorSelector documentation for more information.
+    /// <para></para>
+    /// --> ** note -- A popup Color Selector can be created by instantiating a ColorSelector() object.  This will create an independent Color Selector window.
+    /// </summary>
+    /// <param name="sTitle"> - [optional] Title of the color selector panel in the Dev Window.  Can be omitted.</param>
+    /// <param name="keywords"> - [optional] Various keywords, such as kw::TitleColor(), kw::Font(), etc. to control the title display.</param>
+    /// <returns>ColorSelect reference to control the Color Selector Control.</returns>
+    ColorSelector & AddColorSelect(const char * sTitle,const kwOpt & keywords = kw::none); 
 
+    /// @AddColorSelect
+    /// <summary>
+    /// Adds a Color Selector Control to the DevWindow. 
+    /// <para></para>
+    /// A color selector control allows the user to visually select a color and/or set the RGB values of the color
+    /// independently in a control panel embedded in the dev window.
+    /// <para></para>
+    /// --> A ColorSelector reference is returned to control the Color Selector in the Dev Window
+    /// <para></para>
+    /// --> See ColorSelector documentation for more information.
+    /// <para></para>
+    /// --> ** note -- A popup Color Selector can be created by instantiating a ColorSelector() object.  This will create an independent Color Selector window.
+    /// </summary>
+    /// <param name="sTitle"> - [optional] Title of the color selector panel in the Dev Window.  Can be omitted.</param>
+    /// <param name="keywords"> - [optional] Various keywords, such as kw::TitleColor(), kw::Font(), etc. to control the title display.</param>
+    /// <returns>ColorSelect reference to control the Color Selector Control.</returns>
+    ColorSelector & AddColorSelect(const kwOpt & keywords = kw::none); 
+    
 	// AddSlider() -- Add a slider to the Quick Controls Window.  The default width is 200 with a 0-100 range.  The Range can be 
 	// changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
 	// The title is displayed beneath the slider, as well as the value. 
 	//
-	CSlider & AddSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+//	CSlider & AddSlider(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	CSlider & AddSlider(const char * sSliderName = nullptr,const kwOpt & keywords = kw::none);
 
 	// AddSliderf() -- Add a floating-point slider to the Quick Controls Window.  The default width is 200 with a 0-100 range.  The Range can be 
 	// changed with default Slider options, i.e. opt::Range(0,200), for example, to set a range of 0-200.
 	// -->
 	// The title is displayed beneath the slider, as well as the value. 
 	//
-	CSlider & AddSliderf(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+//	CSlider & AddSliderf(const char * sSliderName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	CSlider & AddSliderf(const char * sSliderName = nullptr,const kwOpt & keywords = kw::none);
 
-	CComboBox & AddComboBox(const char * sComboBoxItems,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & AddWindow(const char * sTitle = nullptr,int iNumlines = 0,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & AddWindow(const char * sTitle,const cwfOpt & cwOpt);
-	CWindow & AddWindow(int iNumLines,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & AddWindow(const cwfOpt & cwOpt);
+	CComboBox & AddComboBox(const char * sComboBoxItems,const kwOpt & keywords = kw::none);
+	
+    CWindow & AddWindow(const char * sTitle = nullptr,int iNumlines = 0,const kwOpt & keywords = kw::none);
+	CWindow & AddWindow(const char * sTitle,const kwOpt & keywords);
+	CWindow & AddWindow(int iNumLines,const kwOpt & keywords = kw::none);
+	CWindow & AddWindow(const kwOpt & keywords);
+
+    CWindow & AddText(int iInHeight = 0,const char * sString = nullptr,const kwOpt& keywords = kw::none);
+    CWindow & AddText(int iInHeight,const kwOpt& keywords);
+    CWindow & AddText(const char * sString,const kwOpt& keywords = kw::none);
+    CWindow & AddText(const kwOpt& keywords);
 
     /// # AddBitmap
     /// <summary>
@@ -580,22 +630,40 @@ public:
     /// <param name="cwOpt">- [optional] Options such as opt::Font(), opt::TextColor(), opt::PadY() to control the next and next control position.</param>
     /// <returns></returns>
     bool AddBitmap(CBitmap & cBitmap,bool bDrawTopBar = true);                                                               /// # AddBitmap
-    bool AddBitmap(CBitmap & cBitmap,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # AddBitmap
-    bool AddBitmap(CBitmap & cBitmap,const char * sText,const cwfOpt & cwOpt);                                               /// # AddBitmap
+    bool AddBitmap(CBitmap & cBitmap,const char * sText,bool bDrawTopBar = true,const kwOpt & keywords = kw::none);    /// # AddBitmap
+    bool AddBitmap(CBitmap & cBitmap,const char * sText,const kwOpt & keywords);                                               /// # AddBitmap
 
     bool AddBitmap(const char * sPath,bool bDrawTopBar = true);                                                               /// # AddBitmap
-    bool AddBitmap(const char * sPath,const char * sText,bool bDrawTopBar = true,const cwfOpt & cwOpt = CWindow::cwNoOpt);    /// # AddBitmap
-    bool AddBitmap(const char * sPath,const char * sText,const cwfOpt & cwOpt);                                               /// # AddBitmap
+    bool AddBitmap(const char * sPath,const char * sText,bool bDrawTopBar = true,const kwOpt & keywords = kw::none);    /// # AddBitmap
+    bool AddBitmap(const char * sPath,const char * sText,const kwOpt & keywords);                                               /// # AddBitmap
 
 	// AddSection() -- Adds a text section to the window, to separate types of controls.
 	// You can use opt::fgColor() to set the text color of the section name.
 	//
-	bool AddSection(const char * sSectionName = nullptr,const cwfOpt & cwOpt = cwfOpt());
+	bool AddSection(const char * sSectionName = nullptr,const kwOpt & keywords = kw::none);
 
 	// SetLocation() -- Change the location of the QuickControls Window
 	//
 	bool SetLocation(int iX,int iY);
-	bool SetLocation(POINT pLoc);
+    // SetLocation() -- Change the location of the QuickControls Window
+    //
+    bool SetLocation(POINT pLoc);
+
+
+    /// <summary>
+    /// AdjustWinPos() - Adjust the horizontal and/or vertical positon of the window
+    /// </summary>
+    /// <param name="iHorz"> - Amount to adjust horizontal positon (negative or positive number.  0 for no movement.</param>
+    /// <param name="iVert"> - Amount to adjust vertical positon (negative or positive number.  0 for no movement.</param>
+    /// <returns></returns>
+    bool AdjustWinPos(int iHorz, int iVert);
+
+    /// <summary>
+    /// AdjustWinPos() - Adjust the horizontal and/or vertical positon of the window
+    /// </summary>
+    /// <param name="pAdjust"> - POINT structure with movement amounts in order of horizintal and vertical.  Use 0 for no movement. Negative numbers can be used.</param>
+    /// <returns></returns>
+    bool AdjustWinPos(POINT pAdjust);
 
 	POINT GetLocation();
 	SIZE GetWindowSize();
@@ -632,7 +700,7 @@ public:
     /// <param name="rgbColor2">- [optional] Second color to clear the background with a gradient</param>
     /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
     /// <returns></returns>
-    bool SetBgColor(RgbColor rgbColor1,RgbColor rgbColor2 = Sage::Rgb::Undefined,bool bDrawBar = true);  // # SetBgColor
+    bool SetBgColor(RgbColor rgbColor1,RgbColor rgbColor2 = Sage::RgbVal::Undefined,bool bDrawBar = true);  // # SetBgColor
     bool SetBgColor(RgbColor rgbColor1,bool bDrawBar);                                                   // # SetBgColor
     bool SetBgColor(const char * sColor1,const char * sColor2 = nullptr,bool bDrawBar = true);           // # SetBgColor
     bool SetBgColor(const char * sColor1,bool bDrawBar);                                                 // # SetBgColor
@@ -655,11 +723,34 @@ public:
     /// <param name="bDrawBar">- [optional] When true (default), the top menu bar is drawn in the original color.  When false, the top menu bar is covered by the new clear screan colors.</param>
     /// <param name="cwOpt"> - [optional] Options.  The only useful option (right now) is the PadY() option to set the first control Y position in the DevWindow</param>
     /// <returns></returns>
-    bool SetBgBitmap(CBitmap & cBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());       // # SetBgBitmap
-    bool SetBgBitmap(const char * sBitmap,bool bDrawBar = true,const cwfOpt & cwOpt = cwfOpt());    // # SetBgBitmap
-    bool SetBgBitmap(CBitmap & cBitmap,const cwfOpt & cwOpt);                                       // # SetBgBitmap
-    bool SetBgBitmap(const char * sBitmap,const cwfOpt & cwOpt);                                    // # SetBgBitmap
+    bool SetBgBitmap(CBitmap & cBitmap,bool bDrawBar = true,const kwOpt & keywords = kw::none);       // # SetBgBitmap
+    bool SetBgBitmap(const char * sBitmap,bool bDrawBar = true,const kwOpt & keywords = kw::none);    // # SetBgBitmap
+    bool SetBgBitmap(CBitmap & cBitmap,const kwOpt & keywords);                                       // # SetBgBitmap
+    bool SetBgBitmap(const char * sBitmap,const kwOpt & keywords);                                    // # SetBgBitmap
 
+    // Sets the window width of the dev window.
+    // This should be used before using any operations with the Dev Window, otherwise some
+    // window-drawing mismatch or other drawing issues may occur. 
+    //
+    // Note: Minimum size is 100 pixels. Maximum size is 1000 pixels. 
+    //       This may also affect auto-placement if the window.  Use SetLocation() or AdjustWinPos() to compensize
+    //
+    bool SetWindowWidth(int iWindowWidth); 
+
+    /// <summary>
+    /// Adjusts the width of the window based on the usual default size. 
+    /// <para></para>
+    /// For example, DevAdjustWidth(-100) makes the window 100 pixels narrower than usual, where DevAdjustWith(200) will make the window 200 wider than default settings.
+    /// <para></para>
+    /// This function should be used before any controls on the Dev Window are created.  
+    /// <para></para>
+    /// DevAdjustWidth() is not additive.  It adjusts from the default window width, not the current width (since the window is usually not opened when called).
+    /// <para></para>
+    /// note:  The minimum window size is 100 pixels, with a maximum of 1000.  If the adjustment exceeds these values, the window will grow or shrink to these minimum and maximum values.
+    /// <para></para>
+    /// --> Changing the width of the window may affect auto-placment.  Use DevSetLocation() or DevAdjustWinPos() to set the window placement manually.
+    /// </summary>
+    bool AdjustWindowWidth(int iWindowWidthAdjust); 
 
     /// <summary>
     /// Sets the window to close automatically when there are no other windows open. <para></para>

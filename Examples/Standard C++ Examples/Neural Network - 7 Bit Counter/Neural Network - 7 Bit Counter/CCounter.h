@@ -1,8 +1,3 @@
-// CCounter.h -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
-
 
 // ***************************************************
 // CCounter.h -- SageBox Neural Network 7-Bit Counter

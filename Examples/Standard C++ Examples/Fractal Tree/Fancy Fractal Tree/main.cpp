@@ -1,5 +1,3 @@
-// File Copyright (c) 2021 Rob Nelson, All Rights Reserved.    Sagebox is free for personal use. 
-// Please feel free to use and copy-paste elements of this program for your own programs that use Sagebox.
 
 // ------------------------------
 // Fractal Tree - Fancier Version
@@ -48,15 +46,15 @@ using fDrawTree = std::function<void(Point3D_t &, double, double, double)>;
 // FracalTree()) -- Main Tree-drawing function. 
 //
 // The recursive DrawTree() is used as a lambda so we can refer to the angle, depth, and Window object as if we 
-// were in a class.  DrawTree() is easily moved out to its own function if iDepth,_ang, and cWin are either 
+// were in a class.  DrawTree() is easily moved out to its own function if depth,_ang, and win are either 
 // passed or set as globals/class members
 //
-// iDepth should probably be passed to Drawtree() anyway, because it reduces two code lines in doing so,
+// depth should probably be passed to Drawtree() anyway, because it reduces two code lines in doing so,
 // but it also makes a good example of using a lambda vs. extracting DrawTree() out to its own function.
 //
-void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,double fMul,bool bShadow = false)
+void FractalTree(CWindow & win,CfPoint szWinSize,double _ang,double line_len,double fMul,bool bShadow = false)
 {
-    static int iDepth = 0;
+    static int depth = 0;
 
     // I used a lambda here so I could avoid passing a lot of things.  Lamdbas 
     // are nice pre-steps to refactoring and branching out into other functions.
@@ -65,7 +63,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
     {
         // Make this lower (i.e. from 14 to 12,11,10), etc. for a more plain tree. 
 
-	    if (iDepth >= 14) return;
+	    if (depth >= 14) return;
 
         // The Rosetta code declares a vector class in the code.  Sagebox has Point3D_t 
         // as an accessible type that performs the same actions. 
@@ -77,11 +75,11 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
 
         // DrawLineFast() used here to keep speed up since it is drawing a lot of little lines (thousands) 
 
-        cWin.DrawLineFast((CfPointf) sp,(CfPointf) r,rgbColors[(int)++iDepth]);   // MSVC green squiggly is wrong here.
+        win.DrawLineFast((CfPointf) sp,(CfPointf) r,rgbColors[(int)++depth]);   // MSVC green squiggly is wrong here.
 
 	    DrawTree(r, line_len*fMul, a, -1 );
 	    DrawTree(r, line_len*fMul, a, 1 );
-        iDepth--;
+        depth--;
     };
 
     Point3D_t sp{szWinSize.x/2,szWinSize.y-1 - line_len};
@@ -89,7 +87,7 @@ void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len,do
     // DrawLine2() is the same as DrawLine() except that you only need to specify length rather
     // than the actual endpoints, which is often convenient. 
 
-    cWin.DrawLine2(sp,{0,(int) line_len},rgbColors[0]);
+    win.DrawLine2(sp,{0,(int) line_len},rgbColors[0]);
  
 	DrawTree(sp, line_len, 0, -1 );
 	DrawTree(sp, line_len, 0, 1 );
@@ -109,17 +107,19 @@ int main( int argc, char* argv[] )
     // the '|' just make the code more readable (for me, anyway)
     //
 
-    auto& cWin = Sagebox::NewWindow(SIZE{1000,700},"Sagebox - Fractal Tree", kw::InnerSize() | kw::bgGradient(SageColor::Black,SageColor::SkyBlueDark)); 
+    auto& win = Sagebox::NewWindow("Sagebox - Fractal Tree", kw::InnerSize() + kw::SetSize(1000,700)); 
+
+    win.ClsRadial("darkblue,black");    // Do a nice radial clear-screen effect (for each cls() call)
 
     // These values can be changed for a different effect. 
   
-    double fAngle       = 24;
-    double fLineLen     = 140;
-    double fLineMult    = .758;
+    double angle       = 24;
+    double lineLen     = 140;
+    double lineMult    = .758;
 
     // Draw the Fractal Tree
 
-    FractalTree(cWin,cWin.GetWindowSize(),fAngle*3.14159/180,fLineLen,fLineMult); //.4 + (double) i/1000);
-    cWin.WaitforClose();               
+    FractalTree(win,win.GetWindowSize(),angle*3.14159/180,lineLen,lineMult); //.4 + (double) i/1000);
+    win.ExitButton();               
 }
 

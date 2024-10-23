@@ -1,6 +1,5 @@
 
-// File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
-// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
+/// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
 
 #include "SageBox.h"
 #include <complex>
@@ -13,49 +12,66 @@
 //
 // This just a basic example, showing how to use standard C++ and Sagebox graphics at the same time.
 //
-// See the other Sagebox Mandelbrot examples for much faster code (up to 20x-50x faster!) that alters things a little, but
-// not too much.
-//
-// In the "10-Liners" directory of Sagebox Examples is a faster version (though still using the slow DrawPixel()) 
-// that prints much larger and uses a type called CComplex, which is much faster than std::complex, and
-// In the main Examples directory, the "Mandelbrot (Faster)" example is very fast in comparison.
-//
-//  Slowness Factors
-//  ----------------
-//
-//      Because this example uses std::complex and prints one pixel at a time, much sloer than need be.
-//
-//      There are two main slowness factors in this program:
-//
-//          1. Using std::complex, which can be slow.  Other examples use a type called CComplex for faster execution
-//          2. DrawPixel.  DrawPixel simply calls Windows::SetPixel(), which is notoriously slow.  Other examples show 
-//             how to speed this up by 20x or more by sending one line at a time (or the entire Mandelbrot), rather than 
-//             setting a pixel for each point.
-//
 // For information on the 3-D Mandelbrot, see documentation in the Sagebox 10-Liner "3D Mandelbrot" project.
 //
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
+// *** Note: CComplex is used instead of std::complex -- std::complex is 3x slower on 64bit applications, and just insanely slow for 32-bit applications.
 
 int main()
 {
-    // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
-    // we don't use, so we don't need to remember it. 
 
-    auto& cWin = Sagebox::NewWindow(SIZE{866,665},"3-D Mandelbrot (Basic) Example");   // InnerSize() creates the canvas size 866x665 vs. the overall window
-    
-    for (int i=-333;i<333;i++)
-        for (int j=-600;j<266;j++)
-        { 
-            
-            std::complex<double> z,dz(0,1),c((double)j/(266),(double) i/(266));
-            int iIter = 0;
-            while (abs(z = z*z + c) < 256 && ++iIter < 100) dz *= z + z;
-            std::complex<double> cVec = (z/dz); ;     // Get the light angle 
-            cVec /= abs(cVec);  // Normalize it. 
+    auto winSize   = CfPoint(1400, 900);     // Initial Window Size
 
-            cWin.DrawPixel(j+600,i+333,iIter == 100 ? SageColor::Black :  
-                RgbColor::fromGray((int) (90*(cVec.real() + cVec.imag()) + 128)));   // Calculate the diffusion
+    // Create a window with a client size cWinSize
+
+    auto& win      = Sagebox::NewWindow("3-D Mandelbrot (Basic) Example",kw::SetSize(winSize));
+  
+
+    auto range      = 4.0f;                         // Initial Range (i.e. "zoom" factor)
+    auto maxIter    = 50;                           // Max Mandelbrot Iterations
+
+    auto center     = CfPoint(-.6f, 0.0f);          // Initial Mandelbrot Center
+    auto cfRange    = CfPoint(range,range * (float) winSize.y / (float) winSize.x);
+
+    auto fd         = cfRange / winSize;            // Unit Increment for each pixel
+    auto start      = center - fd * winSize/2.0;    // Upper-left X,Y position to start
+
+    for (int i = 0; i < winSize.y; i++)
+    {
+        double fy = (double)i * fd.y + start.y;
+        for (int j = 0; j < winSize.x; j++)
+        {
+            double fx = (double)j * fd.x + start.x;
+
+            int iter = 0;
+
+            // For Julia Set, set z = { fx, fy } and c to a sta tic value, such as (.285, 0 ) or (-4.,.6) (and set cfCenter to (0,0);
+
+            auto c = CComplex(fx, fy);      // Using CComplex instead of std::complex due to std::complex slowness, even in release versions.
+
+            auto z = c;  
+            auto dz = CComplex(0.0, 1.0);
+            dz *= z+z; 
+             
+            while (abs(z) < 256 && iter++ < maxIter-1)
+            {
+                dz *= z + z;
+                z = z * z + c; 
+            }
+
+            auto rgbOut = Rgb(0,0,0); 
+                                      
+            if (iter != maxIter)
+            {
+                auto vec = z / dz;
+                vec /= abs(vec);
+                auto gray = (int) (90.0 * (vec.real + vec.imag) + 128.0);
+                rgbOut = Rgb(gray, gray, gray);
+            }
+
+            win.DrawPixel(j, i, rgbOut);
         }
+    }
 
-    return cWin.ExitButton(); // Wait for the user to press a button or close the window
+    return win.ExitButton(); // Wait for the user to press a button or close the window
 }

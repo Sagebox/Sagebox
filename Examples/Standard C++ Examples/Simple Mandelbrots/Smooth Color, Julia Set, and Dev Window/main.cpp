@@ -1,7 +1,3 @@
-// Smooth Color, Julia Set, and Dev Window (Mandelbrot) -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // ****************************************************
 // Smooth Color, Julia Set, and Dev Window (Mandelbrot)
@@ -18,15 +14,12 @@
 //
 //  1. Basic Mandelbrot
 //
-//      This is a simple Mandelbrot with color, using std::complex. 
-//      It's slow, but works and is only about 25 lines of code.
-//  
-//  2. Basic Mandelbrot Faster
-//
-//      This adds speed to the mandelbrot by replacing std::complex with CComplex, 
-//      Windows DrawPixel() with a bitmap funciton via CSageBitmap. 
-//
-//  3. Smooth Color, Julia Set, and Dev Window
+//      This is a simple mandelbrot with no color gradation, so the colors change abruptly vs. the Smooth Color version that
+//      has a nice color gradient throughout. 
+// 
+//      Either type can create some interesting mandelbrot displays and colors.
+// 
+//  2. Smooth Color, Julia Set, and Dev Window
 //
 //      This is a small change from the previous version, adding smooth coloring and the Julia
 //      set to the output.   
@@ -36,14 +29,14 @@
 //      This version also adds some more power by assing z.sq() instead of z*z for a little faster
 //      Mandelbrot calculation.  FastSetPixel() is also used in CSageBitmap to set the pixel much faster.
 //
-//  4. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
+//  3. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
 //
 //      This shows how to add Development-based controls to change values of the Mandelbrot
 //      with just a few lines of code.
 //
 //      It shows using GetEvent() in the main eventloop to get and react to events. 
 //  
-//
+// 
 // -------------------------------------------------------------
 // About This Version ( Smooth Color, Julia Set, and Dev Window)
 // -------------------------------------------------------------
@@ -78,7 +71,7 @@
 
 #include "SageBox.h"
 
-using namespace Sage::opt;      // Sagebox options
+using namespace Sage::kw;      // Sagebox keyword options
 
 // Color Table based on Wikipedia Mandelbrot Colors
 
@@ -104,19 +97,18 @@ static double rgbTable[17][3] =
 // The next version will move these, main() and DrawMandelbrot() into a CMandelbrot class.
 // The values below will then be proper class members.
 
-static constexpr int kColorTableSize = 16384;       // Color Table Size (must be divisible by 16)
-RGBColor_t rgbColorTable[kColorTableSize];          // Color Table derieved from rgbColors
+static constexpr int colorTableSize = 16384;       // Color Table Size (must be divisible by 16)
+RGBColor_t rgbColorTable[colorTableSize];          // Color Table derieved from rgbColors
 
-CWindow     * cWin          = nullptr;              // Our main window.  
-POINT         cWinSize      = { 800, 600 };         // Initial Window Size
-CfPoint       cfWinSize     = cWinSize;             // Get a floating-point version of window size
+CWindow     * win          = nullptr;              // Our main window.  
+CfPoint       winSize      = { 1400, 900 };         // Initial Window Size
  
 // Initial Mandelbrot Values (Center, Range and Iterations)
 
-CComplex    cfJulia         = { -.4, .6 };          // Initial Julia values (when bJuliaSet == true)
-CfPoint     cfCenterJulia   = { 0, 0 };             // Initial Julia Set Center
-CfPoint     cfCenterMandel  = { -.6, 0 };           // Initial Mandelbrot Center
-double      fRange          = 3.7;                  // Initial Range (i.e. "zoom" factor)
+CComplex    pJulia         = { -.4, .6 };          // Initial Julia values (when bJuliaSet == true)
+CfPoint     centerJulia   = { 0, 0 };             // Initial Julia Set Center
+CfPoint     centerMandel  = { -.6, 0 };           // Initial Mandelbrot Center
+double      range          = 3.7;                  // Initial Range (i.e. "zoom" factor)
 int         iMaxIterJulia   = 200;                  // Max Julia Set Iterations
 int         iMaxIterMandel  = 50;                   // Max Mandelbrot Iterations
 bool        bJuliaSet       = false;
@@ -137,14 +129,14 @@ void CreateColorTable()
 {
     for (int i=0;i<16;i++)
     { 
-        for (int j=0;j<kColorTableSize/16;j++)
+        for (int j=0;j<colorTableSize/16;j++)
         {
-            double fPercent = 16*(double) j/kColorTableSize;
+            double fPercent = 16*(double) j/colorTableSize;
 
             // Use a lambda function so we can just repeat it for each color (Red, Green, Blue) 
 
             auto newColor = [&](int c) { return (int) ((rgbTable[i][c])*(1.0-fPercent) + (rgbTable[i][c+3])*fPercent); };
-            rgbColorTable[kColorTableSize*i/16 + j] = { newColor(0), newColor(1), newColor(2) }; 
+            rgbColorTable[colorTableSize*i/16 + j] = { newColor(0), newColor(1), newColor(2) }; 
         }
     }
 }
@@ -170,77 +162,76 @@ void DrawMandelbrot()
     // In the next version, these will disappear because the iterations and center will be user-controlled
     // via an Iterations edit box and clicking on the screen to center.
     
-    CfPoint cfCenter    = bJuliaSet ? cfCenterJulia : cfCenterMandel;
-    int iMaxIter        = bJuliaSet ? iMaxIterJulia : iMaxIterMandel; 
+    CfPoint center    = bJuliaSet ? centerJulia : centerMandel;
+    int maxIter        = bJuliaSet ? iMaxIterJulia : iMaxIterMandel; 
 
-    CfPoint cfRange     = { fRange, fRange*cfWinSize.y/cfWinSize.x };   // Range based on X-axis
+    CfPoint pRange     = { range, range*winSize.y/winSize.x };   // Range based on X-axis
 
-    CfPoint cfD         = cfRange/cfWinSize;                            // Unit Increment for each pixel
-    CfPoint cfStart     = cfCenter - cfD*cfWinSize/2;                   // Upper-left X,Y position to start
-    auto cBitmap = cWin->CreateBitmap(cWinSize.x);               // Create bitmap of (Width,1) --> Returns a CSageBitmap object
+    CfPoint cfD         = pRange/winSize;                           // Unit Increment for each pixel
+    CfPoint cfStart     = center - cfD*winSize/2;                   // Upper-left X,Y position to start 
 
     // print out some information about the mandelbrot.  This will be more useful in the next version
 
-    printf("Drawing Mandelbrot - Iterations = %d, Julia Set = %s\n",iMaxIter, bJuliaSet ? "yes" : "no");
-    printf("Center = (%f,%f) - Range = %.14lf\n",cfCenter.x,cfCenter.y,fRange);       // Range can get very small (see next version of code)
+    SageDebug::printf("---\nIterations{x=70}= {y}%d{}\n",maxIter); 
+    SageDebug::printf("Julia Set{x=70}= {y}%s\n",BoolStringU(bJuliaSet));   // Sage::BoolStringU() prints "Yes" or "No"
+    SageDebug::printf("Center{x=70}= {c}(%g,%g)\n",center.x,center.y);      
+    SageDebug::printf("Range{x=70}= {c}%.14lg\n",range);                    // Range can get very small (see next version of code)
 
-    clock_t ctStart = clock();      // Measure the time we're taking, just to get the data
+    SageTimer timer; // Measure the time we're taking, just to get the data
 
-    for (int i=0;i<cWinSize.y;i++)
+    for (int i=0;i<winSize.y;i++)
     {
         double fy = (double) i*cfD.y + cfStart.y;
-        for (int j=0;j<cWinSize.x;j++)
+        for (int j=0;j<winSize.x;j++)
         {
             double fx = (double) j*cfD.x + cfStart.x;
 
-            int iIter = 0;
+            int iter = 0;
 
-            // For Julia Set, set z = { fx, fy } and c to a static value, such as (.285, 0) or (-4.,.6) (and set cfCenter to (0,0);
+            // For Julia Set, set z = { fx, fy } and c to a static value, such as (.285, 0) or (-4.,.6) (and set center to (0,0);
 
             CComplex dz = { 1,0 };
             CComplex c  = { fx, fy };    
             CComplex z  = c;
 
-            if (bJuliaSet) c = cfJulia; 
+            if (bJuliaSet) c = pJulia; 
 
-            while (z.absSq() < 65536 && iIter++ < iMaxIter-1) z = z.sq() + c; 
+            while (z.absSq() < 65536 && iter++ < maxIter-1) z = z.sq() + c; 
 
-            RGBColor_t rgbOut{};    // Get RGB(0,0,0) for color when we gone past maximum iterations
+            RgbColor rgbOut{};    // Get RGB(0,0,0) for color when we gone past maximum iterations. Can also set to Rgb("Black"), Rgb(PanColor::Black), etc.
   
-            if (iIter < iMaxIter)
+            if (iter < maxIter)
             {
-                    // Generate Smooth color by giving a gradient from one iteration to the next
+                // Generate Smooth color by giving a gradient from one iteration to the next
 
-                    double fLog    = log2(log2(z.absSq())/2);          // still not sure of I should perform abs(z) or abs(x)^2
-                    double fIter = (((double) iIter)+1.0 - fLog);   // Add the value to the iteration
+                double log    = log2(log2(z.absSq())/2);          // still not sure of I should perform abs(z) or abs(x)^2
+                double fIter = (((double) iter)+1.0 - log);   // Add the value to the iteration
                 
-                    fIter /= ((double) iMaxIter-1);                 // Normalize it so we can perform a sqrt() or pow() function
-                    fIter = max(0,min((double) iMaxIter-1,fIter));  // Make sure it stays between 1 and 0
+                fIter /= ((double) maxIter-1);                 // Normalize it so we can perform a sqrt() or pow() function 
 
-                    // Note the sqrt() -- this simply brightens the result.  Results for Mandelbrots tend to be very small, with 
-                    // higher iterations as it nears the edge.   Performing sqrt() brightens up the lower areas allowing 
-                    // more color to be seen.
-                    //
-                    // In the next version, this will change the a pow(fIter,<some value>) for more control.
+                // Note the sqrt() -- this simply brightens the result.  Results for Mandelbrots tend to be very small, with 
+                // higher iterations as it nears the edge.   Performing sqrt() brightens up the lower areas allowing 
+                // more color to be seen.
+                //
+                // In the next version, this will change the a pow(fIter,<some value>) for more control.
 
-                    int    iIndex = (int) ((double)(kColorTableSize-1)*sqrt(fIter));   // Get the index into the rgbTable
+                auto index = (int) ((double)(colorTableSize-1)*sqrt(fIter));   // Get the index into the rgbTable
 
-                    rgbOut = rgbColorTable[iIndex];
+                rgbOut = rgbColorTable[index];
             }
-            cBitmap.SetPixel(j,rgbOut);             // Set the pixel in the one-line bitmap.
+            win->SetPixel(j,i,rgbOut);
         }
-        cWin->DisplayBitmap(0,i,cBitmap);           // Print the one-line bitmap to the Y row in the window.
     }
 
-    clock_t ctEnd = clock();    // get the end ms
-    printf("Finished. Time = %d ms.\n",(int) (ctEnd-ctStart)); 
+    auto elapsedMs = (int) timer.ElapsedMs();    // get the end ms
+    SageDebug::printf("Time{x=70}= {g}%d ms.\n",elapsedMs); 
 }
-
 
 int main()
 {
-    
-    cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"SageBox: Mandelbrot Smooth Color and 3-D Depth");
+    win = &Sagebox::NewWindow("SageBox: Mandelbrot Smooth Color and 3-D Depth",kw::SetSize(winSize));
+
+
 
     CreateColorTable();     // Initialize Color Table used for smooth coloring
     DrawMandelbrot();       // Draw initial Mandelbrot before entering event loop
@@ -252,16 +243,16 @@ int main()
     // These controls are automatically placed in a window created by the 
     // Devcontrols. 
 
-    auto& cCheckboxJulia    = cWin->DevCheckbox("Julia Set"); 
+    auto& checkboxJulia    = win->DevCheckbox("Julia Set"); 
 
     // Set up Edit Boxes for Julia Real and Imaginary components. 
-    // The Default is set here, but CEditBox::SetText() can be used to 
+    // The Default is set here, but inputbox::SetText() can be used to 
     // set the displayed value or string at any time.
     //
     // See the next version of this program for an example.
 
-    auto& cEditBoxReal      = cWin->DevEditBox("Julia Real",Default(cfJulia.fR)); 
-    auto& cEditBoxImag      = cWin->DevEditBox("Julia Imag",Default(cfJulia.fI)); 
+    auto& inputboxReal      = win->DevInputBox("Julia Real",Default(pJulia.real)); 
+    auto& inputboxImag      = win->DevInputBox("Julia Imag",Default(pJulia.imag)); 
 
     // Enter the main "event loop", which is just a loop to get events
     // (i.e. mouse movements, button presses, etc.). 
@@ -276,22 +267,22 @@ int main()
     // This will grow in the next version to include many more events, some with the Dev Window,
     // and some with the main Mandelbrot window.
 
-    while(cWin->GetEvent())
+    while(Sagebox::GetEvent())
     {
-      bool bRedraw = false;
+      bool redraw = false;
 
       // Check for events in which we're interested. 
 
-       bRedraw |= cCheckboxJulia.Pressed(bJuliaSet);
-       bRedraw |= cEditBoxReal.ReturnPressed() | cEditBoxImag.ReturnPressed();  // i.e. if <CR> key pressed on either box.
+       redraw |= checkboxJulia.Pressed(bJuliaSet);
+       redraw |= inputboxReal.ReturnPressed() | inputboxImag.ReturnPressed();  // i.e. if <CR> key pressed on either box.
             
-        if (bRedraw) 
+        if (redraw) 
         {
             // Get the values for Real and Imag edit boxes here.  This allows both boxes to be 
-            // filled even though we're only seeing the Return Key event on the one 
+            // filled even though we're only seeing the Return Key event on the one  
             // actually pressed. 
 
-            cfJulia = { cEditBoxReal.GetFloat(), cEditBoxImag.GetFloat() }; // Convert display values to double values
+            pJulia = { inputboxReal.GetFloat(), inputboxImag.GetFloat() }; // Convert display values to double values
             DrawMandelbrot();
         }
     }

@@ -657,6 +657,8 @@ private:
 		
 class CToken
 {
+    inline static int m_iAllocations = 0;
+
 #define MAX_TOKEN_STRING_SIZE	200
 	stNODEDATA sLocalNodeData,sLastNodeData;
 	int bReverse;
@@ -695,7 +697,8 @@ public:
 	char * ReturnFoundUppperString() { return sTokenString; };
 	int InsertFile(char * sIncludeFile);
 	int iInsertDepth;
-	
+	~CToken();
+
 	//	~CToken() { delete stNodeData; }
 };
 

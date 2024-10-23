@@ -1,7 +1,7 @@
 
 #include "Pendulum.h"
 
-using namespace Sage::opt;  // Sagebox options/keywords
+using namespace kw;  // Sagebox options/keywords
 
 // Sagebox Interactive Pendulum with Dev Controls.  Programming with Sagebox Demonstration Program.
 //
@@ -94,7 +94,7 @@ using namespace Sage::opt;  // Sagebox options/keywords
 // ---------------
 // 
 //      This program works by waiting for the vertical resync, then drawing the pendulum and updating the window. 
-//      The opt::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
+//      The kw::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
 //      real-time display
 // 
 // --------------
@@ -108,7 +108,7 @@ using namespace Sage::opt;  // Sagebox options/keywords
 // Timing Display 
 // --------------
 //
-//      When bShowTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
+//      When showTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
 //      taken to calculate and draw the pendulum.
 //
 // --------------
@@ -119,63 +119,63 @@ using namespace Sage::opt;  // Sagebox options/keywords
 //
 int main()
 {
-    bool bKeepRodLength         = false;    // Keeps the rod lengths static when moving the pendulum bobs.
-    bool bDisplayValues         = true;     // Display current values to the window on/off
-    bool bDisplayInstructions   = true;     // Display instructions.  Set to off as soon as one of the bobs is moved by the user.
-    bool bShowTiming            = false;    // Display real-time timing information in ms 
-    bool bQuitProgram           = false;    // Quit button sets it to true and exits.  Window can also just be closed. 
+    bool keepRodLength         = false;    // Keeps the rod lengths static when moving the pendulum bobs.
+    bool displayValues         = true;     // Display current values to the window on/off
+    bool displayInstructions   = true;     // Display instructions.  Set to off as soon as one of the bobs is moved by the user.
+    bool showTiming            = false;    // Display real-time timing information in ms 
+    bool quitProgram           = false;    // Quit button sets it to true and exits.  Window can also just be closed. 
 
-    auto qForm  = Sagebox::QuickForm("label=' Sagebox C++ Double Pendulum Example'",opt::RealTime() | opt::SageIcon());
+    auto form  = Sagebox::QuickForm("label=' Sagebox C++ Double Pendulum Example'",kw::Realtime() | kw::SageIcon());
  
-    // Get the window and dev control window.  We can use "auto [ cWin, cDev ] = QuickForm().GetWins(), but then it fails
+    // Get the window and dev control window.  We can use "auto [ win, dev ] = QuickForm().GetWins(), but then it fails
     // to work in the lambdas below, so they are assigned separately here. 
     //
-    // qForm.Win and qForm.Dev can be used, but getting separate values helps make the code shorter and more readable. 
+    // form.Win and form.Dev can be used, but getting separate values helps make the code shorter and more readable. 
 
-    auto& cWin = qForm.cWin;        // Get Main Canvas Window. 
-    auto& cDev = qForm.cDev;        // Get Dev Controls Window
+    auto& win = form.cWin;        // Get Main Canvas Window. 
+    auto& dev = form.cDev;        // Get Dev Controls Window
 
     // Initialize the pendulum with the Sagebox Window, as well as the Rod Lengths, Mass1 & Mass2, dampening
     // and starting angles (in degrees)
 
-    DoublePendulum pend(cWin,220, 185, 10.0, 10.0, -15.0, -15.0, .9985, .33);
+    DoublePendulum pend(win,220, 185, 10.0, 10.0, -15.0, -15.0, .9985, .33);
 
     // Build Dev Controls
 
-    cDev.AddText("Pendulum Controls",Font(17) | TextColor("Cyan"));     // Simple text
+    dev.AddText("Pendulum Controls",Font(17) | TextColor("Cyan"));     // Simple text
 
     // The defaults set are in inline with the defaults for the pendulum.  Some of them hard-coded here for easier coding and 
     // readability when they would otherwse (i.e. not a demo) certain function would call get/set functions in the Pendulum class to separate 
     // (i.e. decouple) context and data.  
 
-    auto& cWeight1          = cDev.AddEditBox("Weight 1",Default(pend.m_fMass[0])); 
-    auto& cWeight2          = cDev.AddEditBox("Weight 2",Default(pend.m_fMass[1]));  
+    auto& sliderWeight1         = dev.AddInputBox("Weight 1",Default(pend.m_fMass[0])); 
+    auto& sliderWeight2         = dev.AddInputBox("Weight 2",Default(pend.m_fMass[1]));  
 
-    auto& cDampen           = cDev.AddSlider("Dampen Multiplier",Default(15));  // consistent with .9985 default value
-    auto& cZoom             = cDev.AddSlider("Zoom",Range(25,150) | Default(100)); 
-    auto& cPendSize         = cDev.AddSlider("Pendulum Size",Default(15)); 
+    auto& sliderDampen          = dev.AddSlider("Dampen Multiplier",Default(15));  // consistent with .9985 default value
+    auto& sliderZoom            = dev.AddSlider("Zoom",Range(25,150) | Default(100)); 
+    auto& sliderPendSize        = dev.AddSlider("Pendulum Size",Default(15)); 
 
-    // Add 3 radio buttons.  Horz() puts them horizontally, otherwise they are put vertically. opt::Columns() can specifiy specific # of columns
+    // Add 3 radio buttons.  Horz() puts them horizontally, otherwise they are put vertically. kw::Columns() can specifiy specific # of columns
 
-    auto cThickLines        = cDev.AddRadioButtons("Normal\nThick\nThicker",opt::Horz() | opt::Title("Rod Thickness")); 
+    auto radioThickLines        = dev.AddRadioButtons("Normal\nThick\nThicker",kw::Horz() | kw::Title("Rod Thickness")); 
 
-    auto& cDisplay          = cDev.AddCheckbox("Display Values",Default(bDisplayValues));           // "-" puts it on next line but closer to last checkbox
-    auto& cStaticLength     = cDev.AddCheckbox("-Maintain Rod Length"); 
-    auto& cShowTrail        = cDev.AddCheckbox("+Show Trail",Default(pend.m_bShowTrail));           // "+" to add checkbox on same line as last
-    auto& cSinglePendulum   = cDev.AddCheckbox("-Single Pendulum",Default(pend.m_bSinglePend));   
-    auto& cShowTiming       = cDev.AddCheckbox("-Show Timing",Default(bShowTiming));   
-    auto& cButtonStart      = cDev.AddButton("   Stop   ");                                 // Use spaces to pad the display so it is wider. 
-    auto& cQuitButton       = cDev.AddButton("+   Quit   ");                                // "+" to add button on same line as last
+    auto& buttonDisplay         = dev.AddCheckbox("Display Values",Default(displayValues));         // "-" puts it on next line but closer to last checkbox
+    auto& buttonStaticLength    = dev.AddCheckbox("-Maintain Rod Length"); 
+    auto& buttonShowTrail       = dev.AddCheckbox("+Show Trail",Default(pend.m_bShowTrail));        // "+" to add checkbox on same line as last
+    auto& buttonSinglePendulum  = dev.AddCheckbox("-Single Pendulum",Default(pend.m_bSinglePend));   
+    auto& buttonShowTiming      = dev.AddCheckbox("-Show Timing",Default(showTiming));   
+    auto& buttonStart           = dev.AddButton("   Stop   ");                                      // Use spaces to pad the display so it is wider. 
+    auto& quitButton            = dev.AddButton("+   Quit   ");                                     // "+" to add button on same line as last
 
 
-    int iDragging = 0;                          // > 0 when we're dragging a pendulum bob
-    double fThickness[3] = { 1.0, 2.0, 3.0 };   // Thickness for the Rod Thickness radio box
+    int dragging = 0;                           // > 0 when we're dragging a pendulum bob
+    double thickness[3] = { 1.0, 2.0, 3.0 };    // Thickness for the Rod Thickness radio box
 
-    auto szWinSize = cWin.GetWindowSize();      // Used when we move the display offset up/down with right mouse button
+    auto winSize = win.GetWindowSize();         // Used when we move the display offset up/down with right mouse button
     
     // Set the start button text based on whether or not we're paused. 
     //
-    auto SetStartButtonText = [&](bool bPause) { bPause ? cButtonStart.SetText("   Start   ") : cButtonStart.SetText("   Stop   "); };
+    auto SetStartButtonText = [&](bool bPause) { bPause ? buttonStart.SetText("   Start   ") : buttonStart.SetText("   Stop   "); };
     
 
     // If the mouse was clicked, Pause or Unpause the display.  Also set a dragging indicator if the user pressed on 
@@ -183,23 +183,23 @@ int main()
     //
     auto HandleMouseClick = [&]()
     {
-        bDisplayInstructions = false;
-        bool bForceHold = !pend.m_bPause;
+        displayInstructions = false;
+        bool forceHold = !pend.m_bPause;
   
-        CfPoint pPos = cWin.GetMousePos(); 
-        double fRadius1 = pend.fTopRadius*pend.m_fZoom*pend.m_fCircleMult;
-        double fRadius2 = pend.fBotRadius*pend.m_fZoom*pend.m_fCircleMult;
+        CfPoint pPos = win.GetMousePos(); 
+        double radius1 = pend.fTopRadius*pend.m_fZoom*pend.m_fCircleMult;
+        double radius2 = pend.fBotRadius*pend.m_fZoom*pend.m_fCircleMult;
 
-        iDragging = 0;
+        dragging = 0;
 
-        if (pPos.WithinRect(pend.m_RodVertex[1]-fRadius1,pend.m_RodVertex[1] + fRadius1)) iDragging = 1;
-        if (pPos.WithinRect(pend.m_RodVertex[2]-fRadius2,pend.m_RodVertex[2] + fRadius2)) iDragging = 2;
+        if (pPos.WithinRect(pend.m_RodVertex[1]-radius1,pend.m_RodVertex[1] + radius1)) dragging = 1;
+        if (pPos.WithinRect(pend.m_RodVertex[2]-radius2,pend.m_RodVertex[2] + radius2)) dragging = 2;
 
-        if (!iDragging) SetStartButtonText(pend.m_bPause = bForceHold);
+        if (!dragging) SetStartButtonText(pend.m_bPause = forceHold);
         else
         {
             pend.m_bPause = true;
-            cButtonStart.SetText("   Drop!   "); 
+            buttonStart.SetText("   Drop!   "); 
         }
     };
 
@@ -207,11 +207,11 @@ int main()
     //
     auto HandleMouseDrag = [&]()
     {
-        auto pDelta =  (CfPoint) cWin.GetMousePos()-pend.m_RodVertex[iDragging-1];
-        pend.m_fAngle[iDragging-1] = std::atan2(pDelta.x,pDelta.y);
+        auto pDelta =  (CfPoint) win.GetMousePos()-pend.m_RodVertex[dragging-1];
+        pend.m_fAngle[dragging-1] = std::atan2(pDelta.x,pDelta.y);
 
-        if (!bKeepRodLength) 
-            pend.m_fLength[iDragging - 1] = std::sqrt(pDelta.x*pDelta.x + pDelta.y*pDelta.y)/pend.m_fZoom;
+        if (!keepRodLength) 
+            pend.m_fLength[dragging - 1] = std::sqrt(pDelta.x*pDelta.x + pDelta.y*pDelta.y)/pend.m_fZoom;
         pend.Reset(); 
     };
 
@@ -219,37 +219,37 @@ int main()
 
     auto HandleEvents = [&]()
     {
-        if (cWin.MouseClicked()) HandleMouseClick();
-        if (cWin.MouseDragEvent() && iDragging) HandleMouseDrag();
+        if (win.MouseClicked()) HandleMouseClick();
+        if (win.MouseDragEvent() && dragging) HandleMouseDrag();
 
-        cStaticLength.Pressed(bKeepRodLength);              // Set KeepRodLength if checkbox pressed
-        cDisplay.Pressed(bDisplayValues);                   // Display real-time values (angle, mass, etc.)
-        cSinglePendulum.Pressed(pend.m_bSinglePend);        // Single Pendulum on/off
-        cShowTrail.Pressed(pend.m_bShowTrail);              // Show bottom pendulum trail
+        buttonStaticLength.Pressed(keepRodLength);              // Set KeepRodLength if checkbox pressed
+        buttonDisplay.Pressed(displayValues);                   // Display real-time values (angle, mass, etc.)
+        buttonSinglePendulum.Pressed(pend.m_bSinglePend);       // Single Pendulum on/off
+        buttonShowTrail.Pressed(pend.m_bShowTrail);             // Show bottom pendulum trail
 
-        if (cQuitButton.Pressed()) bQuitProgram = true;
+        if (quitButton.Pressed()) quitProgram = true;
 
-        if (cShowTiming.Pressed()) Sagebox::ShowProcessWindow(bShowTiming = !bShowTiming,true);     // Turn process/debug window & reporting on/off
+        if (buttonShowTiming.Pressed()) Sagebox::ShowProcessWindow(showTiming = !showTiming,true);     // Turn process/debug window & reporting on/off
 
         // Check various sliders and set new values if the position has changed.
 
-        if (auto fDamp = cDampen.Moved())     { pend.m_fDamp1       = pend.m_fDamp2 = 1-(double)*fDamp/10000; if (!*fDamp) pend.ResetOverflow(); }
-        if (auto iSize = cPendSize.Moved())     pend.m_fCircleMult  = (double) *iSize/100*5 + .25;
-        if (auto iZoom = cZoom.Moved())         pend.m_fZoom        = (double) *iZoom/100.0; 
+        if (auto fDamp = sliderDampen.opMoved())     { pend.m_fDamp1       = pend.m_fDamp2 = 1-(double)*fDamp/10000; if (!*fDamp) pend.ResetOverflow(); }
+        if (auto iSize = sliderPendSize.opMoved())     pend.m_fCircleMult  = (double) *iSize/100*5 + .25;
+        if (auto iZoom = sliderZoom.opMoved())         pend.m_fZoom        = (double) *iZoom/100.0; 
             
         // If the radio buttons have changed, then set the new thickness value. 
 
-        if (auto iSize = cThickLines.Pressed()) pend.m_fThickMul    = fThickness[*iSize];
+        if (auto iSize = radioThickLines.Pressed()) pend.m_fThickMul    = thickness[*iSize];
 
         double fValue;
     
-        if (cWeight1.ReturnPressed(fValue) && fValue > 0) pend.m_fMass[0] = fValue;
-        if (cWeight2.ReturnPressed(fValue)) pend.m_fMass[1] = fValue;
+        if (sliderWeight1.ReturnPressed(fValue) && fValue > 0) pend.m_fMass[0] = fValue;
+        if (sliderWeight2.ReturnPressed(fValue)) pend.m_fMass[1] = fValue;
 
-        if (auto iDir = cWin.MouseWheelMoved()) iDir < 0 ? pend.m_fZoom *= .95 : pend.m_fZoom *= 1/.95; 
+        if (auto iDir = win.MouseWheelMoved()) iDir < 0 ? pend.m_fZoom *= .95 : pend.m_fZoom *= 1/.95; 
 
-        if (cWin.MouseRButtonDown()) pend.m_RodVertex[0].y = cWin.GetMousePos().y;
-        if (cButtonStart.Pressed()) SetStartButtonText(pend.m_bPause = !pend.m_bPause);
+        if (win.MouseRButtonDown()) pend.m_RodVertex[0].y = win.GetMousePos().y;
+        if (buttonStart.Pressed()) SetStartButtonText(pend.m_bPause = !pend.m_bPause);
 
     };
 
@@ -257,22 +257,22 @@ int main()
     //
     auto DisplayInstructions = [&]()
     {
-        cWin.SetFgColor("Gray192");         // Set the text color
+        win.SetFgColor("Gray192");         // Set the text color
 
         // {y} = yellow, {g} = green. {30} = set font to size 30pt
 
-        cWin.SetWriteIndent(300);   // Set the newline position for each line 
-        cWin.SetWritePos(300,50); 
-        cWin.Write("{30}{y}Double Pendulum\n"); 
-        cWin.Write("\nClick on either or both pendulums to set position.\n"); 
-        cWin.Write("Click on the screen (or press {g}\"Drop\"{/}) to drop the pendulum.\n\n");
-        cWin.Write("Click on {g}\"Maintain Rod Length\"{/} to change pendulum angles without changing the rod length.\n\n");
-        cWin.Write("Use the controls to the left to change states while pendulum is in motion or before dropping the pendulum.\n\n");
-        cWin.Write("{p}While the pendulum is moving\n\n"); 
-        cWin.Write("Right-click on the screen to move the display area up and down\n"); 
-        cWin.Write("Use the Mouse Wheel to zoom in and out\n"); 
-        cWin.Write("Click on the display area to stop the pendulums so you can move them.");            
-        cWin.SetWriteIndent(0);     // Set newline indent back to 0
+        win.SetWriteIndent(300);   // Set the newline position for each line 
+        win.SetWritePos(300,50); 
+        win.Write("{30}{y}Double Pendulum\n"); 
+        win.Write("\nClick on either or both pendulums to set position.\n"); 
+        win.Write("Click on the screen (or press {g}\"Drop\"{/}) to drop the pendulum.\n\n");
+        win.Write("Click on {g}\"Maintain Rod Length\"{/} to change pendulum angles without changing the rod length.\n\n");
+        win.Write("Use the controls to the left to change states while pendulum is in motion or before dropping the pendulum.\n\n");
+        win.Write("{p}While the pendulum is moving\n\n"); 
+        win.Write("Right-click on the screen to move the display area up and down\n"); 
+        win.Write("Use the Mouse Wheel to zoom in and out\n"); 
+        win.Write("Click on the display area to stop the pendulums so you can move them.");            
+        win.SetWriteIndent(0);     // Set newline indent back to 0
 
     };
 
@@ -280,27 +280,27 @@ int main()
     //
     auto DisplayValues = [&]()
     {
-        cWin.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
-        cWin.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
+        win.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
+        win.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
 
-        cWin.SetFgColor(SageColor::Gray172);         // Set the text color.  Also can be simpl "Gray172" in quotes.
+        win.SetFgColor(SageColor::Gray172);         // Set the text color.  Also can be simpl "Gray172" in quotes.
 
         // {g}  green, {c} = cyan.  {x=130) sets the X write position to that value so things line up
 
-        cWin.SetWritePos(10,10); 
+        win.SetWritePos(10,10); 
 
-        cWin.printf("Mass 1:{x=130}{g}%.2f\n",          (float) pend.m_fMass[0]); 
-        cWin.printf("Mass 2:{x=130}{g}%.2f\n",          (float) pend.m_fMass[1]); 
-        cWin.printf("Length 1:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[0])); 
-        cWin.printf("Length 2:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[1])); 
-        cWin.printf("Dampening:{x=130}{g}%g\n\n",       (float) (1.0-(pend.m_fDamp1*pend.m_fOverflowMul))); 
-        cWin.printf("Ang Accel 1:{x=130}{c}%f\n",       (float) pend.m_fAngAccel1); 
-        cWin.printf("Ang Accel 2:{x=130}{c}%f\n",       (float) pend.m_fAngAccel2); 
-        cWin.printf("Ang Velocity 1:{x=130}{c}%f\n",    (float) pend.m_fAngVel1); 
-        cWin.printf("Ang Velocity 2:{x=130}{c}%f\n",    (float) pend.m_fAngVel2); 
-        cWin.printf("Angle 1:{x=130}{c}%.2f\xb0\n",     (float) (pend.m_fAngle[0]*180.0/Sage::Math::PI)); 
-        cWin.printf("Angle 2:{x=130}{c}%.2f\xb0\n\n",   (float) (pend.m_fAngle[1]*180.0/Sage::Math::PI)); 
-        cWin.printf("Zoom:{x=130}{g}%.2f%%\n",          (float) (pend.m_fZoom*100.0)); 
+        win.printf("Mass 1:{x=130}{g}%.2f\n",          (float) pend.m_fMass[0]); 
+        win.printf("Mass 2:{x=130}{g}%.2f\n",          (float) pend.m_fMass[1]); 
+        win.printf("Length 1:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[0])); 
+        win.printf("Length 2:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[1])); 
+        win.printf("Dampening:{x=130}{g}%g\n\n",       (float) (1.0-(pend.m_fDamp1*pend.m_fOverflowMul))); 
+        win.printf("Ang Accel 1:{x=130}{c}%f\n",       (float) pend.m_fAngAccel1); 
+        win.printf("Ang Accel 2:{x=130}{c}%f\n",       (float) pend.m_fAngAccel2); 
+        win.printf("Ang Velocity 1:{x=130}{c}%f\n",    (float) pend.m_fAngVel1); 
+        win.printf("Ang Velocity 2:{x=130}{c}%f\n",    (float) pend.m_fAngVel2); 
+        win.printf("Angle 1:{x=130}{c}%.2f\xb0\n",     (float) (pend.m_fAngle[0]*180.0/Sage::Math::PI)); 
+        win.printf("Angle 2:{x=130}{c}%.2f\xb0\n\n",   (float) (pend.m_fAngle[1]*180.0/Sage::Math::PI)); 
+        win.printf("Zoom:{x=130}{g}%.2f%%\n",          (float) (pend.m_fZoom*100.0)); 
 
         // If there has been an overflow, then display it in red.  This means the math/float-point had
         // some sort of resolution problem, usually when the bob starts wobbling severely.
@@ -309,10 +309,10 @@ int main()
 
         if (pend.m_iOverflowCount > 2)
         {
-            cWin.printf("\n\n\n\n{r}Math Overflow (%d)\n",pend.m_iOverflowCount-2); 
-            cWin.printf("{12}Try increasing dampening (also lowering weight values and weight ratios).");
+            win.printf("\n\n\n\n{r}Math Overflow (%d)\n",pend.m_iOverflowCount-2); 
+            win.printf("{12}Try increasing dampening (also lowering weight values and weight ratios).");
         }
-        cWin.SetWritePadding(0);    // Reset Padding (since we may be displaying instructions)
+        win.SetWritePadding(0);    // Reset Padding (since we may be displaying instructions)
 
     };
 
@@ -320,25 +320,25 @@ int main()
     //
     // Waits for vertical resync and then draws updates the pendulum and renders it. 
    
-    while (cWin.VsyncWait() && !bQuitProgram)
+    while (win.VsyncWait() && !quitProgram)
     {
-        cWin.Cls();                         // Clear the window
-        CSageTimer csTimer;                 // Time the loop so we can see how long it takes 
+        win.Cls();                         // Clear the window
+        SageTimer timer;                 // Time the loop so we can see how long it takes 
 
         // Use EventPending() so we only look for events when we know there is one to look for. 
         // EventPending() is not required, but allows us to not spend time looking for events when nothing has happened.
 
-        if (cWin.EventPending()) HandleEvents(); 
+        if (win.EventPending()) HandleEvents(); 
 
         pend.Update();                      // Update the pendulum position
         pend.Render();                      // Draw the pendulum
-        if (bDisplayInstructions) DisplayInstructions();
-        if (bDisplayValues) DisplayValues();
+        if (displayInstructions) DisplayInstructions();
+        if (displayValues) DisplayValues();
 
-        auto usTime = csTimer.ElapsedUs();                                              // Get time we took to update and draw the pendulum in microseconds
-        if (bShowTiming) SageDebug::printf("Time = {p}%f ms\n",(float) usTime/1000);    // Print the time out to the Sagebox process/debug window
+        auto usTime = timer.ElapsedUs();                                              // Get time we took to update and draw the pendulum in microseconds
+        if (showTiming) SageDebug::printf("Time = {p}%f ms\n",(float) usTime/1000);    // Print the time out to the Sagebox process/debug window
 
-        cWin.Update();                  // Update the bitmap in the window. 
+        win.Update();                  // Update the bitmap in the window. 
 
     }
     return 0; 

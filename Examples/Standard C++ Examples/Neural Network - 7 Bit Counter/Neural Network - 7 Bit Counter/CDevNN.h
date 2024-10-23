@@ -1,6 +1,3 @@
-// CDevNN.CPP -- Multi-Layer Neural Network Training 
-// Copyright (c) 2019, Rob Nelson, All Rights Reserved
-// Free to use for personal purposes.
 
 // This code is released and free to use for personal purposes. 
 // This is one set of code in a larger development platform.

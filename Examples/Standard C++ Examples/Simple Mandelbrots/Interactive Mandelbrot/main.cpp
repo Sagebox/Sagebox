@@ -1,7 +1,3 @@
-// Interactive Mandelbrot Example -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // ******************************
 // Interactive Mandelbrot Example
@@ -18,15 +14,12 @@
 //
 //  1. Basic Mandelbrot
 //
-//      This is a simple Mandelbrot with color, using std::complex. 
-//      It's slow, but works and is only about 25 lines of code.
-//  
-//  2. Basic Mandelbrot Faster
-//
-//      This adds speed to the mandelbrot by replacing std::complex with CComplex, 
-//      Windows DrawPixel() with a bitmap funciton via CSageBitmap. 
-//
-//  3. Smooth Color, Julia Set, and Dev Window
+//      This is a simple mandelbrot with no color gradation, so the colors change abruptly vs. the Smooth Color version that
+//      has a nice color gradient throughout. 
+// 
+//      Either type can create some interesting mandelbrot displays and colors.
+// 
+//  2. Smooth Color, Julia Set, and Dev Window
 //
 //      This is a small change from the previous version, adding smooth coloring and the Julia
 //      set to the output.   
@@ -36,7 +29,7 @@
 //      This version also adds some more power by assing z.sq() instead of z*z for a little faster
 //      Mandelbrot calculation.  FastSetPixel() is also used in CSageBitmap to set the pixel much faster.
 //
-//  4. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
+//  3. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
 //
 //      This shows how to add Development-based controls to change values of the Mandelbrot
 //      with just a few lines of code.
@@ -75,7 +68,7 @@
 
 #include "SageBox.h"
 
-using namespace Sage::opt;      // Sagebox options
+using namespace Sage::kw;      // Sagebox keyword options, so things like Range() can be used rather than kw::Range(), etc.
 
 // Class Declaration
 //
@@ -84,37 +77,34 @@ using namespace Sage::opt;      // Sagebox options
 //
 class CMandelbrot
 {
-    SIZE        szWinSize   = { 800, 600 };     // Initial Window Size
-    CfPoint     cfWinSize   = szWinSize;        // Get a floating-point version of window size
-    CfPoint     cfCenter    = { -.6, 0 };       // Initial Mandelbrot Center
-    CComplex    cfJulia     = { -.4, .6 };
-    double      fRange      = 3.7;              // Initial Range (i.e. "zoom" factor)
-    int         iMaxIter    = 50;               // Max Mandelbrot Iterations
-    bool        bJuliaSet   = false;
- 
     static constexpr int kColorTableSize = 16384;   // Color Table Size (must be divisible by 16)
-    RGBColor_t rgbColorTable[kColorTableSize];      // Color Table derieved from rgbColors
 
-    static double rgbTable[17][3];
+    CPoint      winSize     = { 1200, 800 };  // Initial Window Size
+    CfPoint     winSizef    = winSize;        // Get a floating-point version of window size
+    CfPoint     center      = { -.6, 0 };     // Initial Mandelbrot Center
+    CComplex    pJulia      = { -.4, .6 };
+    double      range       = 3.7;            // Initial Range (i.e. "zoom" factor)
+    int         maxIter     = 100;            // Max Mandelbrot Iterations
+    bool        juliaSet    = false;
+    
+    int         colorOffset     = 8300;             // Color table index offset for canned color table
+    int         colorStart      = 0;                // Start of color table (i.e. offset into color table for display)
+    int         colorWidth      = kColorTableSize;  // Width of color table indexing, which will repeat over and over, depending on width
 
-    CWindow * cWin      = nullptr;      // Mandelbrot Window
-    CWindow * cDevWin   = nullptr;      // DevWindow (here so it can be used in multiple functions)
+    RgbColor rgbColorTableRaw[kColorTableSize];     // Color Table derieved from rgbColors
+    RgbColor rgbColorTable[kColorTableSize+1];      // Color Table derieved from rgbColors, implementing colorWidth
+
+
+    CWindow * win       = nullptr;      // Mandelbrot Window
+    CWindow * devWin    = nullptr;      // DevWindow (here so it can be used in multiple functions)
+    std::vector<int> mandelData;        // Mandelbrot Data
+    CBitmap bitmap;                     // Mandelbrot output bitmap
     void CreateColorTable();
+    void DisplayMandelbrot();
+    void CreateMandelbrot(bool & abortSignal);
 public:
-    void DrawMandelbrot(bool & bAbortSignal);
     int main();
 };
-
-// Color Table based on Wikipedia Mandelbrot Colors
-//
-double CMandelbrot::rgbTable[17][3] = 
-{
-    { 0, 0, 0       }, { 25, 7, 26     }, { 9, 1, 47      }, { 4, 4, 73      }, 
-    { 0, 7, 100     }, { 12, 44, 138   }, { 24, 82, 177   }, { 57, 125, 209  },
-    { 134, 181, 229 }, { 211, 236, 248 }, { 241, 233, 191 }, { 248, 201, 95  },
-    { 255, 170, 0   }, { 204, 128, 0   }, { 153, 87, 0    }, { 106, 52, 3    },
-    { 106, 52, 3    }, // Added one more to make CreatColorTable()'s job easy
-}; 
 
 // CreateColorTable() -- Creates a smooth n-sized color table based on the 16-color rgbTable. 
 // 
@@ -130,96 +120,181 @@ double CMandelbrot::rgbTable[17][3] =
 //
 void CMandelbrot::CreateColorTable()
 {
-    for (int i=0;i<16;i++)
-    { 
-        for (int j=0;j<kColorTableSize/16;j++)
+    // Structure for a color palette entry
+    struct ColorData
+    {
+        RgbColor rgbColor;  // color value
+        int start;          // Where this color starts in the color table (based on max color table entries)
+    };
+
+    // A color table with 5 entries, equally spaced apart. 
+
+    std::array<ColorData,5> colors = 
+    {{
+        { RgbColor{ 255,255,255 },0 *kColorTableSize/5 },
+        { RgbColor{ 255,204,0   },1 *kColorTableSize/5 },
+        { RgbColor{ 135,31,19   },2 *kColorTableSize/5 },
+        { RgbColor{ 0,0,153     },3 *kColorTableSize/5 },
+        { RgbColor{ 0,102,255   },4 *kColorTableSize/5 },
+    }};
+
+    // Create base gradient, then gradient based on starting position and color width
+
+    int iIndex = 0;
+    int iSize = (int) colors.size();
+
+    for (int i=0;i<iSize;i++)
+    {
+        auto rgbColor1 = colors[i].rgbColor;
+        auto rgbColor2 = i == iSize-1 ? colors[0].rgbColor : colors[i+1].rgbColor;
+
+        int iWidth = i < iSize - 1 ? colors[i+1].start-colors[i].start : kColorTableSize-colors[i].start;
+
+        auto fRed   = (double) rgbColor1.iRed;
+        auto fGreen = (double) rgbColor1.iGreen;
+        auto fBlue  = (double) rgbColor1.iBlue; 
+
+        double fAddR = ((double) rgbColor2.iRed-fRed)/(double) iWidth;
+        double fAddG = ((double) rgbColor2.iGreen-fGreen)/(double) iWidth;
+        double fAddB = ((double) rgbColor2.iBlue-fBlue)/(double) iWidth;
+
+        int x = colors[i].start;
+
+        for (int j=x;j<x+iWidth+1;j++)
         {
-            double fPercent = 16*(double) j/kColorTableSize;
+            if (j < kColorTableSize)
+                rgbColorTableRaw[j] = Rgb((int) fRed,(int) fGreen,(int) fBlue);
 
-            // Use a lambda function so we can just repeat it for each color (Red, Green, Blue) 
-
-            auto newColor = [&](int c) { return (int) ((rgbTable[i][c])*(1.0-fPercent) + (rgbTable[i][c+3])*fPercent); };
-            rgbColorTable[kColorTableSize*i/16 + j] = { newColor(0), newColor(1), newColor(2) }; 
+            fRed    += fAddR;
+            fGreen  += fAddG;
+            fBlue   += fAddB;
         }
     }
+
+    // Create actual gradient based on start and size. 
+
+    iIndex = colorStart + colorOffset;
+        
+    double fAdd = (double) kColorTableSize/(double) colorWidth;
+    double fPlace = (double) iIndex;
+    for (int i=0;i<kColorTableSize;i++)
+    {
+        if (fPlace >= kColorTableSize) fPlace -= (double) kColorTableSize;
+        int iNewIndex = (int) fPlace;
+
+        fPlace += fAdd;
+        rgbColorTable[i] = rgbColorTableRaw[iNewIndex];
+    }
 }
-void CMandelbrot::DrawMandelbrot(bool & bAbortSignal)
+
+void CMandelbrot::DisplayMandelbrot()
+{
+    auto input  = &mandelData[0];   // A little faster than indexing through a vector
+    int iWidth  = bitmap.Width();
+    int iHeight = bitmap.Height();
+
+    for (int i=0;i<iHeight;i++)
+    {
+        for (int j=0;j<iWidth;j++)
+            bitmap.SetPixel(j,i,rgbColorTable[*input++]);
+    }
+    win->DisplayBitmapR(bitmap);    // Put out the bitmap to the window
+}
+
+void CMandelbrot::CreateMandelbrot(bool & abortSignal)
 {   
     static int iCount;  // Redraw Counter, just for reference, assuming one thread (for now)
 
-    cDevWin->printf("Drawing Mandelbrot ({lightyellow}Julia Set = %s) {lb}(#%d) {/} {/}\n",bJuliaSet ? "true" : "false",++iCount);
-    cDevWin->printf("Center = {cyan}(%f,%f){/} -- Range = {cyan}%.14lf{/}\n",cfCenter.x,cfCenter.y,fRange);
+    devWin->printf("Drawing Mandelbrot ({lightyellow}Julia Set = %s) {lb}(#%d) {/} {/}\n",juliaSet ? "true" : "false",++iCount);
+    devWin->printf("Center = {cyan}(%f,%f){/} -- Range = {cyan}%.14lf{/}\n",center.x,center.y,range);
+    
 
-    clock_t ctStart = clock();  // Get start time in ms -- not the most accurate, but good enough for our purposes.
+    CfPoint pRange     = { range, range*winSizef.y/winSizef.x };   // Range based on X-axis
 
-    CfPoint cfRange     = { fRange, fRange*cfWinSize.y/cfWinSize.x };   // Range based on X-axis
-
-    CfPoint cfD         = cfRange/cfWinSize;                            // Unit Increment for each pixel
-    CfPoint cfStart     = cfCenter - cfD*cfWinSize/2;                   // Upper-left X,Y position to start
+    CfPoint fD         = pRange/winSizef;                            // Unit Increment for each pixel
+    CfPoint pStart     = center - fD*winSizef/2;                   // Upper-left X,Y position to start
  
-    // Create SageBox and SageBox Window
+    // Adjust center for Julia Set 
+    
+    if (juliaSet) pStart += decltype(pStart) { .6, 0 };        // Julia starts at (0,0), but we come in with Mandelbrot Center at (.6,0)
 
-    auto cBitmap = cWin->CreateBitmap(szWinSize.cx);                    // Create bitmap of (Width,1) --> Returns a CSageBitmap object
-                                                                        // Ideally, this would be created in the constructor and not here
-                                                                        // so we don't do it every time. It's left here to show the process.
-    for (int i=0;i<szWinSize.cy;i++)
+    // If the window size has changed (or memory has not yet been initialized), allocat
+    // memory for the Mandelbrot Data as well as the bitmap. 
+
+    if (mandelData.size() != (size_t) (winSize.x*winSize.y))
     {
-        double fy = (double) i*cfD.y + cfStart.y;
-        for (int j=0;j<szWinSize.cx;j++)
+        mandelData.resize(winSize.x*winSize.y);
+        bitmap = win->CreateBitmap(winSize.x,winSize.y); 
+    }
+
+    SageTimer timer;     // Start a measurement timer
+
+    // Use parallel processing via omp
+
+#pragma omp parallel for
+    for (int i=0;i<winSize.y;i++)
+    {
+        double y = (double) i*fD.y + pStart.y;
+        auto output = &mandelData[i*winSize.x]; // using a point is a little faster than indexing through a vector each time.
+        for (int j=0;j<winSize.x;j++)
         {
-            double fx = (double) j*cfD.x + cfStart.x;
 
-            int iIter = 0;
+            double x = (double) j*fD.x + pStart.x;
 
-            // For Julia Set, set z = { fx, fy } and c to a static value, such as (.285, 0) or (-4.,.6) (and set cfCenter to (0,0);
+            int iter = 0;
 
-            CComplex c  = { fx, fy };    
+            // For Julia Set, set z = { x, y } and c to a static value, such as (.285, 0) or (-4.,.6) (and set center to (0,0);
+
+            CComplex c  = { x, y };    
             CComplex z  = c;
 
-            if (bJuliaSet) c = cfJulia; // The only change needed to move it to a Julia Set vs. Mandelbrot. 
+            if (juliaSet) c = pJulia; // The only change needed to move it to a Julia Set vs. Mandelbrot. 
 
-            while (z.absSq() < 65536 && iIter++ < iMaxIter-1) z = z.sq() + c; 
+            while (z.absSq() < 65536 && iter++ < maxIter-1) z = z.sq() + c; 
 
-            RGBColor_t rgbOut{};    // Get RGB(0,0,0) for color when we gone past maximum iterations
-                                    // This can be any color, such as { 0,0, 255} for blue  
+            // Get color for value is we're < maxIter -- otherwise keep black/preset color in rgbOut
 
-            // Get color for value is we're < iMaxIter -- otherwise keep black/preset color in rgbOut
-
-            if (iIter < iMaxIter)
+            int colorIndex = kColorTableSize;
+            if (iter < maxIter)
             {
                 // Generate Smooth color by giving a gradient from one iteration to the next
 
-                double fLog     = log2(log2(z.absSq())/2); 
-                double fIter    = (((double) iIter)+1.0 - fLog);
+                double log     = log2(log2(z.absSq())/2); 
+                double fIter    = (((double) iter)+1.0 - log);
                 
-                fIter /= ((double) iMaxIter-1); // Normalize to 1 so we can do a pow() to brighten it.
+                fIter /= ((double) maxIter-1); // Normalize to 1 so we can do a pow() to brighten it.
                 fIter = max(0,min(1,fIter));    // Make sure it stays within 0-1
 
-                int    iIndex = (int) ((double)(kColorTableSize-1)*pow(fIter,.37)); //pow(fIter,.7));
+                colorIndex = (int) ((double)(kColorTableSize-1)*pow(fIter,.37)); //fGamma /* .37+fGamma/10.0 */)); //pow(fIter,.7));
 
-                rgbOut = rgbColorTable[iIndex];
             }
-            cBitmap.SetPixel(j,rgbOut);              // Set the pixel in the one-line bitmap.
+
+            *output++ = colorIndex;   // Set mandelbrot data; to be converted to color later
+
         }
-        cWin->DisplayBitmap(0,i,cBitmap);           // Print the one-line bitmap to the Y row in the window.
-        if (bAbortSignal) break;                    // Madnelbrots can take a long time -- so, abort if we received a signal to do so
     }
+    auto elapsedMs = (int) timer.ElapsedMs();
     clock_t ctEnd = clock();
-    cDevWin->printf("Finished. Time = {g}%d{/} ms\n",ctEnd-ctStart);
+    devWin->printf("Finished. Time = {g}%d{/} ms\n",elapsedMs);
 }
 
 
 int CMandelbrot::main()
 {
-    // Create Sagebox and Main Mandelbrot Window
 
-    cWin = &Sagebox::NewWindow(100,100,szWinSize.cx,szWinSize.cy,"SageBox: Mandelbrot Smooth Color and 3-D Depth",Resizeable());   // Create Mandelbrot window
-                                                                                                // Resizeable() allows the user to resize it with the mouse/maximize
+    rgbColorTable[kColorTableSize] = PanColor::Black;
+
+    // Create Sagebox and Main Mandelbrot Window
+    // kw::Resizeable() allows the user to resize it with the mouse/maximize
+    // kw::SetSize() sets a specific size, rather than the default (usually 1200x800) 
+
+    win = &Sagebox::NewWindow("SageBox: Mandelbrot Smooth Color and 3-D Depth",Resizeable() + SetSize(winSize));
+
     // Set the canvas size so we can resize the window with the mouse.
     // Otherwise, the window cannot be resized -- resizing can be turned off by adding "false" to
     // SetCanvasSize() call. 
 
-    cWin->SetCanvasSize(cWin->GetDesktopSize());       // Get the entir desktop size so the maximize button can be used. 
+    win->SetCanvasSize(win->GetDesktopSize());       // Get the entir desktop size so the maximize button can be used. 
 
     // Set a message in the DevWindow.  The first usage of the Dev Window opens it.  In this case, just a text message to 
     // point out that the mousewheel and clicking on the screen can be used.
@@ -229,8 +304,8 @@ int CMandelbrot::main()
     //       when using rgbColors (i.e. {128,200,100} or a variable, i.e. rgbMyColor) that are not
     //       translatable from text in the "{<colorname>}" format.
 
-    cWin->DevText("{ly}Use the MouseWheel to zoom in/out. Click on screen to center.");
-    cWin->DevText("Resize the window with the mouse to change display size.",TextColor(SageColor::LightGray));   // Use light gray to subdue it a little.
+    Sagebox::DevText("{y}Use the MouseWheel to zoom in/out. Click on screen to center.");
+    Sagebox::DevText("Resize the window with the mouse to change display size.",TextColor(SageColor::LightGray));   // Use light gray to subdue it a little.
 
     // -------------------------------
     // Create and Set Control Defaults
@@ -251,101 +326,147 @@ int CMandelbrot::main()
     // window, with a sub-window for the Mandelbrot. This would be the time to split the functionality and
     // define the controls in the class instead of here as development controls.
 
-    auto& cJulia        = cWin->DevCheckbox("Draw Julia Set"); 
+    auto& checkboxJulia        = Sagebox::DevCheckbox("Draw Julia Set"); 
 
     // With EditBoxes, Default() is used, which sets the text to the value (string, float, or integer).
     // Also, SetText() can be used instead of Default() after the edit box is created. 
-    // See how cJuliaImag.SetText() is used instead of Default in the code below.
+    // See how checkboxJuliaImag.SetText() is used instead of Default in the code below.
     
-    auto& cEditBox      = cWin->DevEditBox("Iterations",opt::MinValue(50) | Default(iMaxIter));
+    auto& inputBox      = Sagebox::DevInputBox("Iterations",kw::MinValue(25) | Default(maxIter));
     
+    auto& sliderColorWidth = Sagebox::DevSlider("Color Width",Range(0,16384) + Default(16384)); 
+    auto& sliderColorStart = Sagebox::DevSlider("Color Start",Range(0,16384)); 
+
+
     // The "ArrowBox" style adds up/down arrows to the right of the Edit Box. These send
     // MouseWheel messages to the Edit Box.  Paired with the SetMouseWheel() calls below, allows the arrows and mousewheel
     // to be used to increment and decrement the values.   
     //
     // The Up/Down arrows may be held down constantly increase/decrease the value. 
 
-     auto& cJuliaReal    = cWin->DevEditBox("Julia Real",Style("Arrowbox") | Default(cfJulia.fR));
-     auto& cJuliaImag    = cWin->DevEditBox("Julia Imag",Style("Arrowbox")); // Don't set default here to show how it is done with SetText()
+     auto& checkboxJuliaReal    = Sagebox::DevInputBox("Julia Real",kw::AddArrowBox() | Default(pJulia.real));
+     auto& checkboxJuliaImag    = Sagebox::DevInputBox("Julia Imag",kw::AddArrowBox()); // Don't set default here to show how it is done with SetText()
       
-    
-     // Set an abort signal for the Mandlebrot, since they can take a long time. 
-     // In this case, it sets the WindowClose signal, so if the Window Close button is pressed,
-     // or something else causes the Window Close status to become active, bAbortSignal will be set to true. 
-     //
-     // This can be used internally in the DrawMandelbrot() function to abort without knowing about
-     // the GUI or control internals about how to abort
-     //
-     // This can also be extended to abort on any control movement that would require a redraw, speeding up the program.
+    auto radioOOBColor = Sagebox::DevRadioButtons("Black\nWhite",Title("Out of Bounds Mandelbrot Color") + Horz()); 
 
-     bool bAbortSignal{};
+    // Set an abort signal for the Mandlebrot, since they can take a long time. 
+    // In this case, it sets the WindowClose signal, so if the Window Close button is pressed,
+    // or something else causes the Window Close status to become active, abortSignal will be set to true. 
+    //
+    // This can be used internally in the DrawMandelbrot() function to abort without knowing about
+    // the GUI or control internals about how to abort
+    //
+    // This can also be extended to abort on any control movement that would require a redraw, speeding up the program.
 
-     cWin->SetSignal(SignalEvents::WindowClose,bAbortSignal); 
+    bool abortSignal{};
 
-    cDevWin = &cWin->DevWindow("Status Window",10);     // Open a basic Window int the Quick Dev Window, for output. 
+    win->SetSignal(SignalEvents::WindowClose,abortSignal); 
 
-    cJuliaImag.SetText(cfJulia.fI);                     // This is another way to set displayed value or string in the Edit Box at any time.
+    devWin = &Sagebox::DevWindow("Status Window",10);     // Open a basic Window int the Quick Dev Window, for output. 
+
+    checkboxJuliaImag.SetText(pJulia.imag);                     // This is another way to set displayed value or string in the Edit Box at any time.
 
     // SetMouseWheel() tells the edit box how to react to the mousewheel, setting the increase value and decrease value. 
     // Minimum and maximums may also be set.  Hover the mouse over the function for more information.
 
-    cJuliaReal.SetMouseWheel(.001,-.001);       // Set MouseWheel (and ArrowBox) Julia Real inc/dec to .001
-    cJuliaImag.SetMouseWheel(.001,-.001);       // Set MouseWheel (and ArrowBox) Julia Imaginary inc/dec to .001
-    cEditBox.SetMouseWheel(100,-100);           // Set MouseWheel iteration inc/dec to 100 - it already has a minimum of 50.
+    checkboxJuliaReal.SetMouseWheel(.001,-.001);       // Set MouseWheel (and ArrowBox) Julia Real inc/dec to .001
+    checkboxJuliaImag.SetMouseWheel(.001,-.001);       // Set MouseWheel (and ArrowBox) Julia Imaginary inc/dec to .001
+    inputBox.SetMouseWheel(25,-25);           // Set MouseWheel iteration inc/dec to 100 - it already has a minimum of 50.
 
-    CreateColorTable();
-    DrawMandelbrot(bAbortSignal);
+    // Set the Dev Window just adjacent to the top of the main window -- i.e. x = 25 + left + width, y = 0 + top + 0
+
+    Sagebox::DevSetLocation(CPoint(25,0) + win->GetWinLocation() + CPoint(win->GetWindowWidth(),0));        
+    Sagebox::DevWindowTopmost();    // Make the Dev Window 'topmost', meaning it will never get obscured by the main window (it will always be on top)
+    
+ 
+    bool redraw = true;
+    bool calcColorTable = true;
 
     // Main Event Loop
+    //
+    // Note: We don't need to create or display the initial mandelbrot before entering the event loop.  
+    // The first GetEvent() always falls through so that the inner-function can draw or setup initial values.
 
-    while (cWin->GetEvent())
+    while (Sagebox::GetEvent())
     {
-        bool bRedraw = false;
-        int iMouseWheel;
-        POINT pMouse;
-
-        // Get the event status of edutboxes and checkboxes, setting bRedraw if they have been set. 
+        // Get the event status of edutboxes and checkboxes, setting redraw if they have been set. 
         // The values are filled since they are included as parameters, but can be filled by retriving the 
-        // values with a function call, such as cJulia.Checked() or cJuliaReal.GetText(), etc.
+        // values with a function call, such as checkboxJulia.Checked() or checkboxJuliaReal.GetText(), etc.
         //
         // This method provides a nice shortcut to get values without having to conditionally check and set values.
 
-        bRedraw |= cJulia.Pressed(bJuliaSet);
-        bRedraw |= cJuliaReal.ReturnPressed(cfJulia.fR);
-        bRedraw |= cJuliaImag.ReturnPressed(cfJulia.fI);
-        bRedraw |= cEditBox.ReturnPressed(iMaxIter);
+        redraw |= checkboxJulia.Pressed(juliaSet);                  // Redraw of Julia/Mandelbrot type changed
+        redraw |= checkboxJuliaReal.ReturnPressed(pJulia.real);     // Redraw of Jula Real or Imaginary values changes
+        redraw |= checkboxJuliaImag.ReturnPressed(pJulia.imag);
+        redraw |= inputBox.ReturnPressed(maxIter);                  // Redraw of the maximum iteration value changed
 
-        // Check if the mousewheel in the Mandelbrot window was moved.  If so, increase/decrease the zoom factor
-        // based on the direction.  iMouseWheel comes back as a positive or integer value, but may be 1,2, 3 or so.
-
-        if (cWin->MouseWheelMoved(iMouseWheel))
+        // Switch Mandelbrot out-of-bounds color (interior, etc.) if one of the radio buttons was pressed
+        
+        if (radioOOBColor.Pressed())
         {
-            fRange *= iMouseWheel > 0 ? .65 : 1/.65;
-            bRedraw = true;
+            rgbColorTable[kColorTableSize] = radioOOBColor.GetCheckedButton() ? PanColor::White : PanColor::Black;
+            calcColorTable = true;
+        }
+        
+        // Color Width Slider handling -- set the color width based on the value, with 1 as a minimum. 
+        
+        if (auto pos = sliderColorWidth.opMoved())
+        {
+            colorWidth = max(1,*pos); 
+            calcColorTable = true; 
         }
 
-        if (cWin->MouseClicked(pMouse))
-        { 
-            CfPoint cfPoint        = pMouse;
-            CfPoint cfRange     = { fRange, fRange*cfWinSize.y/cfWinSize.x } ;
+        // Set the color offset, if the slider was moved
 
-            cfCenter = cfCenter + cfRange*(cfPoint-cfWinSize/2)/cfWinSize;
-            bRedraw = true;
+        if (auto pos = sliderColorStart.opMoved())
+        {
+            colorStart = *pos; 
+            calcColorTable = true;
+        }
+
+        // Check if the mousewheel in the Mandelbrot window was moved.  If so, increase/decrease the zoom factor
+        // based on the direction.  mouseWheel comes back as a positive or integer value, but may be 1,2, 3 or so.
+        
+        if (auto mouseWheel = win->opMouseWheelMoved())
+        {
+            range *= *mouseWheel > 0 ? .65 : 1/.65;
+            redraw = true;
+        }
+
+        // Center the mandelbrot based on where the mouse was clicked. 
+
+        if (auto mousePos = win->opMouseClicked())
+        { 
+            CfPoint pRange     = { range, range*winSizef.y/winSizef.x } ;
+
+            center += pRange*((CfPoint) *mousePos-winSizef/2)/winSizef;
+            redraw = true;
         }
 
         // If the window was resized (the user changed the size and then let go of the mouse), redraw it with the new size.
 
-        if (cWin->WindowResized(szWinSize))
+        if (auto size = win->opWindowResized())
         {
-            cfWinSize = szWinSize;
-            bRedraw = true;
+            winSizef = winSize = *size;     // Set integer and float window sizes
+            redraw = true;
         }
-        if (bRedraw) DrawMandelbrot(bAbortSignal);      // Redraw if we had an event that needs to update.
+
+        // Calculate and/or set create the color table (and then redraw the mandelbrot) if anything significant changed.
+
+        if (redraw) CreateMandelbrot(abortSignal);      
+        if (calcColorTable) CreateColorTable();
+        if (redraw || calcColorTable) DisplayMandelbrot();
+
+        redraw = false;            // Reset redraw and recalc color table
+        calcColorTable = false;
+
 
     }
 
     return 0; 
 }
+
+
 int main()
 {
     CMandelbrot cMandelbrot;

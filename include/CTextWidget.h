@@ -127,26 +127,26 @@ private:
 	MsgStatus OnMove(int iX,int iY) override;
 	void LocUpdate();
 	void LocCls();
-	void Init(const char * sInitialText,const char * sControls);
+	void Init(const char * sInitialText,const kwOpt & keywords);
 	void GetBackground();
 	bool CalcWindow();
 	bool Redraw();
 	void LocalWrite(const char * sText);
 public:
 	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,CString & cText); 
-	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,CString & cText,cwfOpt & cwOpt); 
-	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,CString & cText,const char * sControls); \
+	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,CString & cText,const kwOpt & keywords); 
+//	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,CString & cText,const char * sControls); 
 	~CTextWidget();
 	//CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,const char * sText=nullptr); 
-	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,const char * sText,cwfOpt & cwOpt); 
-	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,const char * sText=nullptr,const char * sControls = nullptr); 
-	void Write(const char * sText,cwfOpt & cwOpt);
+	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt & keywords = kw::none);  
+//	CTextWidget(CWindow * cParent,int iX,int iY,int iWidth,int iHeight,const char * sText=nullptr,const char * sControls = nullptr); 
+	void Write(const char * sText,const kwOpt & keywords);
 	void Write(const char * sText);
 	void Write(CString & cString);
 	__inline void Write(int iValue) { Write(CString() << iValue); }
 	__inline void Write(double fValue) { Write(CString() << fValue); }
 
-	void WriteShadow(const char * sText,cwfOpt & cwOpt);
+	void WriteShadow(const char * sText,const kwOpt & keywords);
 	void WriteShadow(const char * sText);
 	void WriteShadow(CString & cString);
 	void Show(bool bShow = true);

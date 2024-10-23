@@ -22,12 +22,12 @@
 //
 // Notes:
 //
-//   1. Try removing the Sleep() and running the demo with and without calling cLcd.SetFastMode()
+//   1. Try removing the Sleep() and running the demo with and without calling lcd.SetFastMode()
 //      This is a mode where the LCD will only display when necessary.
 //
 //      This is an example of creating fast and efficient program with a little extra effort. 
 //
-//      Note: SetFastMode() requires an additional cLcd.UpdateLast() afer the main loop exits. 
+//      Note: SetFastMode() requires an additional lcd.UpdateLast() afer the main loop exits. 
 //
 // *** Note: This can be a Console Program with a Console Window or a Pure Windows program.  See the Build->Configuration settings.
 
@@ -36,29 +36,29 @@
 
 int main()
 {
-    auto & cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time. 
+    auto & win = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time. 
 
-    // Bring up the LCD Widget.  Send in our Window (&cWin as the parent)
+    // Bring up the LCD Widget.  Send in our Window (&win as the parent)
     //
     // Put it at (50,50) with a value of 1234
    
-    CLcdDisplayWidget cLcd(&cWin,50,50); 
+    CLcdDisplayWidget lcd(&win,50,50); 
 
     // Count until the user presses a dev button to stop the program.
 
-    auto& cStopButton   = cWin.DevButton("Stop Counting");      // A quick way of creating development controls
+    auto& stopButton   = win.DevButton("Stop Counting");      // A quick way of creating development controls
                                                                 // with just one line of code.
     int iCount = 0;
 
-    while (!cStopButton.Pressed() && !cWin.WindowClosing())
+    while (!stopButton.Pressed() && !win.WindowClosing())
     {
         // Once the LCD reaches its maximum, it will stop counting, but we'll still be in the loop.
  
-        cLcd.SetValue(iCount++); 
+        lcd.SetValue(iCount++); 
         Sleep(1);       
     }
 
-    // Put cLcd.UpdateLast() when cLcd.FastMode() is used.
+    // Put lcd.UpdateLast() when lcd.FastMode() is used.
 
-    return cWin.ExitButton();   // Put up a button on the bottom of the window so we know we got the stop button message.
+    return win.ExitButton();   // Put up a button on the bottom of the window so we know we got the stop button message.
 }

@@ -74,7 +74,7 @@ friend CWindow;
 	int			m_iMinY = INT_MAX; 
 	int			m_iMaxX = INT_MIN;
 	int			m_iMaxY = INT_MIN;
-	CString		m_csControls;
+//	CString		m_csControls;
 	CString		m_csWinTitle;
 
 	bool m_bTransparent			= false;
@@ -90,14 +90,14 @@ friend CWindow;
 	CWindow  * m_cWin			= nullptr;
 
 	CDialog		* m_pOrgObject = nullptr;
-	CButton		& CreateButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton		& CreateButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton		& CreateCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton		& CreateCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton		& CreateRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton		& CreateRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & CreateTextWidget(int iX,int iY,int iWidth,int iHeight,const char * sText,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox	& CreateEditBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const char * sText,const cwfOpt & cwOpt = cwfOpt());
+	CButton		& CreateButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText,const kwOpt & keywords = kw::none);
+	CButton		& CreateButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const kwOpt & keywords = kw::none);
+	CButton		& CreateCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText, const kwOpt& keywords = kw::none);
+	CButton		& CreateCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	CButton		& CreateRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText, const kwOpt& keywords = kw::none);
+	CButton		& CreateRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	CTextWidget & CreateTextWidget(int iX,int iY,int iWidth,int iHeight,const char * sText,const kwOpt& keywords = kw::none);
+	CEditBox	& CreateInputBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const char * sText,const kwOpt & keywords = kw::none);
 
 	void SetOrgObject(CDialog * cDialog) { m_pOrgObject = cDialog; }
 	void CreateScriptControls();
@@ -112,91 +112,91 @@ public:
 	}
 	CDialog(CWindow * cParent,CWindow * cOutputWindow);
 	~CDialog();
-	bool Init(int iX,int iY,int iWidth,int iHeight,const char * sTitle, const char * sControls);
+	bool Init(int iX,int iY,int iWidth,int iHeight,const char * sTitle, const kwOpt & keywords);
 	bool Compile(const char * sDialog);
 
-	CButton & NewButton(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(int iX,int iY,int iWidth,int iHeightconst ,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+	CButton & NewButton(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CButton & NewButton(int iX,int iY,int iWidth,int iHeightconst ,const kwOpt & keywords = kw::none);
+	CButton & NewButton(int iX,int iY,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CButton & NewButton(int iX,int iY,const kwOpt & keywords = kw::none);
 
-	CButton & NewButton(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
+	CButton & NewButton(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const kwOpt & keywords = kw::none);
+	CButton & NewButton(int iX,int iY,const wchar_t * sText,const kwOpt & keywords = kw::none);
 	
-	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(CButton * cButton,int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(CButton * cButton,int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const kwOpt & keywords = kw::none);
+	CButton & NewButton(CButton * cButton,int iX,int iY,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CButton & NewButton(CButton * cButton,int iX,int iY,const kwOpt & keywords = kw::none);
 
-	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewButton(CButton * cButton,int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	
-	// Sub-Classable versions
-
-	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
-
-	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-
-	// Sub-Classable versions
-
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
-
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewCheckbox(CButton * cButton,int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-
-
-	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
-
-	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
+	CButton & NewButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const kwOpt & keywords = kw::none);
+	CButton & NewButton(CButton * cButton,int iX,int iY,const wchar_t * sText,const kwOpt & keywords = kw::none);
 	
 	// Sub-Classable versions
-	
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
 
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
-	CButton & NewRadioButton(CButton * cButton,int iX,int iY,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
+	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(int iX,int iY,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(int iX,int iY, const kwOpt& keywords = kw::none);
+
+	CButton & NewCheckbox(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(int iX,int iY,const wchar_t * sText, const kwOpt& keywords = kw::none);
+
+	// Sub-Classable versions
+
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY, const kwOpt& keywords = kw::none);
+
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt & keywords = kw::none);
+	CButton & NewCheckbox(CButton * cButton,int iX,int iY,const wchar_t * sText, const kwOpt& keywords = kw::none);
+
+
+	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(int iX,int iY,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(int iX,int iY, const kwOpt& keywords = kw::none);
+
+	CButton & NewRadioButton(int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(int iX,int iY,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	
+	// Sub-Classable versions
+	
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY,const char * sText = nullptr, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY, const kwOpt& keywords = kw::none);
+
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY,int iWidth,int iHeight,const wchar_t * sText, const kwOpt& keywords = kw::none);
+	CButton & NewRadioButton(CButton * cButton,int iX,int iY,const wchar_t * sText, const kwOpt& keywords = kw::none);
 
 	// Currently no method to sub-class the Text Widget
 
-	CTextWidget & NewTextWidget(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & NewTextWidget(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & NewTextWidget(int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CTextWidget & NewTextWidget(int iX,int iY,const cwfOpt cwOpt = cwfOpt());
+	CTextWidget & NewTextWidget(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt& keywords = kw::none);
+	CTextWidget & NewTextWidget(int iX,int iY,int iWidth,int iHeight,const kwOpt& keywords = kw::none);
+	CTextWidget & NewTextWidget(int iX,int iY,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CTextWidget & NewTextWidget(int iX,int iY,const kwOpt& keywords = kw::none);
 
 
-	CWindow & NewBitmapWindow(int iX,int iY,CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt());
-	CWindow & NewBitmapWindow(int iX,int iY,Sage::RawBitmap_t & cBitmap,const cwfOpt & cwOpt = cwfOpt());
+	CWindow & NewBitmapWindow(int iX,int iY,CBitmap & cBitmap,const kwOpt & keywords = kw::none);
+	CWindow & NewBitmapWindow(int iX,int iY,Sage::RawBitmap_t & cBitmap,const kwOpt & keywords = kw::none);
 
 
 
-	CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(int iX,int iY,const cwfOpt cwOpt = cwfOpt());
+    CEditBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(int iX,int iY,int iWidth,int iHeight,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(int iX,int iY,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(int iX,int iY,const kwOpt & keywords = kw::none);
 
 	// Sub-Classable versions
 
-	CEditBox & NewEditBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(CEditBox * cEditBox,int iX,int iY,const char * sText = nullptr,const cwfOpt & cwOpt = cwfOpt());
-	CEditBox & NewEditBox(CEditBox * cEditBox,int iX,int iY,const cwfOpt cwOpt = cwfOpt());
+    CEditBox & NewInputBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(CEditBox * cEditBox,int iX,int iY,int iWidth,int iHeight,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(CEditBox * cEditBox,int iX,int iY,const char * sText = nullptr,const kwOpt & keywords = kw::none);
+	CEditBox & NewInputBox(CEditBox * cEditBox,int iX,int iY,const kwOpt & keywords = kw::none);
 
 
-
+#if 0
 	CSlider	& NewSlider(int iX,int iY,int iWidth,const char * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt());
 	CSlider	& NewSlider(int iX,int iY,int iWidth,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
 	CSlider	& NewSlider(int iX,int iY,int iWidth,const cwfOpt & cwOpt = cwfOpt());
@@ -206,8 +206,19 @@ public:
 	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const char * sLabel = nullptr,const cwfOpt & cwOpt = cwfOpt());
 	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const wchar_t * sText,const cwfOpt & cwOpt = cwfOpt());
 	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const cwfOpt & cwOpt = cwfOpt());
+#endif
+	CSlider	& NewSlider(int iX,int iY,int iWidth,const char * sLabel = nullptr,const kwOpt & keywords = kw::none);
+	CSlider	& NewSlider(int iX,int iY,int iWidth,const wchar_t * sText,const kwOpt & keywords = kw::none);
+	CSlider	& NewSlider(int iX,int iY,int iWidth,const kwOpt & keywords = kw::none);
 
-	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const cwfOpt & cwOpt);
+	// Sub-Classable versions
+
+	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const char * sLabel = nullptr,const kwOpt & keywords = kw::none);
+	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const wchar_t * sText,const kwOpt & keywords = kw::none);
+	CSlider	& NewSlider(CSlider * cSlider,int iX,int iY,int iWidth,const kwOpt & keywords = kw::none);
+
+
+	CWindow & NewWindow(int iX,int iY,int iWidth,int iHeight,const kwOpt& keywords = kw::none);
 
 	// Instantiate the dialog box.  By default, this also shows the Dialog Box.
 	// When bShow == false (i.e. dialog.Go(false)), the dialog box stays hidden so that changes

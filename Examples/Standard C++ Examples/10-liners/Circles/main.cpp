@@ -1,10 +1,7 @@
 
-// File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
-// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
-
 #include "SageBox.h"
 
-using namespace Sage::kw;       // For keywords in Sage::kw (also Sage::opt) namespace
+using namespace Sage::kw;       // Sagebox Keyword Options
 
 // -----------------------
 // 10-Line Circles Program
@@ -21,7 +18,7 @@ using namespace Sage::kw;       // For keywords in Sage::kw (also Sage::opt) nam
 //
 // It shows using Sagebox in a nice graphic setting and also how it works in various ways
 //
-// Note: This project is set for a Windows program.  You can change it to 
+// Note: This project is se t for a Windows program.  You can change it to 
 //       a console-mode  program in the Build->Configuration settings
 //
 int main()
@@ -31,24 +28,24 @@ int main()
     //
     // bgGradient() -- Clears the window using a gradient from the first color to the second.
 
-    auto& cWin = Sagebox::NewWindow(bgGradient(PanColor::Black,PanColor::DarkBlue));
+    auto& win = Sagebox::NewWindow(bgColor("black,darkblue"));
 
-    double fR = 150;        // Set a radius. 
+    double radius = 150;        // Set a radius. 
 
-    CfPoint pWinSize = cWin.GetWindowSize();        // Get the internal window size
+    CfPoint pWinSize = win.GetWindowSize();        // Get the internal window size
                                                     // GetWindowSize(true) returns entire window size (+frame)
 
+    win.SetPenSize(2);          // Set Pen Size here globally.  Otherwise, we can use kw::PenSize() in the DrawCircle() call
     for (int i=0;i<50;i++)
     {
-        double fAngle = (double) i*3.14159/25;
-
-        cWin.SetPenSize(2); 
+        double angle = (double) i*Math::PI/25.0;
 
         // Use a floating-point structure so we can do some math with it. 
-        // Similar to MSVC Point but a floating-pointer version
+        // Similar to MSVC Point but a floating-point version
 
-        CfPoint pLoc = pWinSize/2 + CfPoint{ sin(fAngle), cos(fAngle) }*fR;
-        cWin.DrawCircle(pLoc,fR,RgbColor::fromHSL(rand() % 360)); 
+        auto pLoc = pWinSize/2 + CfPoint{ sin(angle), cos(angle) }*radius;
+        win.DrawCircle_f(pLoc,radius,RgbColor::fromHSL(rand() % 360));     // floating-point version of DrawCircle()
     }
-    return cWin.ExitButton();       // Change to cwin.WaitforClose() to remove button but wait for window close
+    return win.ExitButton();       // Change to cwin.WaitforClose() to remove button but wait for window close
 }
+ 

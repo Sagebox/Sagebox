@@ -51,9 +51,9 @@
 // configuration, we can just include it here.  The Project configuration already has the correct
 // libary path for x32 and x64 Widgets. 
 
-#pragma comment(lib,"CDialWidget.lib")          // Specify the library we want (otherwise, include it in the project specification)
+#pragma comment(lib,"CdialWidget.lib")          // Specify the library we want (otherwise, include it in the project specification)
 
-#include "..\Widgets\include\CDialWidget.h"     // Include the Dial Widget file, relative to the Sagebox main include path
+#include "..\Widgets\include\CdialWidget.h"     // Include the Dial Widget file, relative to the Sagebox main include path
 
 
 // Main program: Demonstration of the Dial Widget and quick usage of debug output.
@@ -66,36 +66,36 @@
 
 int main()
 {    
-   auto & cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+   auto & win = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
                                            
     // Create a Dial Widget and put it at (25,25) in the window.
     // Normally, I wouldn't use magic numbers and assign these values,
     // but for demo purposes, it's nicer to focus on the specific Sagebox code.
 
-    CDialWidget cDial(&cWin,25,25 + 25);        // Pass in our Window (cWin) as the parent window
+    CDialWidget dial(&win,25,25 + 25);        // Pass in our Window (win) as the parent window
 
     // We want to center the widget, so add (50,50) to center it since it's at (25,25)
     // The "-5" is to compensate for the shadow on the right edge (this is kind of an oversight in the widget)
     // With graphics (as opposed to text input/output), much if it becomes about eye-balling it. 
 
-    auto szSize = CPoint{ 50-5,50 + 15 } + cDial.GetWindowSize();       // GetWindowSize() returns a SIZE, but we use CPoint so we can 
+    auto szSize = CPoint{ 45,65 } + (CPoint) dial.GetWindowSize();      // GetWindowSize() returns a SIZE, but we use CPoint so we can 
                                                                         // do some easy math.
     
-    cWin.SetWindowSize(szSize,true);                             // Set the window size to about 50 pixels larger than the widget itself,
-                                                                // so it looks centered.  The "true" option tells SetWindowSize() 
-                                                                // to make the client size the size given (otherwise it's the entire window size,
-                                                                // including borders and top bar).
+    win.SetWindowSize(szSize,true);         // Set the window size to about 50 pixels larger than the widget itself,
+                                            // so it looks centered.  The "true" option tells SetWindowSize() 
+                                            // to make the client size the size given (otherwise it's the entire window size,
+                                            // including borders and top bar).
 
     // Add a label.  It's done after the window size, because CenterX() centers it in the visible window
     // (which was much wider before).  We can also use Write() or printf(), but the TextWidget is overall more useful for labels
     // and persistent text. 
 
-    cWin.TextWidget(0,15,"Dial Widget",kw::CenterX() | kw::Font("arial,23")); 
+    win.TextWidget(0,15,"Dial Widget",kw::CenterX() | kw::Font("arial,23")); 
 
     // Look for any events.  We only want the dial event, so that's all we look for.
     // GetEvent() returns false (and the while loop exits) when the window is closed (this action can be disabled)
 
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
         // If the value is changed, put the value out to the debug window.
         // This is an example of using the debug window, which is in the Process Control Window,
@@ -104,7 +104,7 @@ int main()
         //
         // note: when debug is first used, it creates the Process Control Window, so no initialization is required.
 
-        if (cDial.ValueChanged()) cWin.debug.printf("Value = {g}%d\n",(int) cDial.GetValue());
+        if (dial.ValueChanged()) win.debug.printf("Value = {g}%d\n",(int) dial.GetValue());
     }
 
     // We don't need an exit button or WaitforClose() since we waited for the window close with the GetEvent() loop

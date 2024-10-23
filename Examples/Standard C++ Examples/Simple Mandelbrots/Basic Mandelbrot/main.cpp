@@ -1,7 +1,3 @@
-// Basic Mandelbrot -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // ****************
 // Basic Mandelbrot
@@ -18,15 +14,12 @@
 //
 //  1. Basic Mandelbrot
 //
-//      This is a simple Mandelbrot with color, using std::complex. 
-//      It's slow, but works and is only about 25 lines of code.
-//  
-//  2. Basic Mandelbrot Faster
-//
-//      This adds speed to the mandelbrot by replacing std::complex with CComplex, 
-//      Windows DrawPixel() with a bitmap funciton via CSageBitmap. 
-//
-//  3. Smooth Color, Julia Set, and Dev Window
+//      This is a simple mandelbrot with no color gradation, so the colors change abruptly vs. the Smooth Color version that
+//      has a nice color gradient throughout. 
+// 
+//      Either type can create some interesting mandelbrot displays and colors.
+// 
+//  2. Smooth Color, Julia Set, and Dev Window
 //
 //      This is a small change from the previous version, adding smooth coloring and the Julia
 //      set to the output.   
@@ -36,7 +29,7 @@
 //      This version also adds some more power by assing z.sq() instead of z*z for a little faster
 //      Mandelbrot calculation.  FastSetPixel() is also used in CSageBitmap to set the pixel much faster.
 //
-//  4. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
+//  3. MandelBrot Interactive (zoom in/out, resize window, set Julia Set and more) 
 //
 //      This shows how to add Development-based controls to change values of the Mandelbrot
 //      with just a few lines of code.
@@ -78,23 +71,22 @@
 int main()
 
 {
-    POINT cWinSize      = { 800, 600 };     // Initial Window Size
-    CfPoint cfWinSize   = cWinSize;         // Get a floating-point version of window size
+    CfPoint winSize      = { 1400, 900 };     // Initial Window Size
  
     // Initial Mandelbrot Values (Center, Range and Iterations)
 
-    CfPoint cfCenter    = { -.6, 0 };       // Initial Mandelbrot Center
-    double fRange       = 3.5;              // Initial Range (i.e. "zoom" factor)
-    int iMaxIter        = 50;               // Max Mandelbrot Iterations
+    CfPoint pCenter    = { -.6, 0 };       // Initial Mandelbrot Center
+    double range       = 3.5;              // Initial Range (i.e. "zoom" factor)
+    int maxIter        = 50;               // Max Mandelbrot Iterations
 
-    CfPoint cfRange     = { fRange, fRange*cfWinSize.y/cfWinSize.x };   // Range based on X-axis
+    CfPoint pRange     = { range, range*winSize.y/winSize.x };   // Range based on X-axis
 
-    CfPoint cfD         = cfRange/cfWinSize;                            // Unit Increment for each pixel
-    CfPoint cfStart     = cfCenter - cfD*cfWinSize/2;                   // Upper-left X,Y position to start
+    CfPoint fD         = pRange/winSize;                            // Unit Increment for each pixel
+    CfPoint pStart     = pCenter - fD*winSize/2;                   // Upper-left X,Y position to start
 
     // Color Table based on Wikipedia Mandelbrot Colors
 
-    static RGBColor_t rgbColors[16] = 
+    static RgbColor rgbColors[16] = 
     {
         { 0, 0, 0       }, { 25, 7, 26     }, { 9, 1, 47      }, { 4, 4, 73      }, 
         { 0, 7, 100     }, { 12, 44, 138   }, { 24, 82, 177   }, { 57, 125, 209  },
@@ -103,37 +95,31 @@ int main()
     }; 
 
     
-    auto cWin = &Sagebox::NewWindow(100,100,cWinSize.x,cWinSize.y,"Basic Mandelbrot (basic, no frills, standard C++ version)");
+    auto& win = Sagebox::NewWindow("Basic Mandelbrot (basic, no frills, standard C++ version)",kw::SetSize(winSize));
 
-    // note: AutoUpdate is on, so the window updates automatically every 10-20ms. When ExitButton() is called, it 
-    // performs any pending updates finishing any part of the Mandelbrot output that may not have updated to the window
-    // in the last 10-20ms of output.
-
-    for (int i=0;i<cWinSize.y;i++)
+    for (int i=0;i<winSize.y;i++)
     {
-        double fy = (double) i*cfD.y + cfStart.y;
-        for (int j=0;j<cWinSize.x;j++)
+        double y = (double) i*fD.y + pStart.y;
+        for (int j=0;j<winSize.x;j++)
         {
-            double fx = (double) j*cfD.x + cfStart.x;
+            double x = (double) j*fD.x + pStart.x;
 
-            int iIter = 0;
+            int iter = 0;
 
-            // For Julia Set, set z = { fx, fy } and c to a static value, such as (.285, 0) or (-4.,.6) (and set cfCenter to (0,0);
+            // For Julia Set, set z = { x, y } and c to a static value, such as (.285, 0) or (-4.,.6) (and set pCenter to (0,0);
 
-            std::complex<double> c = { fx, fy };
+            CComplex c = { x, y };
             auto z = c;
-            while (abs(z) < 2 && iIter++ < iMaxIter-1) z = z*z + c;
+            while (abs(z) < 2 && iter++ < maxIter-1) z = z*z + c;
 
-            int iColor = (iIter == iMaxIter) ? 0 : iIter % 16; //iIter*15/(iMaxIter-1);
+            int color = (iter == maxIter) ? 0 : iter % 16; //iter*15/(maxIter-1);
 
             // Note: Windows DrawPixel() is slow! See next version ("Faster Mandelbrot") for a better method using
             // a bitmap output that prints a line at a time (using CSageBitmap)
 
-            cWin->DrawPixel(j,i,rgbColors[iColor]); 
+            win.DrawPixel(j,i,rgbColors[color]); 
         }
     }
 
-    cWin->ExitButton(); // Get user input so the window doesn't close when CSageBox is deleted.
-
-    return 0;
+    return win.ExitButton(); // Get user input so the window doesn't close when CSageBox is deleted.
 }

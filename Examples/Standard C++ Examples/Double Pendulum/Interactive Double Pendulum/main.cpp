@@ -51,7 +51,7 @@
 // ---------------
 // 
 //      This program works by waiting for the vertical resync, then drawing the pendulum and updating the window. 
-//      The opt::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
+//      The kw::RealTime() setting enables the high resolution timer and sets other configgurations to allow better
 //      real-time display
 // 
 // --------------
@@ -65,7 +65,7 @@
 // Timing Display 
 // --------------
 //
-//      When bShowTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
+//      When showTiming is set to True, the time for each loop is displayed in the Sagebox Process Window, showing the milliseconds
 //      taken to calculate and draw the pendulum.
 //
 // --------------
@@ -76,44 +76,44 @@
 //
 int main()
 {
-    bool bDisplayValues         = true;     // Display current values to the window on/off
-    bool bDisplayInstructions   = true;     // Display instructions.  Set to off as soon as one of the bobs is moved by the user.
-    bool bShowTiming            = false;    // Display real-time timing information in ms 
+    bool displayValues         = true;     // Display current values to the window on/off
+    bool displayInstructions   = true;     // Display instructions.  Set to off as soon as one of the bobs is moved by the user.
+    bool showTiming            = false;    // Display real-time timing information in ms 
 
     // Create main pybox window
 
-    auto& cWin = Sagebox::NewWindow(SIZE{1200,700},"Sagebox C++ Interactive Double Pendulum",opt::RealTime() << opt::bgColor("black"));
+    auto& win = Sagebox::NewWindow("Sagebox C++ Interactive Double Pendulum",kw::Realtime() << kw::bgColor("black") << kw::SetSize(1200,700));
 
     // Initialize the pendulum with the Sagebox Window, as well as the Rod Lengths, Mass1 & Mass2, dampening
     // and starting angles (in degrees)
 
-    DoublePendulum pend(cWin,220, 185, 10.0, 10.0, -15.0, -15.0, .9985, .33);
+    DoublePendulum pend(win,220, 185, 10.0, 10.0, -15.0, -15.0, .9985, .33);
 
     // Build Dev Controls
 
-    int iDragging = 0;                          // > 0 when we're dragging a pendulum bob
-    double fThickness[3] = { 1.0, 2.0, 3.0 };   // Thickness for the Rod Thickness radio box
+    int dragging = 0;                           // > 0 when we're dragging a pendulum bob
+    double thickness[3] = { 1.0, 2.0, 3.0 };    // Thickness for the Rod Thickness radio box
 
-    auto szWinSize = cWin.GetWindowSize();      // Used when we move the display offset up/down with right mouse button
+    auto winSize = win.GetWindowSize();         // Used when we move the display offset up/down with right mouse button
     
-     // If the mouse was clicked, Pause or Unpause the display.  Also set a dragging indicator if the user pressed on 
+    // If the mouse was clicked, Pause or Unpause the display.  Also set a dragging indicator if the user pressed on 
     // one of the pendulum bobs. 
     //
     auto HandleMouseClick = [&]()
     {
-        bDisplayInstructions = false;
-        bool bForceHold = !pend.m_bPause;
+        displayInstructions = false;
+        bool forceHold = !pend.m_bPause;
   
-        CfPoint pPos = cWin.GetMousePos(); 
-        double fRadius1 = pend.fTopRadius*pend.m_fZoom*pend.m_fCircleMult;
-        double fRadius2 = pend.fBotRadius*pend.m_fZoom*pend.m_fCircleMult;
+        CfPoint pPos = win.GetMousePos(); 
+        double radius1 = pend.fTopRadius*pend.m_fZoom*pend.m_fCircleMult;
+        double radius2 = pend.fBotRadius*pend.m_fZoom*pend.m_fCircleMult;
 
-        iDragging = 0;
+        dragging = 0;
 
-        if (pPos.WithinRect(pend.m_RodVertex[1]-fRadius1,pend.m_RodVertex[1] + fRadius1)) iDragging = 1;
-        if (pPos.WithinRect(pend.m_RodVertex[2]-fRadius2,pend.m_RodVertex[2] + fRadius2)) iDragging = 2;
+        if (pPos.WithinRect(pend.m_RodVertex[1]-radius1,pend.m_RodVertex[1] + radius1)) dragging = 1;
+        if (pPos.WithinRect(pend.m_RodVertex[2]-radius2,pend.m_RodVertex[2] + radius2)) dragging = 2;
 
-        if (!iDragging) pend.m_bPause = bForceHold;
+        if (!dragging) pend.m_bPause = forceHold;
         else pend.m_bPause = true;
     };
 
@@ -121,10 +121,10 @@ int main()
     //
     auto HandleMouseDrag = [&]()
     {
-        auto pDelta =  (CfPoint) cWin.GetMousePos()-pend.m_RodVertex[iDragging-1];
-        pend.m_fAngle[iDragging-1] = std::atan2(pDelta.x,pDelta.y);
+        auto pDelta =  (CfPoint) win.GetMousePos()-pend.m_RodVertex[dragging-1];
+        pend.m_fAngle[dragging-1] = std::atan2(pDelta.x,pDelta.y);
 
-        pend.m_fLength[iDragging - 1] = std::sqrt(pDelta.x*pDelta.x + pDelta.y*pDelta.y)/pend.m_fZoom;
+        pend.m_fLength[dragging - 1] = std::sqrt(pDelta.x*pDelta.x + pDelta.y*pDelta.y)/pend.m_fZoom;
         pend.Reset(); 
     };
 
@@ -132,34 +132,34 @@ int main()
 
     auto HandleEvents = [&]()
     {
-        if (cWin.MouseClicked()) HandleMouseClick();
-        if (cWin.MouseDragEvent() && iDragging) HandleMouseDrag();
+        if (win.MouseClicked()) HandleMouseClick();
+        if (win.MouseDragEvent() && dragging) HandleMouseDrag();
 
-        if (auto iDir = cWin.MouseWheelMoved()) iDir < 0 ? pend.m_fZoom *= .95 : pend.m_fZoom *= 1/.95; 
+        if (auto iDir = win.MouseWheelMoved()) iDir < 0 ? pend.m_fZoom *= .95 : pend.m_fZoom *= 1/.95; 
 
-        if (cWin.MouseRButtonDown()) pend.m_RodVertex[0].y = cWin.GetMousePos().y;
+        if (win.MouseRButtonDown()) pend.m_RodVertex[0].y = win.GetMousePos().y;
     };
 
     // Display instruction in the window
     //
     auto DisplayInstructions = [&]()
     {
-        cWin.SetFgColor("Gray192");         // Set the text color
+        win.SetFgColor("Gray192");         // Set the text color
 
         // {y} = yellow, {g} = green. {30} = set font to size 30pt
 
-        cWin.SetWriteIndent(300);   // Set the newline position for each line 
-        cWin.SetWritePos(300,100); 
-        cWin.Write("{30}{y}Double Pendulum\n"); 
-        cWin.Write("\nClick on either or both pendulums to set position.\n"); 
-        cWin.Write("Click on the screen (or press {g}\"Drop\"{/}) to drop the pendulum.\n\n");
-        cWin.Write("Click on {g}\"Maintain Rod Length\"{/} to change pendulum angles without changing the rod length.\n\n");
-        cWin.Write("Use the controls to the left to change states while pendulum is in motion or before dropping the pendulum.\n\n");
-        cWin.Write("{p}While the pendulum is moving\n\n"); 
-        cWin.Write("Right-click on the screen to move the display area up and down\n"); 
-        cWin.Write("Use the Mouse Wheel to zoom in and out\n"); 
-        cWin.Write("Click on the display area to stop the pendulums so you can move them.");            
-        cWin.SetWriteIndent(0);     // Set newline indent back to 0
+        win.SetWriteIndent(300);   // Set the newline position for each line 
+        win.SetWritePos(300,100); 
+        win.Write("{30}{y}Double Pendulum\n"); 
+        win.Write("\nClick on either or both pendulums to set position.\n"); 
+        win.Write("Click on the screen (or press {g}\"Drop\"{/}) to drop the pendulum.\n\n");
+        win.Write("Click on {g}\"Maintain Rod Length\"{/} to change pendulum angles without changing the rod length.\n\n");
+        win.Write("Use the controls to the left to change states while pendulum is in motion or before dropping the pendulum.\n\n");
+        win.Write("{p}While the pendulum is moving\n\n"); 
+        win.Write("Right-click on the screen to move the display area up and down\n"); 
+        win.Write("Use the Mouse Wheel to zoom in and out\n"); 
+        win.Write("Click on the display area to stop the pendulums so you can move them.");            
+        win.SetWriteIndent(0);     // Set newline indent back to 0
 
     };
 
@@ -167,27 +167,27 @@ int main()
     //
     auto DisplayValues = [&]()
     {
-        cWin.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
-        cWin.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
+        win.SetWriteIndent(10);    // Set leftmost column at 10 pixels out we can just use \n without setting it for each line.
+        win.SetWritePadding(5);    // Add some space between lines when writing to the window (for nicer display)
 
-        cWin.SetFgColor(SageColor::Gray172);         // Set the text color.  Also can be simpl "Gray172" in quotes.
+        win.SetFgColor(SageColor::Gray172);         // Set the text color.  Also can be simpl "Gray172" in quotes.
 
         // {g}  green, {c} = cyan.  {x=130) sets the X write position to that value so things line up
 
-        cWin.SetWritePos(10,10); 
+        win.SetWritePos(10,10); 
 
-        cWin.printf("Mass 1:{x=130}{g}%.2f\n",          (float) pend.m_fMass[0]); 
-        cWin.printf("Mass 2:{x=130}{g}%.2f\n",          (float) pend.m_fMass[1]); 
-        cWin.printf("Length 1:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[0])); 
-        cWin.printf("Length 2:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[1])); 
-        cWin.printf("Dampening:{x=130}{g}%g\n\n",       (float) (1.0-(pend.m_fDamp1*pend.m_fOverflowMul))); 
-        cWin.printf("Ang Accel 1:{x=130}{c}%f\n",       (float) pend.m_fAngAccel1); 
-        cWin.printf("Ang Accel 2:{x=130}{c}%f\n",       (float) pend.m_fAngAccel2); 
-        cWin.printf("Ang Velocity 1:{x=130}{c}%f\n",    (float) pend.m_fAngVel1); 
-        cWin.printf("Ang Velocity 2:{x=130}{c}%f\n",    (float) pend.m_fAngVel2); 
-        cWin.printf("Angle 1:{x=130}{c}%.2f\xb0\n",     (float) (pend.m_fAngle[0]*180.0/Sage::Math::PI)); 
-        cWin.printf("Angle 2:{x=130}{c}%.2f\xb0\n\n",   (float) (pend.m_fAngle[1]*180.0/Sage::Math::PI)); 
-        cWin.printf("Zoom:{x=130}{g}%.2f%%\n",          (float) (pend.m_fZoom*100.0)); 
+        win.printf("Mass 1:{x=130}{g}%.2f\n",          (float) pend.m_fMass[0]); 
+        win.printf("Mass 2:{x=130}{g}%.2f\n",          (float) pend.m_fMass[1]); 
+        win.printf("Length 1:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[0])); 
+        win.printf("Length 2:{x=130}{g}%.2f\n",        (float) (pend.m_fLength[1])); 
+        win.printf("Dampening:{x=130}{g}%g\n\n",       (float) (1.0-(pend.m_fDamp1*pend.m_fOverflowMul))); 
+        win.printf("Ang Accel 1:{x=130}{c}%f\n",       (float) pend.m_fAngAccel1); 
+        win.printf("Ang Accel 2:{x=130}{c}%f\n",       (float) pend.m_fAngAccel2); 
+        win.printf("Ang Velocity 1:{x=130}{c}%f\n",    (float) pend.m_fAngVel1); 
+        win.printf("Ang Velocity 2:{x=130}{c}%f\n",    (float) pend.m_fAngVel2); 
+        win.printf("Angle 1:{x=130}{c}%.2f\xb0\n",     (float) (pend.m_fAngle[0]*180.0/Sage::Math::PI)); 
+        win.printf("Angle 2:{x=130}{c}%.2f\xb0\n\n",   (float) (pend.m_fAngle[1]*180.0/Sage::Math::PI)); 
+        win.printf("Zoom:{x=130}{g}%.2f%%\n",          (float) (pend.m_fZoom*100.0)); 
 
         // If there has been an overflow, then display it in red.  This means the math/float-point had
         // some sort of resolution problem, usually when the bob starts wobbling severely.
@@ -196,10 +196,10 @@ int main()
 
         if (pend.m_iOverflowCount > 2)
         {
-            cWin.printf("\n\n\n\n{r}Math Overflow (%d)\n",pend.m_iOverflowCount-2); 
-            cWin.printf("{12}Try increasing dampening (also lowering weight values and weight ratios).");
+            win.printf("\n\n\n\n{r}Math Overflow (%d)\n",pend.m_iOverflowCount-2); 
+            win.printf("{12}Try increasing dampening (also lowering weight values and weight ratios).");
         }
-        cWin.SetWritePadding(0);    // Reset Padding (since we may be displaying instructions)
+        win.SetWritePadding(0);    // Reset Padding (since we may be displaying instructions)
 
     };
 
@@ -207,15 +207,15 @@ int main()
     //
     // Waits for vertical resync and then draws updates the pendulum and renders it. 
    
-    while (cWin.VsyncWait())
+    while (win.VsyncWait())
     {
-        cWin.Cls();                         // Clear the window
-        CSageTimer csTimer;                 // Time the loop so we can see how long it takes 
+        win.Cls();                      // Clear the window
+        SageTimer timer;                // Time the loop so we can see how long it takes 
 
         // Use EventPending() so we only look for events when we know there is one to look for. 
         // EventPending() is not required, but allows us to not spend time looking for events when nothing has happened.
 
-        if (cWin.EventPending()) HandleEvents(); 
+        if (win.EventPending()) HandleEvents(); 
 
         pend.Update();                      // Update the pendulum position
         pend.Render();                      // Draw the pendulum
@@ -224,16 +224,16 @@ int main()
         //
         // {w} sets color to white (overriding current gray color for output)
 
-        cWin.Write(0,10,"{w}Sagebox C++ Interactive Double Pendulum",opt::CenterX() << opt::Font(30));
+        win.Write(0,10,"{w}Sagebox C++ Interactive Double Pendulum",kw::CenterX() << kw::Font(30));
 
 
-        if (bDisplayInstructions) DisplayInstructions();
-        if (bDisplayValues) DisplayValues();
+        if (displayInstructions) DisplayInstructions();
+        if (displayValues) DisplayValues();
 
-        auto usTime = csTimer.ElapsedUs();                                              // Get time we took to update and draw the pendulum in microseconds
-        if (bShowTiming) SageDebug::printf("Time = {p}%f ms\n",(float) usTime/1000);    // Print the time out to the Sagebox process/debug window
+        auto usTime = timer.ElapsedUs();                                              // Get time we took to update and draw the pendulum in microseconds
+        if (showTiming) SageDebug::printf("Time = {p}%f ms\n",(float) usTime/1000);    // Print the time out to the Sagebox process/debug window
 
-        cWin.Update();                  // Update the bitmap in the window. 
+        win.Update();                  // Update the bitmap in the window. 
 
     }
     return 0; 

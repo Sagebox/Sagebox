@@ -1,7 +1,12 @@
 #pragma once
+#include "keywords\opt2_keyfuncs.h"
 
 namespace Sage
 {
+namespace kw
+{
+    extern const kwType::ckw none;
+}
     // WinConio Structure -- Functions for Console Window Output 
     // ---------------------------------------------------------
     //
@@ -75,6 +80,8 @@ namespace Sage
     //
     struct WinConio
     {
+        using kwOpt = kwType::ckw;
+
         WinConio & operator << (const char * x)        ;
         WinConio & operator << (char x)                ;
         WinConio & operator << (std::string & cs)      ;
@@ -523,7 +530,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Integer entered or 0 if error or non-number value entered.</returns>
-        int GetInteger(const char * sMsg, const cwfOpt & cwOpt = cwfOpt()); 
+        int GetInteger(const char * sMsg, const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets an integer from the console and returns an int value. 
@@ -532,7 +539,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Integer entered or 0 if error or non-number value entered.</returns>
-        int GetInteger(const cwfOpt & cwOpt = cwfOpt()); 
+        int GetInteger(const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a long integer from the console and returns a long value. 
@@ -541,7 +548,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Long value entered or 0 if error or non-number value entered.</returns>
-        long GetLong(const char * sMsg, const cwfOpt & cwOpt = cwfOpt());
+        long GetLong(const char * sMsg, const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a long integer from the console and returns a long value. 
@@ -550,7 +557,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Long value entered or 0 if error or non-number value entered.</returns>
-        long GetLong(const cwfOpt & cwOpt = cwfOpt());
+        long GetLong(const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
@@ -560,7 +567,7 @@ namespace Sage
         /// <para>Same as GetNumber()</para>
         /// </summary>
         /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
-        long long GetLongLong(const char * sMsg, const cwfOpt & cwOpt = cwfOpt()); 
+        long long GetLongLong(const char * sMsg, const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
@@ -570,7 +577,7 @@ namespace Sage
         /// <para>Same as GetNumber()</para>
         /// </summary>
         /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
-        long long GetLongLong(const cwfOpt & cwOpt = cwfOpt()); 
+        long long GetLongLong(const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
@@ -580,7 +587,7 @@ namespace Sage
         /// <para>Same as GetLongLong()</para>
         /// </summary>
         /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
-        long long GetNumber(const char * sMsg, const cwfOpt & cwOpt = cwfOpt());
+        long long GetNumber(const char * sMsg, const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a 64-bit 'long long' type from the console and returns a 'long long' value. 
@@ -590,7 +597,7 @@ namespace Sage
         /// <para>Same as GetLongLong()</para>
         /// </summary>
         /// <returns>64-bit Long Long value entered or 0 if error or non-number value entered.</returns>
-        long long GetNumber(const cwfOpt & cwOpt = cwfOpt());
+        long long GetNumber(const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a double value from the console and returns the double value. 
@@ -599,7 +606,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Double value entered or 0 if error or non-number value entered.</returns>
-        double GetFloat(const char * sMsg, const cwfOpt & cwOpt = cwfOpt()); 
+        double GetFloat(const char * sMsg, const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a double value from the console and returns the double value. 
@@ -608,7 +615,7 @@ namespace Sage
         ///     The buffer is cleared before and after entry for error, providing for sage number entry that can be validated in a loop.
         /// </summary>
         /// <returns>Double value entered or 0 if error or non-number value entered.</returns>
-        double GetFloat(const cwfOpt & cwOpt = cwfOpt()); 
+        double GetFloat(const kwOpt & keywords = kw::none); 
 
         /// <summary>
         /// Gets a text line from the user and returns it as a CString object.

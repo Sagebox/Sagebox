@@ -146,6 +146,10 @@ struct CSize
 	CSize() { }
     CSize operator = (Point3D_t & p);
 
+
+    __forceinline bool operator == (const CSize & p2) { cx == p2.cx && cy == p2.cy; }
+    __forceinline bool operator != (const CSize & p2) { cx != p2.cx || cy != p2.cy; }
+
     __forceinline CSize _min(CSize & c) { return {min(cx,c.cx),min(cy,c.cy)}; }
     __forceinline CSize _max(CSize & c) { return {max(cx,c.cx),max(cy,c.cy)}; }
     __forceinline CSize _min(SIZE & c) { return {min(cx,c.cx),min(cy,c.cy)}; }
@@ -276,6 +280,8 @@ struct CfSize
         cy = p2.cy;
         return * this;
     }
+    __forceinline bool operator == (const CfSize & p2) { cx == p2.cx && cy == p2.cy; }
+    __forceinline bool operator != (const CfSize & p2) { cx != p2.cx || cy != p2.cy; }
 	
 	SIZE operator * () { return { (int) cx,(int) cy }; }
 	operator SIZE() const { SIZE p = { (int) cx,(int) cy }; return p; };

@@ -1,8 +1,4 @@
-﻿// Calculator.h -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
-
+﻿
 // *******************************************************
 // Calculator.Cpp -- SageBox Simple Calculator Application 
 // *******************************************************
@@ -56,13 +52,13 @@ private:
     CWindow        * m_cWin     = nullptr;      // Window passed in to place the calculator
     CEditBox    * m_cEditBox    = nullptr;      // Edit Box for number entry
 
-    static constexpr POINT      kWinLoc         = { 20,62 };            // Location of main button grid in window
-    static constexpr SIZE       kButtonSize     = { 70, 60 };           // Button Size for each calculator button
-    CPoint                      kSpace          = { 1,1 };              // Spacing between buttons
-    CPoint                      kButtonSpacing  = kSpace + kButtonSize; // Button Size + Spacing
-    static constexpr RGBColor_t kColorNum{0,0,0};                       // Color for number buttons
-    static constexpr RGBColor_t kColorOp{60,100,255};                   // Color for operations buttons
-    static constexpr RGBColor_t kColorMem{0,0,192};                     // Color for memory buttons
+    static constexpr POINT      kWinLoc         = { 20,62 };                     // Location of main button grid in window
+    static constexpr SIZE       kButtonSize     = { 70, 60 };                    // Button Size for each calculator button
+    CPoint                      kSpace          = { 1,1 };                       // Spacing between buttons
+    CPoint                      kButtonSpacing  = kSpace + (CPoint) kButtonSize; // Button Size + Spacing
+    static constexpr RGBColor_t kColorNum{0,0,0};                                // Color for number buttons
+    static constexpr RGBColor_t kColorOp{60,100,255};                            // Color for operations buttons
+    static constexpr RGBColor_t kColorMem{0,0,192};                              // Color for memory buttons
     
     // Labels for buttons in each group.  In the button groups, the buttons are numbered in order horizontally,
     // so a 3-2 matrix would be buttons numbered 0,1,2 on the first row and 3,4,5 on the second, and so-forth

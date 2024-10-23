@@ -1,7 +1,3 @@
-// CVisualSort.Cpp -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // -----------------------------------------------------------------
 // CVisualSort.Cpp -- SageBox Visual Sorting Algorithm Demonstration
@@ -140,7 +136,7 @@
 #include "sort-texture.pgr2.h"
 #include "AboutSorting.pgr2.h"
 
-using namespace Sage::opt;      // Sagebox options
+using namespace Sage::kw;      // Sagebox keyword options
 
 // InitDataArray() -- Fill the random array with unique values, 0-(kSortSize-1)
 //
@@ -330,7 +326,7 @@ bool CVisualSort::InitWindow()
     // This looks at the location of the m_cGraph win to set the location right above the left corner of the top. 
 
     if (m_cWin->GetClsBitmap().isEmpty())
-        m_cWin->TextWidget(m_cGraphWin->GetWinLocation().x,10,"Sorting Algorithms Visualization",Transparent() | Font("Arial,22"));
+        m_cWin->TextWidget(m_cGraphWin->GetWinLocation().x,10,"Sorting Algorithms Visualization",Font("Arial,22"));
 
     // Create a Text Widget at the bottom of the graph window.   This allows us to just set the text and not worry about 
     // clearing the previous text, updating the window, etc.
@@ -338,8 +334,6 @@ bool CVisualSort::InitWindow()
     // The options are:
     //
     //        Font()            -- Make it a larger font ("Arial,18").  The default font is smaller
-    //        Transparent()     -- Make the background transparent (i.e. copy the parent window's background).  Since we have a texture or gradient, 
-    //                             We want the text to blend in.
     //        CenterX()         -- This centers the Text Widget Window.  We could make the window the size of the parent window, but setting what we need is nicer and gives
     //                             us more control.  This also means we want to center the Text Widget window so the text will be centered.
     //        TextCenterX()     -- This Centers the Text in the window.  The Window is centered, but the window itself is 300 pixels long.  The Text will
@@ -347,7 +341,7 @@ bool CVisualSort::InitWindow()
     //                             This tells the TextWidget to center the text within the 300-pixel-wide window, which itself is centered in the main window.
     //                             This will center the text in the main window even though we're writing out to a text widget window.
 
-    m_cText = &m_cWin->TextWidget(0,45+kSortSize/2+15,300,0,Font("Arial,18") | Transparent() | CenterX() | TextCenterX());
+    m_cText = &m_cWin->TextWidget(0,45+kSortSize/2+15,300,0,Font("Arial,18") | CenterX() | TextCenterX());
 
     m_cGraphWin->SetClsBitmap(m_cWin->ReadPgrBitmap("Texture2",sSortTexture));    // Set the texture for the Graph Window.  Remove line to remove the texture.
 
@@ -356,24 +350,24 @@ bool CVisualSort::InitWindow()
     // Write some text explaining the threshold slider.  "{cyan}" is used twice because the color, when set, is active until the end of the line, 
     // so the next line needs to specify the color again.
     //
-    // note: DevText() is just a TextWidget() placed on the QuickDev controls window.  We don't save the returned object because we don't change the text.
-    // However, if we saved the returned object, such as auto &cText = &DevText("Some text (or this can be blank)"), we can use cText->Write() later to change the text.
+    // note: DevTextWidget() is just a TextWidget() placed on the QuickDev controls window.  We don't save the returned object because we don't change the text.
+    // However, if we saved the returned object, such as auto &cText = &DevTextWidget("Some text (or this can be blank)"), we can use cText->Write() later to change the text.
     // Since we don't need it again here, we don't save it and it gets deleted with its parent window.
     //
     // note: As the first use of the Quick Dev Controls Window, this causes the window to open automatically. 
 
-    m_cWin->DevText( "{cyan}Use Threshold Slider to control speed of display. Higher Values\n"
+    m_cWin->DevTextWidget( "{cyan}Use Threshold Slider to control speed of display. Higher Values\n"
                      "{cyan}speed up the display.");
     
     // Write another informational message in a smaller font and differnet color -- "ly" is short for "lightyellow"
-    // note: we can also specify these colors as opt::bgColor("ly") or opt::bgColor{100,200,100} (i.e. an RGB color),
+    // note: we can also specify these colors as kw::bgColor("ly") or kw::bgColor{100,200,100} (i.e. an RGB color),
     // but using the {} is nice shorthand -- and we can also use the colors for specific items, such as:
     //
     //        "This {red}text{/} is red and this {yellow}text{/}" to cause only certain text to appear a different color.
     //
     // The closing "{/}" is not needed when it continues to the end of the text line.
 
-    m_cWin->DevText( "{ly}Use the Mouse Wheel on the Slider for finer control",Font("Arial,11,italic"));
+    m_cWin->DevTextWidget( "{ly}Use the Mouse Wheel on the Slider for finer control",Font("Arial,11,italic"));
 
     // Set the threshold range between 1-500 --> Lower values slow it down, faster values speed it up.
 
@@ -396,7 +390,7 @@ bool CVisualSort::InitWindow()
     //
     // Otherwise, the Dev Window pops up in a place that overlaps the display window, and its nice to get it out of the display.
 
-    CPoint cpSize = CPoint(m_cWin->GetWindowSize(true)) + SIZE{ -cDev->GetWindowSize().cx, 40 } + m_cWin->GetWinLocation();
+    CPoint cpSize = CPoint(m_cWin->GetWindowSize(true)) + POINT{ -cDev->GetWindowSize().cx, 40 } + m_cWin->GetWinLocation();
     cDev->SetLocation(cpSize);
 
     // We could check for an error here, but when it works once it will always work unless something catastrophic is going on

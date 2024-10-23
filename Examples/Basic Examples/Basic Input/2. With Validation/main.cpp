@@ -23,10 +23,10 @@
 //             This version adds validation to the last example, but does so in some interesting ways:
 //
 //                  1. Uses the Sagebox Options format to automatically validate input
-//                  2. Use cWin.console.getInteger(), which is what "win >> MyInteger" ultimately calls, we just do it directly here.
-//                     This adds the opt::Range() option, will tells Sagebox to validate the input
-//                  3. in the "cin" replacement "cWin" (i.e. the class object for any Sagebox Window), we insert
-//                     the opt::Range() in the stream to tell Sagebox to validate the input.  This can be useful for ad-hoc
+//                  2. Use win.console.getInteger(), which is what "win >> MyInteger" ultimately calls, we just do it directly here.
+//                     This adds the kw::Range() option, will tells Sagebox to validate the input
+//                  3. in the "cin" replacement "win" (i.e. the class object for any Sagebox Window), we insert
+//                     the kw::Range() in the stream to tell Sagebox to validate the input.  This can be useful for ad-hoc
 //                     adding things quickly without having to convert to console.GetInteger() or a dialog box. 
 //
 //             See more notes above the main() function
@@ -39,47 +39,46 @@
 
 #include "Sagebox.h"
 
-using namespace Sage::opt; 
+using namespace Sage::kw;       // Sagebox Keyword Options 
 
 // ** Try entering values out of range (i.e. -10, 500, etc.)
 
 int main()
 {   
-    auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
+    auto &win = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
                            
-    constexpr int iRadiusMin = 1;
-    constexpr int iRadiusMax = 400;
+    constexpr int RadiusMin = 1;
+    constexpr int RadiusMax = 400;
 
-    RgbColor rgbColor = PanColor::Red; // We could use { 255,0,0 }
-                                        // We can also use a standard Windows COLORREF RGB(255,0,0); 
+    RgbColor rgbColor = Rgb("Red");     // We can also use PanColor::Red, SageColor;:Red, {255,0,0} or Windows COLORREF RGB(255,0,0)                                            // We can also use a standard Windows COLORREF RGB(255,0,0); 
 
-    int iRadius1, iRadius2;
+    int Radius1, Radius2;
 
     // The "{cyan}" and "{18}" shows using a font and a color.  {cyan} can also be abbreviated as "{c}"
     
-    cWin << "{16}Let's Draw an Ellipse. {cyan}Enter two radius values between 1 and 400 (try going outside of the range).\n\n";
+    win << "{16}Let's Draw an Ellipse. {cyan}Enter two radius values between 1 and 400 (try going outside of the range).\n\n";
 
     // Use the window's console i/o versions for input/output.  If the user closes the window the entry falls through with 
     // a return of 0 -- if the user presses control-C, the program exits as in a console program (this can be turned off).
 
-    // Here, we are using cWin.console.GetInteger(), which is what "cWin >> iRadius2" below eventually calls. 
-    // In this case, we specify "opt::Range" (we do not need to the opt:: part, but typing opt:: will cause the editor to show all options)
+    // Here, we are using win.console.GetInteger(), which is what "win >> Radius2" below eventually calls. 
+    // In this case, we specify "kw::Range" (we do not need to the kw:: part, but typing kw:: will cause the editor to show all options)
     // to tell the GetInteger() routine the acceptable range, and to bring up a message box.
    
-    cWin << "Enter Radius 1: ";
-    iRadius1 = cWin.console.GetInteger(opt::Range(iRadiusMin,iRadiusMax));
+    win << "Enter Radius 1: ";
+    Radius1 = win.console.GetInteger(kw::Range(RadiusMin,RadiusMax));
 
-    // Use the C++ stream format like "cin" -- here, we can add the same opt::Range() function (this time without specifying "opt::")
+    // Use the C++ stream format like "cin" -- here, we can add the same kw::Range() function (this time without specifying "kw::")
     // to tell Sagebox we want to validate the value entered. 
     
-    cWin << "Enter Radius 2: ";
-    cWin >> Range(iRadiusMin,iRadiusMax) >> iRadius2;
+    win << "Enter Radius 2: ";
+    win >> Range(RadiusMin,RadiusMax) >> Radius2;
 
     // If we get here, then we know we have some good values. 
 
-    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor); 
+    win.FillEllipse(400,400,Radius1,Radius2,rgbColor); 
 
-    cWin.ExitButton();   // Now we really need an ExitButton() or WaitforClose() (or some method to pause exit),
+    win.ExitButton();   // Now we really need an ExitButton() or WaitforClose() (or some method to pause exit),
                         // because the program is done, and everything will close on exit. 
 }
 

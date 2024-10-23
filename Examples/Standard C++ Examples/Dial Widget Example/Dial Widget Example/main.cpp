@@ -1,7 +1,3 @@
-// Dial Widget Example -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // ***************************
 // SageBox Dial Widget Example
@@ -41,18 +37,18 @@
 #include "SageBox.h"
 #include "Widgets\include\CDialWidget.h"
 
-using namespace Sage::opt;  // Sagebox options/keywords 
+using namespace Sage::kw;  // Sagebox keyword options
 
 int main()
 {
     
-    auto& cWin = Sagebox::NewWindow(100,100,550,270,"Sagebox - Dial Widget Example");
-    cWin.Cls(SageColor::SkyBlue,SageColor::SkyBlueDark);                              // Clear screen with a gradient of two stock colors
+    auto& win = Sagebox::NewWindow(100,100,550,270,"Sagebox - Dial Widget Example");
+    win.Cls("SkyBlue,SkyBlueDark");     // We can also use pure symbolic values: SageColor::SkyBlue,SageColor::SkyBlueDark);                            
 
-    CDialWidget cDial(&cWin,10,30);                                // Give the dial our parent window and location to put it
+    CDialWidget dial(&win,10,30);       // Give the dial our parent window and location to put it
     
-    cDial.SetRange(0,1000);
-    cDial.SetValue(450);        // Set initial value
+    dial.SetRange(0,1000);
+    dial.SetValue(450);                 // Set initial value
 
     // Get a Text widget to display the number we get from the dial, using a large font.
     // In this case, we use TextCenter(), which centers the value in the text window we created.
@@ -60,7 +56,7 @@ int main()
     // the text widget takes up the rest of the window, but since its transparent and centers the text,
     // it blends well as it displays on the screen.
 
-    auto& cText = cWin.TextWidget(210,60,550-210,0,Transparent() | Font("Arial,130") | TextCenter());
+    auto& text = win.TextWidget(210,60,550-210,0,Font("Arial,130") | TextCenter());
 
     // Create a text widget to remind the user to right-click on the dial for some options. 
     //
@@ -72,12 +68,12 @@ int main()
     //        Transparent()         -- This allows the background of the Text widget to blend with the window's background, since it is a 
     //                                 gradient and not a solid color (i.e. it copies the parent window's background)
 
-    cWin.TextWidget(0,0,"Right-Click Mouse on Dial Face for Development Window and Options",Font("arial,12,bold") | TextColor(PanColor::Cyan) | JustTopCenter() | OffsetY(5)| Transparent());
+    win.TextWidget(0,0,"Right-Click Mouse on Dial Face for Development Window and Options",Font("arial,12,bold") | TextColor("cyan") | JustTopCenter() | PadY(5));
 
     // A Lambda to write the value, since we use it more than once (and it's too small to create a function),
     // once before we enter the main event loop, and then again when we get new dial values. 
 
-    auto WriteValue = [&]() { cText.Write(CString() >> (int) cDial.GetValue()); };    // Put out the number to our text widget
+    auto WriteValue = [&]() { text.Write(CString() >> (int) dial.GetValue()); };    // Put out the number to our text widget
 
     WriteValue();
 
@@ -85,9 +81,9 @@ int main()
     //
     // In this case, we just want one event -- check the dial if its changed and then print the value. 
 
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
-        if (cDial.ValueChanged()) WriteValue();
+        if (dial.ValueChanged()) WriteValue();
     }
     return 0;
 }

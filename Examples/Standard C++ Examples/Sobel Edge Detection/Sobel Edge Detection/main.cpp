@@ -1,18 +1,14 @@
-// Sobel Edge Detection Source -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // ************************************
 // Sagebox Sobel Edge Detection Example
 // ************************************
 // 
-//  This program shows a quick example of  loading an image with the GetFile functionality of SageBox, then 
+//  This program shows a quick example of  loading an mage with the GetFile functionality of SageBox, then 
 //  converting it to a bitmap. 
 //  
 //  After conversion, a sobel convolution is then applied to calculate the edges. 
 //  
-//  This program shows how easy it is to get a file and to perform image-processing a calculations on an image.
+//  This program shows how easy it is to get a file and to perform mage-processing a calculations on an mage.
 //  
 //  There are two versions (projects) of the Sobel Edge Detection -- one for black-and-white edges, and the other for color
 //  that show the edge in the color of the area behind the edges.
@@ -53,32 +49,32 @@ int Sobel()
     // Alternatively, since this is a console-mode application, we could also just send in a file name from the command line, 
     // but this is nice because the user can browse thumbnails.
 
-    auto csFile = Sagebox::GetOpenFile("*.jpg");                // Get the file from the user, listing only jpegs
-    conAssert(!csFile.isEmpty(),"No File Specified.");          // Error-out if the user entered no file.
+    auto file = Sagebox::GetOpenFile("*.jpg");                // Get the file from the user, listing only jpegs
+    conAssert(!file.isEmpty(),"No File Specified.");          // Error-out if the user entered no file.
 
     // Read the JPEG.  if it comes back invalid or empty, then it either was not a JPEG, not found, or there
     // was an error reading it.  You can get the specific Jpeg error by calling  GetJpegError() -- in this case we don't 
     // care about the actual error, just that we didn't get a bitmap in memory from loading the file.
 
-    auto cBitmap = Sagebox::ReadJpegFile(csFile);                                   // Get the JPEG
-    conAssert(cBitmap.isValid(),"JPEG not found or not a valid JPEG file.");        // Error-out if something didn't happen correctly
+    auto bitmap = Sagebox::ReadJpegFile(file);                                   // Get the JPEG
+    conAssert(bitmap.isValid(),"JPEG not found or not a valid JPEG file.");        // Error-out if something didn't happen correctly
 
-    printf("FileName: %s\nOriginal Size = %dx%d\n",*csFile,cBitmap.GetWidth(),cBitmap.GetHeight());
+    printf("FileName: %s\nOriginal Size = %dx%d\n",*file,bitmap.GetWidth(),bitmap.GetHeight());
 
     // Use two thumbnail/resize tools. The default for both are "BestFit" (it is shown in the QuickThumbnail call for reference, but not required),
-    // Which will size the image to the smallest dimension in the Width/Height given while keeping the proportions of the image. 
-    // If the image is smaller than this, then it will return the image without resizing it. 
+    // Which will size the mage to the smallest dimension in the Width/Height given while keeping the proportions of the mage. 
+    // If the mage is smaller than this, then it will return the mage without resizing it. 
     //
-    // "ExactBestFit" will resize the image to the lowest Width/Height value (keeping the image the same proportion), even of the image is smaller.
+    // "ExactBestFit" will resize the mage to the lowest Width/Height value (keeping the mage the same proportion), even of the mage is smaller.
     // There are also a number of other options.
 
-    Sagebox::QuickThumbnail(cBitmap,350,350,ThumbType::BestFit);            // Get a Best Fit thumbnail and display it on the screen
-    auto cNewBitmap = Sagebox::QuickResize(cBitmap,1200,800);               // Get a best fit, no more than 1200X, 800Y, if the image is larger than this.
+    Sagebox::QuickThumbnail(bitmap,350,350,ThumbType::BestFit);            // Get a Best Fit thumbnail and display it on the screen
+    auto newBitmap = Sagebox::QuickResize(bitmap,1200,800);               // Get a best fit, no more than 1200X, 800Y, if the mage is larger than this.
 
-    int iWidth  = cNewBitmap.GetWidth();
-    int iHeight = cNewBitmap.GetHeight();
+    int width  = newBitmap.GetWidth();
+    int height = newBitmap.GetHeight();
      
-    auto cBitmapOut = Sagebox::CreateBitmap(cNewBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
+    auto bitmapOut = Sagebox::CreateBitmap(newBitmap.GetSize());          // Get an output bitmap of the same size of the one we resized. 
 
     // ** Note: There is no error-checking on the bitmap.  If it is assumed there are no memory allocation errors in their creation.  This is safe, since 
     //           we've already verified we have a valid bitmap (i.e. we errored-out back to the command window if we didn't get a valid bitmap in memory
@@ -86,21 +82,21 @@ int Sobel()
     //
     // This generally falls under the assumption that if you have a memory problem here, something is systemically wrong in the system.
     //
-    // In release-level software and huge memory allocations (such as a 200 Megapixel image), etc., The return bitmaps can be checked
+    // In release-level software and huge memory allocations (such as a 200 Megapixel mage), etc., The return bitmaps can be checked
     // for a valid or empty state to determine if a memory error has occured, or exception handling can also be installed.
     
-    cBitmapOut.FillColor({0,0,0});    // Clear the bitmap with black since we don't fill in the edges.
+    bitmapOut.FillColor({0,0,0});    // Clear the bitmap with black since we don't fill in the edges.
 
     // Arrays for the convolution on the Sobel Matrix:  X,Y, and Multiplier (Where X and Y or offsetts from the current pixel)
     
-    int iArrayV[6][3] = {   { -1,-1, 1 },
+    int arrayV[6][3] = {    { -1,-1, 1 },
                             { -1, 0, 2 },
                             { -1, 1, 1 },
                             {  1,-1,-1 },
                             {  1, 0,-2 },
                             {  1, 1,-1 } };
 
-    int iArrayH[6][3] = {   { -1,-1, 1 },
+    int arrayH[6][3] = {    { -1,-1, 1 },
                             {  0,-1, 2 },
                             {  1,-1, 1 },
                             { -1, 1,-1 },
@@ -108,32 +104,32 @@ int Sobel()
                             {  1, 1,-1 } };
 
 
-    double fDiv = sqrt(2);    // Divide by sqrt(2) since we're doing y = sqrt(a^2 + b^2)
+    double div = sqrt(2);    // Divide by sqrt(2) since we're doing y = sqrt(a^2 + b^2)
 
     // Get the pixel from the array (X,Y, multiplier), multiply it and return it as a Gray value
     // Normally I would use a lambda here, but MSVC lambdas do not yet support __inline, which 
     // makes it twice as slow as need be -- so an old-fashion define lets us do it inline.
 
-    #define GetGray(ipInd) (ipInd[2]*(int) cNewBitmap.GetPixel(j+ipInd[0],i+ipInd[1]).Gray())
+    #define GetGray(ipInd) (ipInd[2]*(int) newBitmap.GetPixel(j+ipInd[0],i+ipInd[1]).Gray())
 
     // The main loop -- go through each pixel and get the values of the two convolutions for each pixel. 
     // Then get the magnitude and put it out as a pixel in our new bitmap.
 
-    for (int i=1;i<iHeight-1;i++)
+    for (int i=1;i<height-1;i++)
     {
-        for (int j=1;j<iWidth-1;j++)
+        for (int j=1;j<width-1;j++)
         {
-            double fGrayV = 0,fGrayH = 0;
-            for (int k=0;k<6;k++) fGrayV += GetGray(iArrayV[k]);
-            for (int k=0;k<6;k++) fGrayH += GetGray(iArrayH[k]);
+            double grayV = 0,grayH = 0;
+            for (int k=0;k<6;k++) grayV += GetGray(arrayV[k]);
+            for (int k=0;k<6;k++) grayH += GetGray(arrayH[k]);
 
-            int iMag = (int) min(255,sqrt(fGrayV*fGrayV + fGrayH*fGrayH)/fDiv);
+            int mag = (int) min(255,sqrt(grayV*grayV + grayH*grayH)/div);
 
-            cBitmapOut.SetPixel(j,i,{iMag,iMag,iMag });
+            bitmapOut.SetPixel(j,i,{mag,mag,mag });
         }
     }
 
-    Sagebox::ImgView(cBitmapOut,kw::Title("Sobel Result"));    // Show the new bitmap
+    Sagebox::ImgView(bitmapOut,kw::Title("Sobel Result"));    // Show the new bitmap
 
     return Sagebox::ExitButton("Sobel Edge Detection Finished.");   // Get an input from the user so we don't exit the program
                                                                     // (which deallocates all memory and closes all windows)

@@ -98,24 +98,24 @@ private:
 
 private:
 private:
-    void Init(CWindow * cParent, int iX,int iY,const char * sControls);
+    void Init(CWindow * cParent, int iX,int iY,const kwOpt & keywords);
     void LocalSetDefaults();
     void ReadPGR();
     bool PrintValue();
     void FillBackground();
     bool Redraw(bool bForce = false);
     void CalcImage();
-    void ReadOptions(const char * sOptions);
+    void ReadOptions(const kwOpt & keywords);
     bool DisplayBlank();
     void ForceRedraw();
     bool CreatePopupWindow();
     bool InitPopupWindow();
 
 public:
-    CLcdDisplayWidget(CWindow * cParent, int iX,int iY, int iInitialValue = 0, const cwfOpt & cwOpt = cwfOpt());
-    CLcdDisplayWidget(CWindow * cParent,POINT pLoc, int iInitialValue = 0, const cwfOpt & cwOpt = cwfOpt());
-    CLcdDisplayWidget(int iX,int iY, int iInitialValue = 0, const cwfOpt & cwOpt = cwfOpt());
-    CLcdDisplayWidget(POINT pLoc, int iInitialValue = 0, const cwfOpt & cwOpt = cwfOpt());
+    CLcdDisplayWidget(CWindow * cParent, int iX,int iY, int iInitialValue = 0, const kwOpt & keywords = kw::none);
+    CLcdDisplayWidget(CWindow * cParent,POINT pLoc, int iInitialValue = 0, const kwOpt & keywords = kw::none);
+    CLcdDisplayWidget(int iX,int iY, int iInitialValue = 0, const kwOpt & keywords = kw::none);
+    CLcdDisplayWidget(POINT pLoc, int iInitialValue = 0, const kwOpt & keywords = kw::none);
     ~CLcdDisplayWidget();
 
     virtual void SetDefaults()    { }

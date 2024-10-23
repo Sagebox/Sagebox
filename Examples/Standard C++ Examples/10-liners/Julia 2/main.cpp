@@ -1,10 +1,7 @@
 
-// File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
-// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
-
 #include "SageBox.h"
 
-using namespace Sage::opt;  // Sagebox options (aka Sage::kw)
+using namespace Sage::kw;  // Sagebox Keyword Options
 
 // -----------------------
 // 10-Line Julia Output #2
@@ -25,36 +22,44 @@ using namespace Sage::opt;  // Sagebox options (aka Sage::kw)
 // and the Range and Color are different -- it also doesn't calculate a diffusion value, using the 
 // result directly.  Otherwise, it is the same code.
 //
-// Note: This uses DrawPixel() which is a Windows function and is slow! 
-//       The examples in the Simple Mandelbrot Examples (except for the first one) use a bitmap
-//       which is about 10 times faster. 
-//
 // Note: This project is set for a console mode program with optimized code.  You can change it to 
 //       a pure Windows program in the Build->Configuration settings
 //
 int main()
 { 
-    // Create a window of a specific size.  AutoWindow() also creates a static CSagebox class that
-    // we don't use, so we don't need to remember it. 
+    using namespace kw;     // So we don't have to use kw:: for options, e.g. kw::bgColor() as used below. 
+    
+    // Create a window of a specific size.  
+    // Use bgColor() to set the base color to RGB(0,0,128), since 0 values in the main loop will be that value. 
+    // --> This lets the textwidget blend.  Otherwise, we can just add the text widget later.
+    //
+    // kw::SetPos(50,20) is used because the default position of (50,50) causes the window to run off the bottom of a 1920x1080 screen a little.
 
-    auto& cWin = SageBox::NewWindow(SIZE{1200,1000},"Sagebox - Julia Set 2");
+    auto& win = SageBox::NewWindow("Sagebox - Julia Set 2",SetSize(1200,1000) + bgColor({0,0,128}) + SetPos(50,20));
 
-    cWin.TextWidget(0,10,"Julia Set (-.4, .6)",Font("Arial,50") | JustCenterX() | Transparent());
+    //win.SetAutoUpdate();    // Sets the window to update every 10-20ms or so.
+                            // The default is to not update until called upon to do so, but it's nice to see the
+                            // output as-it-happens, since this function might take a second or so to complete.
+
+    win.TextWidget(0,10,"Julia Set (-.4, .6)",Font("Arial,50") | JustCenterX());
 
     for (int i=-500;i<500;i++)
         for (int j=-600;j<600;j++)
         { 
             CComplex z{(double)j/400,(double) i/400},c{-.4,.6};
-            double fIter = 0;
-            while (z.abs() < 65536 && fIter++ < 450) z = z*z + c;
-            auto iValue = (int) (255.0*(fIter+1 - log2(log2(z.absSq())/2))/450);
+            double iter = 0;
+            while (z.abs() < 65536 && iter++ < 450) z = z*z + c;
 
-           cWin.DrawPixel(j+600,i+500,{min(255,iValue*4),min(255,iValue*2),(255-iValue)/2});
+            // Get a smooth color value
+
+            auto value = (int) (255.0*(iter+1 - log2(log2(z.absSq())/2))/450);
+
+           win.DrawPixel(j+600,i+500,{min(255,value*4),min(255,value*2),(255-value)/2});
         }
 
         // Since we have an extra line to keep within 10 lines of code, add a Label the image. 
         // Transparent() blends Background, JustCenterX() centers the message
 
-    return cWin.WaitforClose();
+    return Sagebox::ExitButton();
 }
  

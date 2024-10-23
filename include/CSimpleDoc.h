@@ -18,6 +18,7 @@
 #define _CSimpleDoc_H_
 #include "CSageBox.h"
 #include "cparsehtml.h"
+#include "keywords\opt2_ckwargs.h"
 
 namespace Sage
 {
@@ -65,7 +66,7 @@ public:
 	CSimpleDoc(CWindow * cWin,const char * sHtmlFile);
 	bool AddImage(const char * sPath,Mem<unsigned char> & stImageData);
 	bool MainDraw(const char * sTitle,int iWidth,int iHeight,bool bModal,Placement placement,bool bAllowDrag);
-	bool Draw(const char * sTitle,int iWidth,int iHeight,const cwfOpt & cwOpt = cwfOpt());
+	bool Draw(const char * sTitle,int iWidth,int iHeight,const kwOpt & keywords = kw::none);
 };
 
 #endif // _CSimpleDoc_H_

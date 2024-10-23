@@ -1,7 +1,4 @@
 
-// File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
-// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
-
 #include "Sagebox.h"
 
 // -----------------------
@@ -23,10 +20,6 @@
 // and the Range and Color are different -- it also doesn't calculate a diffusion value, using the 
 // result directly.  Otherwise, it is the same code.
 //
-// Note: This uses DrawPixel() which is a Windows function and is slow! 
-//       The examples in the Simple Mandelbrot Examples (except for the first one) use a bitmap
-//       which is about 10 times faster. 
-//
 // Note: This project is set for a console mode program with optimized code.  You can change it to 
 //       a pure Windows program in the Build->Configuration settings
 //
@@ -35,18 +28,24 @@ int main()
     // Create a window of a specifix size.  AutoWindow() also creates a static CSagebox class that
     // we don't use, so we don't need to remember it. 
     
-    auto& cWin = Sagebox::NewWindow(SIZE{800,1000},"Sagebox - Julia Set 1");
+    auto& win = Sagebox::NewWindow("Sagebox - Julia Set 1",kw::SetSize(800,1000) + kw::SetPos(50,20));
 
+    auto maxIter = 50; 
+     
     for (int i=-500;i<500;i++)
-        for (int j=-400;j<400;j++)
+        for (int j=-400;j<400;j++) 
         { 
-            CComplex z{(double)j/400,(double) i/400},c{.285,0};
-            int iIter = 0;
-            while (z.abs() < 65536 && iIter++ < 55) z = z*z + c;
-            auto iValue = (int) (255.0*(((double) iIter)+1 - log2(log2(z.absSq())/2))/55);
+            CComplex z((double)j/400,(double) i/400),c(.285,0.0);
+            int iter = 0; 
+            while (z.abs() < 65536 && iter++ < maxIter) z = z*z + c;
+            
+            // Get smooth color
+            
+            auto value = (int) (255.0*(((double) iter)+1 - log2(log2(z.absSq())/2))/maxIter);
 
-            cWin.DrawPixel(j+400,i+500,{min(255,iValue*2),max(0,(255-iValue)*2),max(0,(255-iValue)*2)});
+            win.DrawPixel(j+400,i+500,{min(255,value*2),max(0,(255-value)*2),max(0,(255-value)*2)});
         }
-    return cWin.WaitforClose();     // Wait for the user to close the window.
+
+    return Sagebox::ExitButton();     // Wait for the user to close the window.
 }
 

@@ -37,11 +37,11 @@
 
 int main()
 {
-   auto& cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+   auto& win = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Print a message out to the window.  
 
-    cWin << "Click Mouse on the Window to Draw Rectangle.  Close Window to Exit.";
+    win << "Click Mouse on the Window to Draw Rectangle.  Close Window to Exit.";
 
     // Get an Event.  The program is dormant (using no processor time)  until an event is received
     // or the window is closed (which can be disabled).
@@ -49,31 +49,31 @@ int main()
     // GetEvent() returns TRUE on an event, FAKLSE on Window closing (so it exits)
     //
   
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
-        POINT pMouse;       // Store mouse location here.  It is only filled 
+        POINT mousePos;       // Store mouse location here.  It is only filled 
                             // When an event occurs.  We could also use win.GetMousePos()
                             // to get the mouse position, but this is easier.
 
-        if (cWin.MouseMoved(pMouse)) 
+        if (win.MouseMoved(mousePos)) 
         {
             // Print out to the console window
 
-            printf("Mouse Moved at (%d,%d)\n",pMouse.x,pMouse.y); 
+            printf("Mouse Moved at (%d,%d)\n",mousePos.x,mousePos.y); 
 
             // Print to the debug window to show an easy debug method. The window does not 
             // become visible until it is printed to (or explicitly shown with debug.Show().
             //
             // Note that "{g}" is used as a method to change the text color to green.
           
-            cWin.debug.printf("Mouse Moved at {g}(%d,%d)\n",pMouse.x,pMouse.y); 
+            SageDebug::printf("Mouse Moved at {g}(%d,%d)\n",mousePos.x,mousePos.y); 
         }
 
         // If we clicked on the window, draw a rectangle of radius 100 with the mouse point as the center
         // win.GetColor() is used, but an RGB color can also be put in place, either directly, with 
         // Windows COLORREF type of RgbColor type. -- for example, using "{255,0,0}" is the same as win.GetColor("Red");
 
-        if (cWin.MouseClicked(pMouse)) cWin.FillRectangle(pMouse.x-50,pMouse.y-50,100,100,PanColor::Red);
+        if (win.MouseClicked(mousePos)) win.FillRectangle(mousePos.x-50,mousePos.y-50,100,100,"red");   // Can also use symbolic PanColor::Red here.
     }
 
     // We don't need to hold up the exit, since the user closed the window manually.

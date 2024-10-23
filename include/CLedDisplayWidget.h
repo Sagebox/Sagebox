@@ -18,6 +18,8 @@
 
 
 #include "CSageBox.h"
+#include "keywords\opt2_keyfuncs.h"
+
 
 
 class CLCDDisplay1238Widget : protected CWindow
@@ -80,20 +82,20 @@ private:
 	MsgStatus OnMove(int iX,int iY) override;
 	MsgStatus OnWidgetMessage(void * cWidget,int iMessage);
 private:
-	void Init(CWindow * cParent, int iX,int iY,const char * sControls);
-	void LocalSetDefaults();
+	void Init(CWindow * cParent, int iX,int iY,const kwOpt & keywords = kw::none);
+    void LocalSetDefaults();
 	void ReadPGR();
 	bool PrintValue();
 	void FillBackground();
 	bool Redraw(bool bForce = false);
 	void CalcImage();
-	void ReadOptions(const char * sOptions);
+	void ReadOptions(const kwOpt & keywords = kw::none);
 	bool DisplayBlank();
 	void ForceRedraw();
 
 public:
-	CLCDDisplay1238Widget(CWindow * cParent, int iX,int iY, int iInitialValue, cwfOpt & cwOpt = cwfOpt());
-	CLCDDisplay1238Widget(CWindow * cParent,POINT pLoc, int iInitialValue, cwfOpt & cwOpt = cwfOpt());
+	CLCDDisplay1238Widget(CWindow * cParent, int iX,int iY, int iInitialValue, const kwOpt & keywords = kw::none);
+	CLCDDisplay1238Widget(CWindow * cParent,POINT pLoc, int iInitialValue, const kwOpt & keywords = kw::none);
 	virtual void SetDefaults()	{ }
 
 	// Access Functions

@@ -99,9 +99,68 @@ public:
     CString & MakeLowerCase();
     static const char * SkipWhiteSpace(const char * sString,bool bIncludeNewLine = true);
     static const char * SkipAlphaNumeric(const char * sString);
+    static const char * SkipVarName(const char * sString);
+    static CString GetVarName(char * & sString);
+
+    /// <summary>
+    /// *** Note: The specifics of this function are not completely known.  Use RemoveWhiteSpace() instead. 
+    /// </summary>
+    /// <returns></returns>
     CString & StripWhiteSpace(); 
     CString & StripQuotes(bool bIncludeSingleQuotes = false); 
-    CString & StripSingleQuotes(); 
+    CString & StripSingleQuotes();
+
+    /// <summary>
+    /// Removes all occurences of the char specified from the string, e.g. Remove('x') removes all occurrences of 'x' in the CString object.
+    /// <para></para>
+    /// --> See: Removei() for case-insensitive version
+    /// --> See: Remove(const char * sString) to remove a string rather than a single character.
+    /// </summary>
+    /// <param name="cChar">- char to remove</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CString & Remove(const char cChar,bool bRecalc = true);
+
+    /// <summary>
+    /// Case-insensitive: Removes all occurences of the char specified from the string, e.g. Remove('x') or Remove('X') removes all occurences of 'x' and 'X' from the string.
+    /// <para></para>
+    /// --> See: Remove() for non-case-insensitive version
+    /// --> See: Remove(const char * sString) to remove a string rather than a single character.
+    /// </summary>
+    /// <param name="cChar">- char to remove</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CString & Removei(const char cChar,bool bRecalc = true);
+
+    /// <summary>
+    /// Removes all occurences of the input string from the CString string, e.g. Remove('abc') removes all occurrences of 'abc' in the CString object.
+    /// <para></para>
+    /// --> See: Removei() for case-insensitive version
+    /// --> See: Remove(const char) to remove a single character (a little faster than specigying one character as a string).
+    /// </summary>
+    /// <param name="sString"> - The string to remove from the CString object.</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CString & Remove(const char * sString,bool bRecalc = true);
+ 
+    /// <summary>
+    /// Removes all whitespace from a string, such as spaces and tabs. 
+    /// </summary>
+    /// <param name="bRecalc"> - [optional] When true (default), the length of the string is recalculated.  When false, the string length is not re-calculated (saving time when unnecessary).</param>
+    /// <returns></returns>
+    CString & RemoveWhitespace(bool bRecalc=true); 
+    CString & SimplifyWhitespace(); 
+
+    /// <summary>
+    /// Case-Insensitive: Removes all occurences of the input string from the CString string, e.g. Remove('abc') or Remove('ABC') removes all occurrences of "ABC" and "abc".
+    /// <para></para>
+    /// --> See: Remove() for non-case-insensitive version
+    /// --> See: Remove(const char) to remove a single character (a little faster than specigying one character as a string).
+    /// </summary>
+    /// <param name="sString"> - The string to remove from the CString object.</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CString & Removei(const char * sString,bool bRecalc = true);
 
     static CString StripQuotes(const char * sString,bool bIncludeSingleQuotes = false); 
     static CString StripSingleQuotes(const char * sString); 
@@ -584,11 +643,64 @@ public:
 		if (sAlloc) *sAlloc = 0;
 	}
   
+    /// <summary>
+    /// Removes all occurences of the char specified from the string, e.g. Remove('x') removes all occurrences of 'x' in the CString object.
+    /// <para></para>
+    /// --> See: Removei() for case-insensitive version
+    /// --> See: Remove(const wchar_t * sString) to remove a string rather than a single character.
+    /// </summary>
+    /// <param name="cChar">- char to remove</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CStringW & Remove(const wchar_t cChar,bool bRecalc = true);
+
+    /// <summary>
+    /// Case-insensitive: Removes all occurences of the char specified from the string, e.g. Remove('x') or Remove('X') removes all occurences of 'x' and 'X' from the string.
+    /// <para></para>
+    /// --> See: Remove() for non-case-insensitive version
+    /// --> See: Remove(const wchar_t * sString) to remove a string rather than a single character.
+    /// </summary>
+    /// <param name="cChar">- char to remove</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CStringW & Removei(const wchar_t cChar,bool bRecalc = true);
+
+    /// <summary>
+    /// Removes all occurences of the input string from the CString string, e.g. Remove('abc') removes all occurrences of 'abc' in the CString object.
+    /// <para></para>
+    /// --> See: Removei() for case-insensitive version
+    /// --> See: Remove(const wchar_t) to remove a single character (a little faster than specigying one character as a string).
+    /// </summary>
+    /// <param name="sString"> - The string to remove from the CString object.</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CStringW & Remove(const wchar_t * sString,bool bRecalc = true);
+
+    /// <summary>
+    /// Case-Insensitive: Removes all occurences of the input string from the CString string, e.g. Remove('abc') or Remove('ABC') removes all occurrences of "ABC" and "abc".
+    /// <para></para>
+    /// --> See: Remove() for non-case-insensitive version
+    /// --> See: Remove(const wchar_t) to remove a single character (a little faster than specigying one character as a string).
+    /// </summary>
+    /// <param name="sString"> - The string to remove from the CString object.</param>
+    /// <param name="bRecalc">- When true (default), recalculates string length.  When false, skips recalculation.</param>
+    /// <returns></returns>
+    CStringW & Removei(const wchar_t * sString,bool bRecalc = true);
+
+
 	wchar_t * UnEmptyStr()  { return (*s) ? s : nullptr; }
 	bool isEmpty(){ return  s && *s ? false : true; };
 //    CString c_str() { return !this ? CString() : CString(*this); };
     __forceinline wchar_t * w_str() { return !this ? (wchar_t *)  L"" : this->s; };
 
+    /// <summary>
+    /// Re-evaluates the length of the string in memory.  This can be used when the char * array is modified directly to let CString() re-determine
+    /// the length of the data.
+    /// <para></para>&#160;&#160;&#160;
+    /// This sets the length at the first 0 in the data.  It does not modify the size of memory. 
+    /// </summary>
+    /// <returns>Length of string in memory (i.e. first 0 encountered).  Returns 0 if length is 0 or if there is an error</returns>
+    int ReCalc();
 
 };
 }; // namespace Sage

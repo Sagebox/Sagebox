@@ -23,7 +23,6 @@
 #include <cfloat>
 #include "CControlStyles.h"
 #include "DialogStruct.h"
-#include "SageOpt.h"
 #include "ControlGroup.h"
 #include "CEditBox.h"
 #include "CString.h"
@@ -34,6 +33,7 @@
 #include "CWindow.h"
 #include "CRawBitmap.h"
 #include "CRawBitmap32.h"
+#include "keywords\opt2_ckwargs.h"
 #include <string>
 #include <vector>
 
@@ -137,8 +137,8 @@ public:
 	~CDavinci();
 	CWindow & NewWindow(int ix,int iy,int iWidth,int iHeight,char * sTitle,const char * sControl=NULL);
 	CWindow & NewWindow(CWindow * cWin,int ix,int iy,int iWidth,int iHeight,char * sTitle,const char * sControl=NULL);
-	CWindow & NewWindow(int ix,int iy,int iWidth,int iHeight,char * sTitle,cwfOpt & cwOpt);
-	CWindow & NewWindow(CWindow * cWin,int ix,int iy,int iWidth,int iHeight,char * sTitle,cwfOpt & cwOpt);
+	CWindow & NewWindow(int ix,int iy,int iWidth,int iHeight,char * sTitle,const kwType::ckw & keywords);
+	CWindow & NewWindow(CWindow * cWin,int ix,int iy,int iWidth,int iHeight,char * sTitle,const kwType::ckw & keywords);
 	CDavBitmap		GetBitmapObject(int iWidth,int iHeight = 1);
 	[[nodiscard]] Sage::RawBitmap_t		GetBitmapStruct(int iWidth,int iHeight = 1);
 	 [[nodiscard]] Sage::RawBitmap32_t	GetBitmapStruct32(int iWidth,int iHeight = 1);

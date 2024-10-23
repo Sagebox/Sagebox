@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.30413.136
+VisualStudioVersion = 16.0.33920.266
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hello World (Console)", "Hello World (Console).vcxproj", "{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}"
 EndProject
@@ -19,16 +19,14 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
+		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug|x64.ActiveCfg = Debug|x64
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug|x64.Build.0 = Debug|x64
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug|x86.ActiveCfg = Debug Optimized|Win32
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug|x86.Build.0 = Debug Optimized|Win32
+		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Debug|x86.ActiveCfg = Debug|x64
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
+		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
 		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug|x64.ActiveCfg = Debug|x64
-		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug|x86.ActiveCfg = Debug|Win32
+		{0DBAC718-48C2-4377-9F9B-0FA0D3BA4B67}.Windows Debug|x86.ActiveCfg = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

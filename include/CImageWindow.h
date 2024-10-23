@@ -14,14 +14,6 @@ private:
     static constexpr const char     * kOptName_Percent      = "Percent";
     static constexpr const char     * kOptName_ZoomBox      = "ZoomBox";
 
-public:
-    class opt
-    {
-    public:
-        static inline cwfOpt FillZoom() { return Sage::opt::Bool(kOptName_FillZoom); }
-        static inline cwfOpt Percent(int iPercent) { return Sage::opt::Int(kOptName_Percent,iPercent); }
-        static inline cwfOpt ZoomBox() { return Sage::opt::Bool(kOptName_ZoomBox); }
-    };
 
 private:
     static constexpr SIZE kDefaultWinSize   = { INT_MIN,INT_MIN };
@@ -33,12 +25,12 @@ private:
     CDataStore * m_cDataStore       = nullptr;
     int m_iGenBitmapControlID       = 0;
 
-    void Init(CWindow * cWin,Sage::CBitmap & cBitmap,POINT pWinLoc,SIZE szWinSize,const cwfOpt & cwOpt);
+    void Init(CWindow * cWin,Sage::CBitmap & cBitmap,POINT pWinLoc,SIZE szWinSize,const kwOpt & keywords);
 public:
-    CImageWin(CBitmap & cBitmap,const cwfOpt & cwOpt = cwfOpt())                              ;
-    CImageWin(CBitmap & cBitmap,SIZE szWinSize,const cwfOpt & cwOpt = cwfOpt())               ;
-    CImageWin(CBitmap & cBitmap,POINT pWinLoc,const cwfOpt & cwOpt = cwfOpt())                ;
-    CImageWin(CBitmap & cBitmap,POINT pWinLoc,SIZE szWinSize,const cwfOpt & cwOpt = cwfOpt()) ;
+    CImageWin(CBitmap & cBitmap,const kwOpt & keywords = kw::none)                              ;
+    CImageWin(CBitmap & cBitmap,SIZE szWinSize,const kwOpt & keywords = kw::none)               ;
+    CImageWin(CBitmap & cBitmap,POINT pWinLoc,const kwOpt & keywords = kw::none)                ;
+    CImageWin(CBitmap & cBitmap,POINT pWinLoc,SIZE szWinSize,const kwOpt & keywords = kw::none) ;
     bool Delete();  // Manually delete vs. automatic delete.
     bool WindowClosed(); 
     bool WindowCloseEvent(); 

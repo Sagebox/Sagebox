@@ -42,13 +42,15 @@
 #include "CSagebox.h"
 #include "CColorWheelWidget.h"
 
+using namespace Sage::kw;       // Sagebox Keyword Options
+
 int main()
 {
-    auto & cWin = Sagebox::NewWindow();                            // Since its a small app, create static Sagebox and Window at the same time.
+    auto & win = Sagebox::NewWindow();                              // Since its a small app, create static Sagebox and Window at the same time.
 
-    SIZE RectSize = { 400,400 };                                    // Rectangle Size
-    auto RectPos  = ((CPoint) cWin.GetWindowSize() - RectSize)/2;   // Put Rectangle in center of window 
-                                                                    // Uses CPoint (a class-based version of POINT) to calculate placement.
+    SIZE RectSize = { 400,400 };                                                // Rectangle Size
+    auto RectPos  = ((CPoint) win.GetWindowSize() - (CPoint) RectSize)/2;       // Put Rectangle in center of window 
+                                                                                // Uses CPoint (a class-based version of POINT) to calculate placement.
   
     // Create a text Widget to give the user some information
     //
@@ -64,21 +66,21 @@ int main()
     // We could just use win.Write(), as well,  TextWidgets are nice because they are persistent. We can update or Hide the Text Widget, 
     // but in this case we used it as a fire-and-forget, so we didn't save the return object, which is deleted automatically when the Window closes. 
    
-    cWin.TextWidget(0,0,"Move Color Wheel to change color of Rectangle. Close Window to Exit",Font("Arial,18") | JustBottomCenter() | OffsetY(-10));
+    win.TextWidget(0,0,"Move Color Wheel to change color of Rectangle. Close Window to Exit",Font("Arial,18") + JustBottomCenter() + PadY(-10));
 
-    // Create the color wheel and place it at 20,20, passing in our Window (cWin) object as the parent
+    // Create the color wheel and place it at 20,20, passing in our Window (win) object as the parent
 
-    CColorWheelWidget cColorWheel(&cWin,20,20); 
+    CColorWheelWidget cColorWheel(win,20,20); 
 
     // Put up an initial rectangle until the color wheel is moved.
     // As a refactoring step, we could move this into a lambda since we duplicate the code below. 
 
-    cWin.FillRectangle(RectPos,RectSize,cColorWheel.GetRGBValues());
+    win.FillRectangle(RectPos,RectSize,cColorWheel.GetRgbColor());
 
     // Wait for an event.  If the Window is closed, GetEvent() returns false so the loop can exit (this can be disabled).
     // While waiting for events (mouse movements, clicks, buttons, etc.), the code below is asleep and uses no processor time.
 
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
         // The Color Wheel will cause an event if the color has changed, and 
         // we can check that with "ValueChanged()" (or event.ValueChanged()) in the Color Wheel object.
@@ -87,6 +89,6 @@ int main()
 
         // If the user changed the color, Color Wheel caused an event and set ValueChanged() to true. 
 
-        if (cColorWheel.ValueChanged(rgbColor)) cWin.FillRectangle(RectPos,RectSize,rgbColor);
+        if (cColorWheel.ColorChanged(rgbColor)) win.FillRectangle(RectPos,RectSize,rgbColor);
     }
 }

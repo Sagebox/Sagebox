@@ -1,7 +1,4 @@
 
-// File copyright(c) 2021, Rob Nelson, All rights reserved.  rob@projectsagebox.com
-// Sagebox is free for personal use.  website: www.projectsagebox.com -- github repository: https://wwww.github.com/Sagebox/Sagebox
-
 #include "SageBox.h"
 
 // -------------------------
@@ -27,9 +24,9 @@
 //
 int main()
 {
-    auto& cWin = Sagebox::NewWindow(SIZE{850,850}, "Sagebox - 10-Line Liassjous"); 
+    auto& win = Sagebox::NewWindow("Sagebox - 10-Line Liassjous",kw::SetSize(850,850)); 
 
-    double fFreq = 3.01;               // Get initial frequency multiplier
+    double freq = 3.01;               // Get initial frequency multiplier
 
     // Main loop.  Draw the initial Lissajous and then repeat while the user is entering numbers
     // note: The windows auto-updates about every 10-20ms, and updates any leftover items when GetFloat()
@@ -37,25 +34,25 @@ int main()
 
     do
     {      
-        cWin.Cls(SageColor::Black,SageColor::SkyBlueDark);        // Clear screen with a gradient
+        win.Cls("black,skybluedark");     // Or (SageColor::Black,SageColor::SkyBlueDark) --> Clear screen with a gradient
          
         for (double i=0;i<6240;i++)
         { 
             // Use the CfPoint structure for some easy point-based math.
 
-            CfPoint pLoc = { cos(-1.57+i/100*fFreq), sin(-1.57+i/100) };
+            CfPoint pLoc = { cos(-1.57+i/100*freq), sin(-1.57+i/100) };
             auto rgbColor = SageTools::HSLtoRGB({fmod(i/315,1),1,.5});
-            cWin.FillCircle(pLoc*400+425,2.0,rgbColor);
+            win.FillCircle_f(pLoc*400+425,2,rgbColor);  // Floating-point version of FillCircle
         }
     }
-    while(cWin.dialog.GetFloat("+Lissajous\nEnter Frequency Multiplier\nPress Cancel to quit",
-                                                                            fFreq,kw::Default(fFreq)));
+    while(win.dialog.GetFloat("+Lissajous\nEnter Frequency Multiplier (e.g. 2.97)\nPress Cancel to quit",
+                                                                            freq,kw::Default(freq)));
 
     // In the GetFloat() call above:
     //
     // "+Lissajous"         -- When the first item starts with a '+', this specifies the title of the window
-    // The first "fFreq"    --  specified where to put the value
-    // Default(fFreq)       -- Specifies the default for the input box.
+    // The first "freq"    --  specified where to put the value
+    // Default(freq)       -- Specifies the default for the input box.
 
     return 0;       // Just return.  We don't need to wait for the window to close since the user canceled.
 }

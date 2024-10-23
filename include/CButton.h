@@ -18,7 +18,6 @@
 #define _CDavButton_H_
 #include <windows.h>
 #include "Sage.h"
-#include "SageOpt.h"
 #include "CButtonHandler.h"
 
 // ----------------
@@ -71,6 +70,8 @@ struct CEControlAction_t	;
 struct CEButton_t			;
 class CButton				;
 class CWindow				;
+
+using Button = CButton;
 
 class CButton : public CButtonHandler
 {
@@ -166,6 +167,7 @@ public:
 	//
 	bool Pressed(Peek peek = Peek::No);
 	bool Pressed(bool & bChecked,Peek peek = Peek::No);
+	std::optional<bool> opPressed(Peek peek = Peek::No);
 
 	// PeekPress() -- Returns TRUE of the button was pressed, false if it has not been pressed. This will not reset the flag and will always return TRUE until the flag is reset.
 	// This function is a shortcut for Pressed(Sage::Peek:Yes).

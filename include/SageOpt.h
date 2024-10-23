@@ -397,10 +397,18 @@ namespace opt
 	static optRet bgColor(DWORD dwColor) { return defOpt.bgColor(dwColor); }  ;	
 
 	//---> Set the background color for this control.  Enter any valid SageWin named color or RGB() value
-	static optRet bgColor(const char * sColor) { return defOpt.bgColor(sColor); }  ;	
+	static optRet bgColor(const char * sColor,const char * sColor2 = nullptr) 
+    {
+        if (!sColor2) return defOpt.bgColor(sColor); 
+        return defOpt.bgColor(CString() << sColor << "," << sColor2); // Gradient
+    }  ;	
 
 	//---> Set the background color for this control.  Enter any valid SageWin named color or RGB() value
-	static optRet bgColor(Sage::RGBColor_t rgbColor) { return defOpt.bgColor(*rgbColor); }  ;	
+	static optRet bgColor(Sage::RGBColor_t rgbColor,Sage::RGBColor_t rgbColor2 = Rgb::Undefined) 
+    { 
+        if (rgbColor2.Undefined()) return defOpt.bgColor(*rgbColor); 
+        return defOpt.bgColor(*rgbColor) << defOpt.bgColor2(*rgbColor2);        // Gradient
+    };	
 
 	// --> Sets the background color for controls like Buttons (i.e. Style("Window") or Style("Panel") when the mouse is over the control.
 	// For example, with Windows-style or Panel-Style buttons, this will cause the color of the button to change to the bgHColor() specified

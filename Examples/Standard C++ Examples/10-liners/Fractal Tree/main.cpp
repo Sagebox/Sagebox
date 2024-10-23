@@ -1,15 +1,8 @@
-// File Copyright (c) 2021 Rob Nelson, All Rights Reserved.    Sagebox is free for personal use. 
-// Please feel free to use and copy-paste elements of this program for your own programs that use Sagebox.
-
-// Include the main CSagebox.h file.  This includes most typical C++ .h files, as well. 
-//
-// <functional> is included for the std::function reference, since I couldn't use auto because DrawTree is recursive
-//
 
 #include "Sagebox.h"
 #include <functional>
 
-using namespace Sage::opt;      // options/keywords namespace
+using namespace Sage::kw;      // Sagebox Keyword Options
 
 // ------------------------------
 // Fractal Tree - 10 Line Version
@@ -47,24 +40,24 @@ using namespace Sage::opt;      // options/keywords namespace
 using fDrawTree = std::function<void(Point3D_t &, double, double, double,double)>;
 
 
-void FractalTree(CWindow & cWin,CfPoint szWinSize,double _ang,double line_len)
+void FractalTree(CWindow & win,CfPoint szWinSize,double _ang,double line_len)
 {
     // The original code from Rosetta Project created a 2-D vector type.
     // Sagebox already has the Point3D_t type that can be used with just the X & Y
     // components with the same functionality. 
 
-    fDrawTree DrawTree = [&](Point3D_t & sp, double line_len, double a,  double rg,double fDepth)
+    fDrawTree DrawTree = [&](Point3D_t & sp, double line_len, double a,  double rg,double depth)
     {
         auto r = Point3D_t{0,-line_len}.RotateZ(a += rg *_ang) + sp;
 
         // DrawLineFast() is used here to keep from anti-aliasing the pixels -- keeps it brighter
 
-        cWin.DrawLineFast((CfPointf) sp,(CfPointf) r,SageTools::HSVtoRGB({.15 + fDepth/12,1,.9}));
-	    for (int i=0;i<2;i++) if (fDepth < 12) DrawTree(r, line_len*.75, a, i*2-1,fDepth+1 );
+        win.DrawLineFast((CfPointf) sp,(CfPointf) r,SageTools::HSVtoRGB({.15 + depth/12,1,.9}));
+	    for (int i=0;i<2;i++) if (depth < 12) DrawTree(r, line_len*.75, a, i*2-1,depth+1 );
     };
 
     Point3D_t sp{szWinSize.x/2,szWinSize.y-1 - line_len};
-    cWin.DrawLine2(sp,{0,(int) line_len},{255,0,0});
+    win.DrawLine2(sp,{0,(int) line_len},{255,0,0});
 	for (int i=0;i<2;i++) DrawTree(sp, line_len, 0, i*2-1 ,0);
 }
 
@@ -76,9 +69,11 @@ int main( int argc, char* argv[] )
     // we don't use it, we can just get a window.  The CSagebox object can be retreived with 
     // CSagbox::GetStaticSagebox()
     //
-    auto& cWin = Sagebox::NewWindow(SIZE{1300,900},"Sagebox - Fractal Tree",bgGradient(PanColor::Black,PanColor::DarkBlue)); 
-    FractalTree(cWin,cWin.GetWindowSize(),24*3.14159/180,130.0f*1.45);
-    return cWin.WaitforClose(); // Wait for user to close the window
+    auto& win = Sagebox::NewWindow("Sagebox - Fractal Tree",kw::SetSize(1300,900)); 
+    win.ClsRadial("darkblue,black");        // Clear the background with a radial gradient to look nice. 
+
+    FractalTree(win,win.GetWindowSize(),Math::ToRad(24),130.0f*1.45);
+    return win.ExitButton();
 
 }
 

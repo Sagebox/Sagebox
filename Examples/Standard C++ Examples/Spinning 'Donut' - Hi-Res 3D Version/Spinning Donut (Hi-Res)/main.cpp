@@ -1,8 +1,3 @@
-// 3d Ascii Donut -- All parts but original source Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
-
 
     // **************************************** DEPRECATED *****************************************
     // 
@@ -58,7 +53,7 @@
 //
 // 1. Dervived CWindow for main() (aka SandBox-type project)
 //
-//        This program uses a class derived from CWindow (CAsciiDonut), which bring the CWindow functions into the same namespace
+//        This program uses a class derived from CWindow (AsciiDonut), which bring the CWindow functions into the same namespace
 //        as the window attached to CWindow.
 //
 //        This makes using various Windows functions more inline with the code, vs. using MyWindow->Function().
@@ -93,9 +88,11 @@
 
 #include "CAsciiDonut.h"
 
+using namespace Sage::kw;       // Sagebox Keywords
+
 // FillColorTable() -- Fill the color table for the color we want the donut. 
 //
-void CAsciiDonut::FillColorTable(Sage::HSLColor_t stHSL)
+void AsciiDonut::FillColorTable(Sage::HSLColor_t stHSL)
 {
     pRGB32 sTempOut = (pRGB32) m_ucColorTable + 1;    // Get past value used for BG Color
 
@@ -112,7 +109,7 @@ void CAsciiDonut::FillColorTable(Sage::HSLColor_t stHSL)
 // a vertical gradient that has the same color for every pixel in each
 // row, so we only need the first one.
 //
-void CAsciiDonut::FillBgTable()
+void AsciiDonut::FillBgTable()
 {
     cBitmapBg = m_cWin->GetWindowBitmap({0,0},{1,m_szWindowSize.y});
     (*cBitmapBg).ReverseBitmap();
@@ -120,7 +117,7 @@ void CAsciiDonut::FillBgTable()
 //CalcBitmap() -- Calculate the bitmap based on the light intensity in the incoming map.
 //                A value of 0 is the background, which we has in cBitmapBg. 
 //
-void CAsciiDonut::CalcBitmap(int * pMap)
+void AsciiDonut::CalcBitmap(int * pMap)
 {
     unsigned char * sOut            = m_cOut;
     unsigned char * ucColorTable    = m_ucColorTable;
@@ -151,7 +148,7 @@ void CAsciiDonut::CalcBitmap(int * pMap)
 // Drawing them from memory makes things much faster than calling 
 // processor-expensive items like sin() and cos()
 //
-void CAsciiDonut::CalcSinCosTable()
+void AsciiDonut::CalcSinCosTable()
 {
     int iIndex = 0,iIndex2 = 0;
     for (double i = 0; 6.28 > i; i += 0.01/4.0/1.2)
@@ -168,13 +165,13 @@ void CAsciiDonut::CalcSinCosTable()
 
 // Main() -- the actual main() since we've derived from a CWindow (called from main())
 //
-int CAsciiDonut::Main() 
+int AsciiDonut::Main() 
 {
-    m_cWin = &Sagebox::NewWindow("SageBox -- Ascii Donut by Andy Sloan in High Res",opt::NoAutoUpdate()); 
+    m_cWin = &Sagebox::NewWindow("SageBox -- Ascii Donut by Andy Sloan in High Res",kw::NoAutoUpdate()); 
 
     auto& cWin = *m_cWin;
 
-    cWin.Cls(SageColor::Black,SageColor::Blue);
+    cWin.Cls("black,blue");
 
     m_szWindowSize  = { 800, 550 };                             // Set the Window size to something reasonable
     m_pInsetSize    = { 640,352 };                              // Get a 80x24 area, akin to a terminal (just to center the output)
@@ -188,12 +185,12 @@ int CAsciiDonut::Main()
     // The user can also close the window
     
     auto &StopButton = cWin.NewButton(0,m_szWindowSize.y-30,"   Press Button or Close Window to Stop   ",Center());
-    CColorWheelWidget cWheel(&cWin,0,15,Transparent() | opt::JustTopRight() | OffsetX(-20));        // note: "opt::" not needed, but using it will display a list of options
-
+    CColorWheelWidget cWheel(cWin,0,15,Transparent() | kw::JustTopRight() | PadX(-20));        // note: "kw::" not needed, but using it will display a list of options
+                                                                                                // note: Transparent() option is deprecated and will be default in upcoming release.
     SIZE szSize     = cWheel.GetWindowSize();
     POINT szPoint   = cWheel.GetWindowPos();
 
-    cWin.TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Transparent() | Font("Arial,14,bold") | fgColor(SageColor::NearWhite) | TextCenterX());
+    cWin.TextWidget(szPoint.x,szPoint.y+szSize.cy,szSize.cx,0,"Set Torus Color",Font("Arial,14,bold") | fgColor(SageColor::NearWhite) | TextCenterX());
 
     FillColorTable({ 0,1.0,1.0 });        // HSL Color: H = 0, S = 1, L = 1
     FillBgTable();
@@ -275,7 +272,7 @@ int CAsciiDonut::Main()
         cWin.Update();      // Update the screen with the new bitmap
         Sleep(0);           // Give the system some time so we don't make it sluggish
 
-        if (cWheel.ValueChanged()) FillColorTable(cWheel.GetHSLValues());        // If the color wheel was moved, then change the colors for the next bitmap
+        if (cWheel.ColorChanged()) FillColorTable(cWheel.GetHslValue());        // If the color wheel was moved, then change the colors for the next bitmap
         if (cWin.WindowClosing() || StopButton.Pressed()) break;                        // Break out if someone closed the window or pressed the stop button
     }
     return 0;
@@ -304,7 +301,7 @@ int main()
     //
     // ** This example will probably be changed to the current format of working with static Sagebox functions and the Window as a separate object.
 
-    return CAsciiDonut::Main();
+    return AsciiDonut::Main();
 }
 
 

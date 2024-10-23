@@ -22,7 +22,7 @@
 //             This uses the Sagebox version of console input.  It is very similar to console input and output, using the 
 //             same form as cin and cout, but with the window name.
 //
-//             We can also use "console." functions -- try typing "console." or "cWin.console." to see the list of functions.
+//             We can also use "console." functions -- try typing "console." or "win.console." to see the list of functions.
 //
 //             The console window isn't needed, so we could have used the Windows version of the Console project, but it was left
 //             showing to show that we're still technically in a Console mode program, though it might as well be a pure Windows program, which 
@@ -42,28 +42,27 @@
 
 int main()
 {   
-    auto &cWin = SageBox::NewWindow();    // It's a simple app so we can just create Sagebox and the Window together.
+    auto &win = SageBox::NewWindow();       // It's a simple app so we can just create Sagebox and the Window together.
 
-    RgbColor rgbColor = PanColor::Red;     // Or we could use {255,0,0}
-                                            // We can also use a standard Windows COLORREF RGB(255,0,0); 
+    RgbColor rgbColor = Rgb("Red");         // We can also use PanColor::Red, SageColor;:Red, {255,0,0} or Windows COLORREF RGB(255,0,0)                                            // We can also use a standard Windows COLORREF RGB(255,0,0); 
 
-    int iRadius1 = 0,iRadius2 = 0;          // We don't need to set them to 0, since we get a guaranteed numeric result. 
+    int Radius1 = 0,Radius2 = 0;            // We don't need to set them to 0, since we get a guaranteed numeric result. 
                                             // (which is 0 when the number is invalid, such as non-numeric entry)
 
-    cWin << "Let's Draw an Ellipse. Enter two radius values (somewhere between 5 and 300 or so).\n\n";
+    win << "Let's Draw an Ellipse. Enter two radius values (somewhere between 5 and 300 or so).\n\n";
 
     // Use the window's console i/o versions for input/output.  If the user closes the window the entry falls through with 
     // a return of 0
 
-    cWin << "Enter Radius 1: ";          // Simple i/o, as in C++, but without the "cin >> integer" issue. 
-    cWin >> iRadius1;
+    win << "Enter Radius 1: ";              // Simple i/o, as in C++, but without the "cin >> integer" issue. 
+    win >> Radius1;
 
-    cWin << "Enter Radius 2: "; 
-    cWin >> iRadius2; 
+    win << "Enter Radius 2: "; 
+    win >> Radius2; 
 
-    cWin.FillEllipse(400,400,iRadius1,iRadius2,rgbColor); 
+    win.FillEllipse(400,400,Radius1,Radius2,rgbColor); 
 
-    cWin.ExitButton();              // Get input (via the Exit Button) from the user so the program doesn't close down.
-                                    // We can also use cWin.WaitforClose() to wait for the window to close, without the button.
+    return win.ExitButton();    // Get input (via the Exit Button) from the user so the program doesn't close down.
+                                // We can also use win.WaitforClose() to wait for the window to close, without the button.
   
 }

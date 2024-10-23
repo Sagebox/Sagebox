@@ -74,15 +74,15 @@ void DoublePendulum::Render()
     int iCount = 0;
 
     if (!m_bSinglePend && m_bShowTrail)
-    for (auto & t : m_vTrails) m_cWin.DrawLineToEx(!(bool) (iCount++),t.position*m_fZoom+m_RodVertex[0],t.color,fTrailThickness); 
+    for (auto & t : m_vTrails) m_cWin.DrawLineToEx(!(bool) (iCount++),t.position*m_fZoom+m_RodVertex[0],t.color,kw::PenSize(fTrailThickness)); 
 
     // Draw Rods, Peg, and both pendulums at various zoom/thickness/size factors. 
 
-    m_cWin.DrawLine(m_RodVertex[0],m_RodVertex[1],SageColor::White,m_fThickMul*fLineThickness*m_fZoom); 
-    if (!m_bSinglePend) m_cWin.DrawLine(m_RodVertex[1],m_RodVertex[2],SageColor::Cyan,m_fThickMul*fLineThickness*m_fZoom); 
-    m_cWin.FillCircle(m_RodVertex[0],m_fThickMul*fPegRadius*m_fZoom,SageColor::White);
-    m_cWin.FillCircle(m_RodVertex[1],fTopRadius*m_fZoom*m_fCircleMult,SageColor::Red);
-    if (!m_bSinglePend) m_cWin.FillCircle(m_RodVertex[2],fBotRadius*m_fZoom*m_fCircleMult,SageColor::Green);
+    m_cWin.DrawLine(m_RodVertex[0],m_RodVertex[1],SageColor::White,kw::PenSize(m_fThickMul*fLineThickness*m_fZoom)); 
+    if (!m_bSinglePend) m_cWin.DrawLine(m_RodVertex[1],m_RodVertex[2],SageColor::Cyan,kw::PenSize(m_fThickMul*fLineThickness*m_fZoom)); 
+    m_cWin.FillCircle_f(m_RodVertex[0],m_fThickMul*fPegRadius*m_fZoom,SageColor::White);
+    m_cWin.FillCircle_f(m_RodVertex[1],fTopRadius*m_fZoom*m_fCircleMult,SageColor::Red,kw::PenSize(2.5));
+    if (!m_bSinglePend) m_cWin.FillCircle_f(m_RodVertex[2],fBotRadius*m_fZoom*m_fCircleMult,SageColor::Green,kw::PenSize(2.5));
 }
 
 // Update the pendulum angular velocity and angles. 

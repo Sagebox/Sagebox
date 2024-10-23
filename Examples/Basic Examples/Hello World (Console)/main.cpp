@@ -15,7 +15,7 @@
 
 int main()
 {
-    auto & cWin = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
+    auto & win = Sagebox::NewWindow();   // Since its a small app, create static Sagebox and Window at the same time.
 
     // Set Window title. This is optional. Here, it is helpful to have a display of
     // the differences with version.  CString() is used in Sagebox as stack-and-heap-based
@@ -23,25 +23,24 @@ int main()
     //
     // It is passed to SetWindowTitle() as a "const char *"
     //
-    // We could have done this with an opt:Title() option in AutoWindow(), but do it here for clarity.
+    // We could have done this with an kw:Title() option in AutoWindow(), but do it here for clarity.
 
-    cWin.SetWindowTitle(CString() << "Sagebox Console-Mode Hello World Program -- " << cWin.GetVersionInfo()); 
+    win.SetWindowTitle(CString() << "Sagebox Console-Mode Hello World Program -- " << win.GetVersionInfo()); 
 
     // Show some different ways to print out the console window and the Sagebox Window
     // Note these comments between Console, Windows, and Sandbox versions. 
 
     printf("Hello World (printf)\n");       // This will go out to Console Window (stdio)
-    cWin << "Hello World (win)\n";          // Output to the Sagebox window like cout
+    win << "Hello World (win)\n";          // Output to the Sagebox window like cout
     std::cout << "Hello World (cout)\n";    // cout also goes to the Console Window (stdio)
 
-    cWin.SetFont(100);               // A Shortcut for SetFont("Arial,100");
-    cWin.printf("Hello World\n");    // This prints "Hello World" much larger in the Sagebox Window
+    win.printf("{100}Hello World\n");    // This prints "Hello World" much larger in the Sagebox Window. ({100} sets font to Arial,100)
 
     // Draw a red circle to show how we can do it.  Instead of GetColor("Red)", rgb value
     // {255,0,0}, a Windows COLORREF, or RgbColor type value may also be used. 
 
-    cWin.FillCircle(300,200,100,PanColor::Red);  
+    win.FillCircle(300,200,100,"red");     // Can also use symbolic PanColor::Red or SageColor::Red
 
-    return cWin.ExitButton();    // We use the exit button (or win.WaitforClose()) to prevent the program from 
+    return win.ExitButton();    // We use the exit button (or win.WaitforClose()) to prevent the program from 
                                 // terminating and destroying the window since we don't have any other user input.
 }

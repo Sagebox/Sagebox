@@ -1,7 +1,3 @@
-// Color Selector Example -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // **********************
 // Color Selector Example
@@ -70,7 +66,7 @@
 //  
 //  7. Hiding and Showing the Window
 //  
-//      The Window is initially hidden on creation with the opt::Hidden() option. It is hidden so the window may be resized and the image can be put in the window, without
+//      The Window is initially hidden on creation with the kw::Hidden() option. It is hidden so the window may be resized and the image can be put in the window, without
 //      the window showing first (which can make it look like it flashes).
 //  
 //      Show() is used after the window is resized and image put out to the window to show the window all at once.
@@ -89,6 +85,8 @@
 #include "Sagebox.h"
 #include "CColorSelector.h"
 
+using namespace Sage::kw;       // Sagebox keyword options
+
 int main()
 {
     Sagebox::HideConsole(); // We don't need the console window, so let's hide it -- it comes back when the program is done and is a nice
@@ -96,40 +94,40 @@ int main()
                             // program. 
                             // We can change this to a full Windows program (with no console window) with a project setting. 
 
-    auto& cWin = Sagebox::NewWindow("SageBox Color Selector Example - Simple Image Processing (Multiply)",Hidden());          // Create a new window, but keep it hidden so we can resize it before showing it.
+    auto& win = Sagebox::NewWindow("SageBox Color Selector Example - Simple Image Processing (Multiply)",Hidden());          // Create a new window, but keep it hidden so we can resize it before showing it.
 
     stdTry;
 
-    CString cs      = cWin.GetOpenFile("*.jpg");      // Get a .JPG file
-    auto cBitmap    = cWin.ReadJpegFile(cs);            // Read the file in -- if it doesn't exist or it is an empty string, it 
+    CString cs      = win.GetOpenFile("*.jpg");         // Get a .JPG file
+    auto bitmap    = win.ReadJpegFile(cs);              // Read the file in -- if it doesn't exist or it is an empty string, it 
                                                         // just returns
 
     // Look at some errors using an Assert -- a nice way to avoid early exits and cleanup without a lot of if() statements.
-    // If the file selection was cancelled, cs will be empty.  If not, then if cBitmap is empty, then there was an error
+    // If the file selection was cancelled, cs will be empty.  If not, then if bitmap is empty, then there was an error
     // trying to load the jpeg (i.e. not found, corrupted, not a jpeg, etc. -- GetLastJpegError() can be called to find out.
 
     stdAssert(!cs.isEmpty(),"No image was specified."); 
-    stdAssert(!cBitmap.isEmpty(),"The JPEG file could not be read. It is either not a JPEG or corrupt.");
+    stdAssert(!bitmap.isEmpty(),"The JPEG file could not be read. It is either not a JPEG or corrupt.");
 
-    auto cResized = cWin.QuickResize(cBitmap,1200,800);     // Resize the bitmap to a Max Width of 1200 OR a max Height of 800, 
+    auto cResized = win.QuickResize(bitmap,1200,800);       // Resize the bitmap to a Max Width of 1200 OR a max Height of 800, 
                                                             // Whichever the image fits into, keeping it the same proportions. 
 
     CBitmap csNew(cResized.GetSize());                      // Get a bitmap sized to our new resized bitmap.
 
-    int iIndent = 50;                                       // Indent for the bitmap display
+    int indent = 50;                                       // Indent for the bitmap display
 
-    int iWidth    = csNew.GetWidth();
-    int iHeight = csNew.GetHeight();
+    int width    = csNew.GetWidth();
+    int height = csNew.GetHeight();
 
     // Resize the window the size of the resized bitmap + the indent.  The "true" parameter tells SageBox
     // to make the client area (i.e. non-border areas) the size we want.  Otherwise it will resize the total size
     // of the window (borders and all) the size requested.
 
-    cWin.SetWindowSize(CPoint(cResized.GetSize()) + SIZE{iIndent*2,iIndent*2},true); 
+    win.SetWindowSize(CPoint(cResized.GetSize()) + POINT{indent*2,indent*2},true); 
 
-    cWin.Cls(SageColor::Black,SageColor::DarkBlue);               // Now the we've resized it, lets give it a gradient of Black-to-Dark Blue
+    win.Cls(SageColor::Black,SageColor::DarkBlue);               // Now the we've resized it, lets give it a gradient of Black-to-Dark Blue
 
-    CColorSelector cColor(&cWin,cResized.GetWidth() + iIndent*2 + 30,20,Popup() | NoClose());
+    ColorSelector cColor(win,cResized.GetWidth() + indent*2 + 30,20,Popup() | NoClose());
 
     // Do simple multiply of the selected color to tone the image.
     // This is a lambda so we can call it initially and in the GetEvent() loop.
@@ -141,9 +139,9 @@ int main()
         unsigned char * sNew = csNew;       // Get starting address of the output bitmap memory
         unsigned char * sCur = cResized;    // Get starting address of the Resized bitmap memory.
 
-        for (int i=0;i<iHeight;i++)
+        for (int i=0;i<height;i++)
         {
-            for (int j=0;j<iWidth;j++)
+            for (int j=0;j<width;j++)
             {
                 // There are various ways to do this quickly -- this one is fast enough while
                 // keeping the code self-documenting.
@@ -161,12 +159,12 @@ int main()
             sCur += cResized.GetOverhang();                 // by 4, and the OverHang tells us how much we have left at the
                                                             // end of the line.
         }
-        cWin.DisplayBitmap(iIndent,iIndent,csNew);          // Display the bitmap centered in the window
-        cWin.Update();                                      // Update the window, 
+        win.DisplayBitmap(indent,indent,csNew);          // Display the bitmap centered in the window
+        win.Update();                                      // Update the window, 
     };
 
     Process({255,255,255});     // Process the first one with white so it won't change.
-    cWin.Show();                // Show it since it was hidden so we could resize it.
+    win.Show();                // Show it since it was hidden so we could resize it.
     
     // The main event loop.
     // 
@@ -175,9 +173,9 @@ int main()
     // if the Ok, Cancel button is pressed (or the Color Selector Window is closed), we also exit
     // the loop.
     
-    while(cWin.GetEvent())
+    while(win.GetEvent())
     {
-        if (cColor.ValueChanged()) Process(cColor.GetRGBValues());
+        if (cColor.ColorChanged()) Process(cColor.GetRgbColor());
         if (cColor.OkButtonPressed() || cColor.CancelButtonPressed()) break;
     }
 
@@ -186,7 +184,7 @@ int main()
 
     stdCatcher
     {
-        cWin.WinMessageBox(CString() << "Error displaying image --" << sErrMsg,"Load Image error",MB_OK | MB_ICONEXCLAMATION); 
+        win.WinMessageBox(CString() << "Error displaying image --" << sErrMsg,"Load Image error",MB_OK | MB_ICONEXCLAMATION); 
     }
 
     return 0;

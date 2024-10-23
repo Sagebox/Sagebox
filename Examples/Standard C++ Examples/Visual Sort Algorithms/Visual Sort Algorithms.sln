@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30413.136
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Visual Sort Algorithms", "Visual Sort Algorithms\Visual Sort Algorithms.vcxproj", "{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}"
 EndProject
@@ -19,20 +19,16 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug Optimized|x86.ActiveCfg = Debug Optimized|Win32
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug Optimized|x86.Build.0 = Debug Optimized|Win32
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x64.ActiveCfg = Debug|x64
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x64.Build.0 = Debug|x64
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x86.ActiveCfg = Debug Optimized|Win32
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x86.Build.0 = Debug Optimized|Win32
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x64.ActiveCfg = Windows Debug Optimized|x64
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x64.Build.0 = Windows Debug Optimized|x64
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Debug|x86.ActiveCfg = Debug|x64
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|Win32
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug Optimized|x86.Build.0 = Windows Debug Optimized|Win32
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|x64
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
 		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug|x64.Build.0 = Windows Debug|x64
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug|x86.ActiveCfg = Windows Debug|Win32
-		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug|x86.Build.0 = Windows Debug|Win32
+		{3E48A099-9D1C-4D7A-BC0C-E3BC61A452CC}.Windows Debug|x86.ActiveCfg = Windows Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

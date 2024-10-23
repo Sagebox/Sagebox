@@ -54,7 +54,7 @@ int main()
     auto DrawRect = [&](POINT pLoc)
     {
         cWin.Cls();     // Not the most efficient compared to a region, but good enough
-        cWin.FillRectangle(pLoc.x-100,pLoc.y-100,200,200,SageColor::Red,SageColor::White); 
+        cWin.FillRectangle(pLoc.x-100,pLoc.y-100,200,200,"red",kw::PenColor("white"));  // Can also use PanColor::Red and PanColor::White, respectively.
     };
 
     DrawRect(szWinSize/2);      // Draw initial rectangle in the center (CPoint will divide 'x and 'y' element by 2 here)

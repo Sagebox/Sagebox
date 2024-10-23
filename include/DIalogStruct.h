@@ -18,9 +18,19 @@
 #include <cfloat>
 #include <cmath>
 #include "CString.h"
+#include "keywords\opt2_ckwargs.h"
 namespace Sage
 {
+    namespace kw
+    {
+        extern const kwType::ckw none;
+    }
 
+   // namespace kwType
+   // {
+   //     template<int size>
+   //     class ckw2;
+   // };
 class CPasWindow;
 enum class DialogJustify
 	{
@@ -102,7 +112,7 @@ public:
 	{
 		EditBoxType	eEditBoxType;
 		Sage::SageString stDefaultText;
-		Sage::SageString stOptString;
+//		Sage::SageString stOptString;
 		Sage::SageString stName;
 		Sage::SageString stText;
 		CPasWindow	* m_cWinCore;
@@ -121,6 +131,7 @@ public:
 		SIZE		szEditBoxSize;
 		POINT		pPosition;
 		CEditBox	* cEditBox;
+        kwType::ckw2<20> kw;
 	public:
 		void Delete();
 		void SetMinValue(int iValue,bool bSet = true);
@@ -194,6 +205,7 @@ public:
 			stLabelText.Delete();
 		}
 };
+    static constexpr int m_iMaxItems = 1000;
 	int m_iNumItems     = 0;
 	int m_iNumButtons   = 0;	    // Used, since buttons are only used at the bottom (as opposed to checkboxes, etc.)
 						            // with specific types: Cancel, Ok, Yes, No, and a few others. 
@@ -208,7 +220,7 @@ public:
 		{
 			Label		stLabel;
 			Button		stButton;
-			EditBox		stEditBox;
+			EditBox		stEditBox; 
 			Title		stTitle;
 			TitleIcon	stTitleIcon;
 			AddSpace	stAddSpace;
@@ -314,7 +326,7 @@ public:
 	HFONT SetFont(Label & stLabel);
 	Sage::RGBColor_t SetTextColor(Label & stLabel);
 	bool AddButton(ButtonType eButtonType, const char * sAltText = nullptr);
-	bool AddEditBox(EditBoxType eEditBoxType, const char * sName,const char * sDefaultText = nullptr,const char * sOptString = nullptr);
+	bool AddEditBox(EditBoxType eEditBoxType, const char * sName,const char * sDefaultText = nullptr,const kwType::ckw & keywords = kw::none);
 	bool ValidateEditBox(EditBox & stEditBox);
 	bool AddLabel(DialogItem eItemType,const char * sLabel,DialogJustify eJustify);
 	bool AddVerticalSpace(int iPixels,const char * sName = nullptr);

@@ -20,16 +20,10 @@
 #include "CSageTools.h"
 namespace Sage
 {
-using namespace opt;
+//using namespace opt;
 
 // These should be moved to the .cpp file 
 
-#define pi 3.14159265358979
-#define Rad90 (pi/2.0);
-#define Rad180 (pi)
-#define Rad360 (2.0*pi)
-#define Rad(_deg) (_deg*pi/180)
-#define Deg(_rad) (_rad*180/pi)
 
 class CColorWheelWidget : private CWindow
 {
@@ -60,8 +54,8 @@ public:
         private:
             CColorWheelWidget * cWidget;
         public:
-            bool ValueChanged(bool bPeek = false);
-            bool ValueChanged(Sage::RGBColor_t & rgbColor);
+            bool ColorChanged(bool bPeek = false);
+            bool ColorChanged(Sage::RGBColor_t & rgbColor);
 
         };
 private:
@@ -153,7 +147,7 @@ private:
     bool        m_bHighlighted      = false;
 
 
-    void Init(CWindow * cParent,int iX,int iY,const char * sControl = nullptr);
+    void Init(CWindow * cParent,int iX,int iY,const kwOpt & keywords = kw::none);
     void SetDefaults();
     void ReadPGR();
     void CreateWheel();
@@ -164,7 +158,7 @@ private:
     void AddSmallRing(POINT pMouse);
     void CalcValues(bool bSendMessage);
     void Redraw();
-    void SetOptions(const char * sControls);
+    void SetOptions(kwType::KeyValuesPtr & keys);
 
     CfPoint GetIntersect(CPoint & p1, CPoint & p2);
     CfPoint DrawEdgeCircle(POINT & pMouse);
@@ -184,20 +178,20 @@ protected:
     virtual void OnValueChange() { }    // Override function to get value changes     
 
 public:
-    CColorWheelWidget(CWindow * cParent,int iX,int iY);
-    CColorWheelWidget(CWindow * cParent,int iX,int iY,const cwfOpt & cwOpt);
+    CColorWheelWidget(CWindow & cParent,int iX,int iY);
+    CColorWheelWidget(CWindow & cParent,int iX,int iY,const kwOpt & keywords);
     ~CColorWheelWidget();
-    static CColorWheelWidget & AttachNew(CDialog & cDialog,int iX,int iY,const cwfOpt & cwOpt = cwfOpt());
+    static CColorWheelWidget & AttachNew(CDialog & cDialog,int iX,int iY,const kwOpt & keywods = kw::none);
     static CColorWheelWidget & GetEmptyObject();
     static CColorWheelWidget & Get(CDialog & cDialog,int iD);
     static CColorWheelWidget & Get(CDialog & cDialog,const char * sName);
 
     // Access Functions
 
-    Sage::RGBColor_t GetRGBValues();
-    Sage::HSLColor_t GetHSLValues();
-    bool ValueChanged(bool bPeek = false);
-    bool ValueChanged(Sage::RGBColor_t & rgbColor);
+    Sage::RGBColor_t GetRgbColor();
+    Sage::HSLColor_t GetHslValue();
+    bool ColorChanged(bool bPeek = false);
+    bool ColorChanged(Sage::RGBColor_t & rgbColor);
     void SetDebug(bool bDebug);
     void SetLocation(int iX,int iY);
     void Show(bool bShow = true);
@@ -205,11 +199,14 @@ public:
     void UpdateBg(bool bRedraw = true);
     void Update();
     bool isValid();
-    bool SetRGBValue(RGBColor_t rgbColor);
+    bool SetRgbColor(RGBColor_t rgbColor);
     SIZE GetWindowSize();
     POINT GetWindowPos();
+    CWindow & GetWindow();
     Event event;                                        // Event functions, but can be used directly (i.e. ValueChanged())
 
 };
+using ColorWheelWidget = CColorWheelWidget;
+
 }; // namespace Sage
 #endif // _CColorWheelWidget_H_

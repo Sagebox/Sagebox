@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34928.147
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simple DrawVector Call", "Simple DrawVector Call\Simple DrawVector Call.vcxproj", "{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Using CDrawVector Class", "Using CDrawVector Class\Using CDrawVector Class.vcxproj", "{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Optimized|x64 = Debug Optimized|x64
+		Debug Optimized|x86 = Debug Optimized|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Windows Debug Optimized|x64 = Windows Debug Optimized|x64
+		Windows Debug Optimized|x86 = Windows Debug Optimized|x86
+		Windows Debug|x64 = Windows Debug|x64
+		Windows Debug|x86 = Windows Debug|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug|x64.ActiveCfg = Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug|x64.Build.0 = Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Debug|x86.ActiveCfg = Debug|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{9E492B73-C6B0-4459-ABD4-CF7CE62AC3B2}.Windows Debug|x86.ActiveCfg = Windows Debug|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug Optimized|x64.ActiveCfg = Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug Optimized|x64.Build.0 = Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug Optimized|x86.ActiveCfg = Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug|x64.ActiveCfg = Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug|x64.Build.0 = Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Debug|x86.ActiveCfg = Debug|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug Optimized|x64.ActiveCfg = Windows Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug Optimized|x64.Build.0 = Windows Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug Optimized|x86.ActiveCfg = Windows Debug Optimized|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug|x64.ActiveCfg = Windows Debug|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug|x64.Build.0 = Windows Debug|x64
+		{31B95352-A4E6-4B0D-9919-4E3C0A3C7F18}.Windows Debug|x86.ActiveCfg = Windows Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {67A2C231-D3FF-4E00-BCFC-2A58D04B251A}
+	EndGlobalSection
+EndGlobal

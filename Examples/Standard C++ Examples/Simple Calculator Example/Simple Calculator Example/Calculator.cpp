@@ -1,8 +1,4 @@
-﻿// Calculator.Cpp -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
-
+﻿
 // *******************************************************
 // Calculator.Cpp -- SageBox Simple Calculator Application 
 // *******************************************************
@@ -58,7 +54,7 @@
 #include "Calculator.h"
 #include "calctexture.pgr2.h"       // PGR (Graphics Resource) file containing the background texture.
 
-using namespace Sage::opt;          // Sagebox options
+using namespace Sage::kw;          // Sagebox Keywords
 
 #pragma warning(disable: 4996)      // Stop MSVC complaining about my use of strncat 
 
@@ -183,31 +179,33 @@ bool Calculator::InitWindow()
 
     // Initialize the Edit Box.  It is put just above the button grid, with the same width (i.e. 5*the button size)
     
-    m_cEditBox = &m_cWin->NewEditBox(kWinLoc.x,kWinLoc.y-35,kButtonSpacing.x*5,33,Font("Arial,23") | bgColor(SageColor::White)
-                                                                                                   | fgColor(SageColor::Black) | opt::ThickBorder() | opt::FloatsOnly());
+    m_cEditBox = &m_cWin->NewInputBox(kWinLoc.x,kWinLoc.y-35,kButtonSpacing.x*5,33,Font("Arial,23") | bgColor(SageColor::White)
+                                                                                                    | fgColor(SageColor::Black) | kw::ThickBorder() | kw::FloatsOnly());
 
-    // Set generic options for all buttons. This sets a highlighted background color for each button (i.e. bgHigh()).  This is the same for 
+    // Set generic keywords for all buttons. This sets a highlighted background color for each button (i.e. bgHigh()).  This is the same for 
     // all buttons to make things easy, but can be set to have a different background color for each button section with different colors, for 
     // better blending. 
     //
     // Style("Windows") sets panel-style buttons vs. default buttons
     // TextColor() sets the text color on the buttons, which usually defaults to black with Windows Style buttons
 
-    cwfOpt cwOpt = opt::Style("Windows") | TextColor(SageColor::White) | bgHigh({40,40,255}) | Font("Arial,20");
+    SageKeys<10> keywords;                  // Use some persistent keywords we can transfer for easier usage
+
+    keywords << Style("Windows") | TextColor(SageColor::White) | bgHigh({40,40,255}) | Font("Arial,20");    // Set some keyword options to pass to button groups.
 
     // Some lambda values to make life easer. 
 
     auto ButLoc = [&](int iX,int iY)    { return POINT{kWinLoc.x + iX*kButtonSpacing.x, kWinLoc.y + iY*kButtonSpacing.y}; };
-    auto getOpt = [&](RGBColor_t color) { return cwfOpt() << cwOpt | bgColor(color); };
+    auto GetKw  = [&](RGBColor_t color) { return kwType::ckw2<10>() << bgColor(color) << keywords; };    // Return with generic keywords + kw::bgColor()
 
     // Create button groups with group IDs -- Numbers, Ops (mul, div, etc.), Ops2 (two rows of functions), and memory, clear, etc.
     // This creates 4 button grid areas, two of which overlap (one has a nullptr in the place of a button to keep the 
     // area open for another grid that uses it). 
 
-    m_cWin->CreateButtonGroup((int) ButtonGroups::Numbers, 12, sButtonNumbers,  ButLoc(1,2), kButtonSize,3,kSpace,getOpt(kColorNum));
-    m_cWin->CreateButtonGroup((int) ButtonGroups::Ops,     4,  sButtonOps,      ButLoc(0,2), kButtonSize,1,kSpace,getOpt(kColorOp));
-    m_cWin->CreateButtonGroup((int) ButtonGroups::Mem,     5,  sButtonMem,      ButLoc(4,1), kButtonSize,1,kSpace,getOpt(kColorMem));
-    m_cWin->CreateButtonGroup((int) ButtonGroups::Ops2,    10, sButtonOps2,     ButLoc(0,0), kButtonSize,5,kSpace,getOpt(kColorOp));
+    m_cWin->CreateButtonGroup((int) ButtonGroups::Numbers, 12, sButtonNumbers,  ButLoc(1,2), kButtonSize,3,kSpace,GetKw(kColorNum));
+    m_cWin->CreateButtonGroup((int) ButtonGroups::Ops,     4,  sButtonOps,      ButLoc(0,2), kButtonSize,1,kSpace,GetKw(kColorOp));
+    m_cWin->CreateButtonGroup((int) ButtonGroups::Mem,     5,  sButtonMem,      ButLoc(4,1), kButtonSize,1,kSpace,GetKw(kColorMem));
+    m_cWin->CreateButtonGroup((int) ButtonGroups::Ops2,    10, sButtonOps2,     ButLoc(0,0), kButtonSize,5,kSpace,GetKw(kColorOp));
 
     m_cWin->Show();        // Show the window now that we've created all of the controls and initialized any display.
     return (m_cWin != nullptr);        // Just in case we didn't get our window created, return an error it is nullptr

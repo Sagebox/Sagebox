@@ -1,7 +1,3 @@
-// CVisualSort.Cpp -- Copyright(c) 2020, 2021 Rob Nelson.  robnelsonxx2@gmail.com -- all rights reserved.
-// This file, information, and process within are for personal use only and may not be distributed without permission.
-// Please modify, copy, do whatever you want for personal uses.  For professional, distribution or commercial uses, 
-// contact the e-mail address above
 
 // *******************************************************
 // CVisualSort.h -- SageBox Neural Network 7-Bit Counter
@@ -57,7 +53,7 @@ class CVisualSort
     CShellSort            m_ShellSort;
 
     int                    m_iCounter;                  // Counter for the threshold (i.e. how many Update() calls before we print a graph)
-    int                    m_iThreshold = 35;           // How many Update()/DrawGraph() calls before we draw a graph and update the window.
+    int                    m_iThreshold = 5;            // How many Update()/DrawGraph() calls before we draw a graph and update the window.
 
     static constexpr int kTriangleSize = 8;             // Size of the bottom triangle that shows LEFT and RIGHT indexes in the sort in real-time
 

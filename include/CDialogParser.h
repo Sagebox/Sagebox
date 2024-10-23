@@ -16,10 +16,13 @@
 #if !defined(_CDialogParser_H_)
 #define _CDialogParser_H_
 #include "CString.h"
+//include "opt2\ckwargs\opt2_keyfuncs.h"
+//include "opt2\ckwargs\opt2_ckwargs.h"
 #include <vector>
 namespace CSageScript { class CCompLink; }
 namespace Sage
 {
+
 class CSageScipt;
 
 class CWidget;
@@ -50,6 +53,7 @@ public:
 		int ID;
 		CString csName;
 		CString csOptions;
+     //   kwType::ckw2<10> * keywords;
 		CString csText;
 		CWidget * cWidget;
 		void * pObject;

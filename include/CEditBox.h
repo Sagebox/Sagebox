@@ -86,9 +86,9 @@ private:
 
 	bool SetLabelPending(LabelJust eLabelJust,int iX,const char * sLabel,const char * sFont,RGBColor_t rgbColor); 
     stControlLabel_t m_sControlLabel{};
-    bool SetLabelOpt(cwfOpt & cwOpt,SizeRect & srBox);
+    bool SetLabelOpt(kwType::ckw2<20> & kw2,SizeRect & srBox);
     stControlLabel_t DrawLabel();
-    stControlLabel_t CalcLabel(cwfOpt & cwOpt,SizeRect & srBox);
+    stControlLabel_t CalcLabel(kwType::ckw2<20> & kw2,SizeRect & srBox);
 public:
 	friend CWindow;
 	int					  m_iControl	;		// Davinci Control ID
@@ -151,7 +151,7 @@ public:
 	bool GetInteger(int & iValue,int iSetValue = INT_MIN);
 
     /// <summary>
-    /// Checks whether the input is valid for numbers with Range() set for validation.
+    /// Checks whether the inpu is valid for numbers with Range() set for validation.
     /// If there was no validation set, this function returns true.
     /// </summary>
     /// <param name="bBlankLinesValid">If blank lines are considered invalid, then set this to false (default).  Otherwise, blank lines are considered valid.</param>

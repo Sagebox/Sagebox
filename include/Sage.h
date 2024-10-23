@@ -107,7 +107,6 @@ enum class ImageStatus
     UnknownError
 };
 
-
 #ifdef _WIN64
 #define stdInt	//__int64
 #else
@@ -164,6 +163,8 @@ enum class ImageStatus
 #else
 	#define kAdvPublic	private
 #endif
+
+#define kDevPublic      public  // non-published public items -- Contents removed via scanning 
 #include <Windows.h>
 #include "CDevString.h"
 #include "Sagestring.h"
@@ -176,19 +177,83 @@ enum class ImageStatus
 namespace Sage
 {
 
+enum class CenterType
+{
+    None            = 0, 
+    Center          = 1, 
+    Middle          = 1, 
+    TopLeft         = 2,
+    TopCenter       = 3,
+    TopRight        = 4,
+    RightCenter     = 5,
+    BottomRight     = 6,
+    BottomCenter    = 7,
+    BottomLeft      = 8,
+    LeftCenter      = 9,
+};
+
+enum class LineCapType
+{
+    Default        ,
+    Flat           ,
+    Arrow          ,
+    Round          ,
+    Square         ,
+    Diamond        ,
+    ArrowAnchor    ,
+    RoundAnchor    ,
+    SquareAnchor   ,
+    DiamondAnchor  ,
+    Undefined      ,
+};
+enum class JustType
+{
+    None            = 0, 
+    Center          = 1, 
+    TopLeft         = 2,
+    TopCenter       = 3,
+    TopRight        = 4,
+    RightCenter     = 5,
+    BottomRight     = 6,
+    BottomCenter    = 7,
+    BottomLeft      = 8,
+    LeftCenter      = 9,
+    CenterX         = 10,
+    CenterY         = 11,
+};
 // Math namespace to be filled out over time. 
 //
 // Right now, mostly constants and conversions. 
 //
 namespace Math
 {
-    constexpr double PI =  3.141592653589793238;
-    constexpr float  PIf = 3.141592653589793238f;
-    constexpr double ToRad(double fDeg) { return fDeg * PI / 180.0; };
-    constexpr double ToDeg(double fDeg) { return fDeg * 180.0 / PI; };
-    constexpr float  ToRad(float fDeg) { return fDeg * PIf / 180.0f; };
-    constexpr float  ToDeg(float fDeg) { return fDeg * 180.0f / PIf; };
-    constexpr double  ToRad(int iDeg) { return (double) iDeg * PI / 180.0; };
+    constexpr double PI =  3.141592653589793238462643383279;
+    constexpr float  PIf = 3.141592653589793238462643383279f;
+    __forceinline constexpr double ToRad(double fDeg) { return fDeg * PI / 180.0; };
+    __forceinline constexpr double ToDeg(double fDeg) { return fDeg * 180.0 / PI; };
+    __forceinline constexpr float  ToRad(float fDeg) { return fDeg * PIf / 180.0f; };
+    __forceinline constexpr float  ToDeg(float fDeg) { return fDeg * 180.0f / PIf; };
+    __forceinline constexpr float  ToRad(int iDeg) { return (float) iDeg * PIf / 180.0f; };
+
+    constexpr float     Rad1f   = 0.0174532925199432957692369076848f;
+    constexpr double    Rad1    = 0.0174532925199432957692369076848;
+    constexpr float     Rad45f  = 0.785398163397448309615660845819f;
+    constexpr double    Rad45   = 0.785398163397448309615660845819;
+    constexpr float     Rad90f  = 1.570796326794896619231321691639f;
+    constexpr double    Rad90   = 1.570796326794896619231321691639;
+    constexpr float     Rad120f = 2.094395102393195492308428922186f;
+    constexpr double    Rad120  = 2.094395102393195492308428922186;
+    constexpr float     Rad135f = 2.356194490192344928846982537459f;
+    constexpr double    Rad135  = 2.356194490192344928846982537459;
+    constexpr float     Rad180f = 3.141592653589793238462643383279f;
+    constexpr double    Rad180  = 3.141592653589793238462643383279;
+    constexpr float     Rad225f = 3.926990816987241548078304229099f;
+    constexpr double    Rad225  = 3.926990816987241548078304229099;
+    constexpr float     Rad270f = 4.712388980384689857693965074919f;
+    constexpr double    Rad270  = 4.712388980384689857693965074919;
+    constexpr float     Rad360f = 2.0f*PIf;
+    constexpr double    Rad360  = 2.0*PI;
+
 }
 
     // System-wide global events. 
@@ -474,8 +539,8 @@ struct ButtonSignal
 	// --> GetSignal(MyButtonSignal.bPressed) can be used instead of the member function.
 	// 
 	constexpr bool GetSignal() { bool bReturn = bPressed; bPressed = false; return bReturn; };
-    __forceinline bool Pressed(Peek peek = Peek::No) { bool bReturn = (bool) bPressed; bPressed &= *( bool *)&peek; return bReturn; }
-    __forceinline bool Checked(Peek peek = Peek::No) { bool bReturn = (bool) bChecked; bChecked &= *( bool *)&peek; return bReturn; }
+    __forceinline bool Pressed(Peek peek = Peek::No) { bool bReturn = (bool) bPressed; if (peek == Peek::No) bPressed =false; return bReturn; }
+    __forceinline bool Checked(Peek peek = Peek::No) { bool bReturn = (bool) bChecked; if (peek == Peek::No) bChecked = false; return bReturn; }
 
 };
 
@@ -554,6 +619,20 @@ enum class LabelJust
 	SetXPos           = 12,
 };	
 
+// Line Join Types for Basic Shapes, Curves, Arc, Draw Pie, etc.
+//
+// Default for most functions is susually Miter Clipped.
+// For some functions, such as Arcs and Curves, the default is Round to avoid sharp edges on the curves
+//
+enum class LineJoinType
+{
+    Miter,
+    MiterClipped,
+    Round,
+    Bevel,
+    Default,    // Typically Miter Clipped
+};
+
 enum class TextJust
 {
     Default           = 0,
@@ -569,6 +648,7 @@ enum class TextJust
     BottomRight       = 9,
     BottomLeft        = 10,
     BottomCenter      = 11,
+    BottomMiddle      = 11,
 };	
 
 class CWindow;
@@ -645,8 +725,8 @@ public:
 		Unknown,
 	};
 
-	struct RGBColor_t;
-	struct RGBColorA_t;
+	struct RgbColor;
+	struct RgbColorA;
     class CRgb; 
 
 	enum class WidgetMsg
@@ -742,6 +822,8 @@ typedef RGBColor32* pRGB32;
     //
     // $$ DO NOT CHANGE THE ORDER OR DELETE ITEMS -- Look at uses of AutoUpdateType as integers, such as CPasWindow::UserCreateWindow(), etc.
     //
+    // $$ DO NO CHANGE ELEMENTS WITHOUT ADDRESSING Python, C#, VB, etc. 
+
 	enum class AutoUpdateType
 	{
 		//  Update() must be used to update the window.
@@ -851,6 +933,7 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * Columns           = "Columns";
         static constexpr const char * Rows              = "Rows";
         static constexpr const char * Hidden            = "Hidden";
+        static constexpr const char * AllowRollover     = "AllowRollover";
         static constexpr const char * Style             = "Style";
         static constexpr const char * fgColor           = ";fgColor;TextColor";
         static constexpr const char * TextColor         = ";TextColor;fgColor";
@@ -886,6 +969,20 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * OffsetY           = ";OffsetY;YOffset";     
         static constexpr const char * NumbersOnly       = "NumbersOnly";     
         static constexpr const char * FloatsOnly        = "FloatsOnly";     
+        static constexpr const char * Color             = "Color";     
+        static constexpr const char * Opacity           = "Opacity";     
+        static constexpr const char * Rotate            = "Rotate";     
+        static constexpr const char * PenColor          = "PenColor";     
+        static constexpr const char * BorderColor       = "BorderColor";     
+        static constexpr const char * PenSize           = "PenSize";     
+        static constexpr const char * BorderSize        = "BorderSize";     
+        static constexpr const char * AutoGradient      = "AutoGrad";     
+        static constexpr const char * Gradient          = "Gdnt";     
+        static constexpr const char * __Gradient2       = "__Gdnt2";     
+        static constexpr const char * __GradAngle       = "__GdAng";     
+        static constexpr const char * PenGradient       = "PGdnt";     
+        static constexpr const char * __PenGradient2    = "__PGdnt2";     
+        static constexpr const char * __PenGradAngle    = "__PGdntAng";     
 
         //imgOpt-specific names (ones that are not shared with general names)
 
@@ -925,6 +1022,7 @@ typedef RGBColor32* pRGB32;
         static constexpr const char * __TempEmptyOk     = "__TempEmptyOk";
         static constexpr const char * __EmptyBlankErr   = "__EmptyBlankErr";
         static constexpr const char * __NoExdent        = "__NoExdent";
+        static constexpr const char * __Color2          = "__Color2";
 
 
     };  
@@ -982,41 +1080,106 @@ public:
 	void SetUndefined() { fH = fS = fL = -1; }
 	bool Undefined() { return fH < 0 || fH > 1 || fS < 0 || fS > 1 || fL < 0 || fL > 1; }
 };
-using RgbColor = RGBColor_t;
-using RgbColorA = RGBColorA_t;
+using RGBColor_t = RgbColor;
+using RGBColorA_t = RgbColorA;
 
-struct RGBColor_t
+
+struct RgbColorA
+{
+public:
+	int iRed;
+	int iGreen;
+	int iBlue;
+	int iAlpha;
+public:
+	__forceinline RgbColorA operator * (const RgbColorA & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline RgbColorA & operator *= (const RgbColorA & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
+	__forceinline RgbColorA operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
+    __forceinline RgbColorA & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
+	__forceinline RgbColorA operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
+    __forceinline RgbColorA & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
+
+	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
+	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
+    operator RgbColor const ();
+
+#ifdef SupportGDI
+   	__forceinline operator  Gdiplus::Color () const { return Gdiplus::Color(iAlpha,iRed,iGreen,iBlue); }
+#endif
+
+	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
+	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
+	__forceinline RgbColorA & fromRGB(DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
+	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
+	__forceinline RgbColorA & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
+	
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
+	RgbColorA & Init();
+
+	/// <summary>
+	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
+    /// <para></para>&#160;&#160;&#160;
+    /// Init() and SetUndefined() are the same function.
+	/// </summary>
+	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
+	RgbColorA & SetUndefined();
+	bool Undefined();
+    __forceinline RgbColorA fromGray(int iGray) { return { iGray,iGray,iGray,iAlpha }; }
+    __forceinline RgbColorA fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray, iAlpha }; }
+    __forceinline RgbColorA & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
+    __forceinline RgbColorA & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
+	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
+	__forceinline double Gray() { return (double) ((int)(iRed+iGreen+iBlue))/3.0; }
+	double LabGray();
+    bool operator == (const RgbColorA &color) { return color.iRed == iRed && color.iGreen == iGreen && color.iBlue == iBlue && color.iAlpha == iAlpha; };
+    bool operator != (const RgbColorA &color) { return !(color.iRed == iRed && color.iGreen == iGreen && color.iBlue == iBlue && color.iAlpha == iAlpha); };
+
+
+	__forceinline void Clip() { iAlpha = max(0,min(255,iAlpha)); iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
+};
+
+
+struct RgbColor
 {
 public:
 	int iRed;
 	int iGreen;
 	int iBlue;
 public:
-	__forceinline RGBColor_t operator * (const RGBColor_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
-	__forceinline RGBColor_t operator + (const RGBColor_t & r2) { return { min(255,max(0,iRed + r2.iRed)), min(255,max(0,iGreen + r2.iGreen)), min(255,max(0,iBlue + r2.iBlue)) }; }
-	__forceinline RGBColor_t operator - (const RGBColor_t & r2) { return { min(255,max(0,iRed - r2.iRed)), min(255,max(0,iGreen - r2.iGreen)), min(255,max(0,iBlue - r2.iBlue)) }; }
-	__forceinline RGBColor_t & operator *= (const RGBColor_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
-	__forceinline RGBColor_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
-	__forceinline RGBColor_t operator * (double fValue) { return { (int) ((double)iRed*fValue),  (int) ((double)iGreen*fValue),  (int) ((double)iBlue*fValue) }; }
-    __forceinline RGBColor_t & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
-	__forceinline RGBColor_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
-    __forceinline RGBColor_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
+	__forceinline RgbColor operator * (const RgbColor & r2) const { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
+	__forceinline RgbColor operator | (const RgbColor & r2) const { return { iRed + r2.iRed, iGreen + r2.iGreen, iBlue + r2.iBlue }; }
+	__forceinline RgbColor operator + (const RgbColor & r2) const { return { min(255,max(0,iRed + r2.iRed)), min(255,max(0,iGreen + r2.iGreen)), min(255,max(0,iBlue + r2.iBlue)) }; }
+	__forceinline RgbColor operator - (const RgbColor & r2) const { return { min(255,max(0,iRed - r2.iRed)), min(255,max(0,iGreen - r2.iGreen)), min(255,max(0,iBlue - r2.iBlue)) }; }
+	__forceinline RgbColor & operator *= (const RgbColor & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
+	__forceinline RgbColor operator * (int iValue) const { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
+	__forceinline RgbColor operator * (double fValue) const { return { (int) ((double)iRed*fValue),  (int) ((double)iGreen*fValue),  (int) ((double)iBlue*fValue) }; }
+    __forceinline RgbColor & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
+	__forceinline RgbColor operator / (int iValue) const { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
+    __forceinline RgbColor & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
 
 	//__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
 	//__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
-   	operator RGBColorA_t ();
+   	operator RgbColorA () const;
+    bool operator == (const RgbColor color) { return color.iRed == iRed && color.iGreen == iGreen && color.iBlue == iBlue; };
+    bool operator != (const RgbColor color) { return !(color.iRed == iRed && color.iGreen == iGreen && color.iBlue == iBlue); };
 
 #ifdef SupportGDI
-   	__forceinline operator  Gdiplus::Color () { return Gdiplus::Color(iRed,iGreen,iBlue); }
+   	__forceinline operator  Gdiplus::Color () const { return Gdiplus::Color(iRed,iGreen,iBlue); }
     operator CRgb (); 
 
 #endif
 
 	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
 	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
-    __forceinline static RGBColor_t fromWinRGB(DWORD dwColor) { return RGBColor_t{ (int) GetRValue(dwColor), (int)  GetGValue(dwColor), (int)  GetBValue(dwColor) }; }
-	__forceinline DWORD operator * () { if (iRed < 0 && iGreen < 0 && iBlue < 0) return -1; return RGB(iRed,iGreen,iBlue);  }
-	__forceinline RGBColor_t & operator = (DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
+    __forceinline static RgbColor fromWinRGB(DWORD dwColor) { return RgbColor{ (int) GetRValue(dwColor), (int)  GetGValue(dwColor), (int)  GetBValue(dwColor) }; }
+	__forceinline DWORD operator * () const { if (iRed < 0 && iGreen < 0 && iBlue < 0) return -1; return RGB(iRed,iGreen,iBlue);  }
+	__forceinline RgbColor & operator = (DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
+    operator DWORD() const { if (iRed < 0 && iGreen < 0 && iBlue < 0) return -1; return RGB(iRed,iGreen,iBlue);  }
 	
 	/// <summary>
 	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
@@ -1032,12 +1195,14 @@ public:
     /// Init() and SetUndefined() are the same function.
 	/// </summary>
 	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
-	RGBColor_t & SetUndefined();
-	bool Undefined();
-    static __forceinline RGBColor_t fromGray(int iGray) { return { iGray,iGray,iGray }; }
-    static __forceinline RGBColor_t fromGray(float fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
-     __forceinline RGBColor_t toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
-    __forceinline RGBColor_t toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
+	RgbColor & SetUndefined();
+	bool ValidColor() const;
+	bool Undefined() const;
+	bool NotFound() const;
+    static __forceinline RgbColor fromGray(int iGray) { return { iGray,iGray,iGray }; }
+    static __forceinline RgbColor fromGray(float fGray) { return { (int) fGray,(int) fGray,(int) fGray }; }
+     __forceinline RgbColor toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
+    __forceinline RgbColor toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
 	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
 	__forceinline float Gray() { return (float) ((int)(iRed+iGreen+iBlue))/3.0f; }
 	float LabGray();
@@ -1053,9 +1218,63 @@ public:
     static RgbColor fromHSL(int iHue);
     static RgbColor fromHSV(int iHue);
 
+    __forceinline RgbColorA RgbA(int iAlpha = 255) const { return Sage::RgbColorA{iRed,iGreen,iBlue,iAlpha }; }
+    Gdiplus::Color getGdiColor(int iOpacity = 255) { return { (BYTE) iOpacity, (BYTE) iRed,(BYTE) iGreen,(BYTE) iBlue }; }
 	__forceinline void Clip() { iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
 };
 
+
+// CRgbColor is used mostly as a type for inputting color to functions, but can be used as a general type.
+// CRgbColor is container class for RgbColor, containing space for two colors: a primary color and a gradient/other color.
+//
+// CRgbColor is used for input on a number of functions as it can use either RgbColor types or resolve text color name (e.g. "red"). See full documentation for more information.
+//
+// - Examples: 
+//          - FillCircle(100,100,50,"red")      -> Converts "red" to an rgb color of {255,0,0}
+//          - FillCircle(100,100,50,PanColor::Red) -> passes the rgb RED color {255,0,0}
+//          - FillCircle(100,100,50,{255,0,0})  -> passes the direct color
+//
+// --> Secondary colors can be used, which are typically gradients, e.g. "red,"green" or (PanColor::Red,PanColorGreen), etc. 
+//
+// Examples: 
+//          -- FillCircle(100,100,50,"red,green")   -> passes in red and green to draw circle, which draws a red-green gradient in the circle
+//          -- FillCircle(100,100,50,(PanColor::Red,PanColor::Green))   -> Symbolic values of the same process
+//
+// --> While not used as a general color type, CRgbColor converts easily to RgbColor type, allowing quick assignments such as 'CRgbColor MyColor = "red"', etc.
+// --> CRgbColor is easily assigned to RgbColor -- Example: RgbColor MyColor = MyCRgbColor;
+//
+class CRgbColor
+{
+public:
+    bool bisRgbA[2];
+    int iAlpha[2];
+    RgbColor rgbColor; 
+    RgbColor rgbColor2; 
+    __forceinline void Init() { bisRgbA[0] = bisRgbA[1] = false; iAlpha[0] = iAlpha[1] = 255; } 
+public:
+    CRgbColor() = default;
+    CRgbColor(int iRed,int iGreen,int iBlue);
+//    CRgbColor(CRgbColor & rgbColor);
+    CRgbColor(CRgbColor & rgbColor,CRgbColor & rgbColor2);
+    CRgbColor(const char * sColor);
+    CRgbColor(RgbColor rgbColor);
+    CRgbColor(RgbColorA rgbColor);
+    CRgbColor(RgbColorA rgbColor,RgbColorA rgbColor2);
+    CRgbColor(RgbColor rgbColor,RgbColor rgbColor2) { Init(); this->rgbColor = rgbColor; this->rgbColor2 = rgbColor2; }
+    int Red() const { return rgbColor.iRed; }
+    int Green() const { return rgbColor.iRed; }
+    int Blue() const { return rgbColor.iRed; }
+    operator RgbColor() const { return rgbColor;  }
+    operator RgbColorA() const { return rgbColor.RgbA();  }
+    operator Gdiplus::Color() const { return { (BYTE) (bisRgbA[0] ? iAlpha[0] : 255), (BYTE) rgbColor.iRed, (BYTE) rgbColor.iGreen, (BYTE) rgbColor.iBlue  }; }
+    RgbColor operator * () const { return rgbColor; };
+
+    // $$ This function is deprecated.
+    //
+    Gdiplus::Color getGdiColor(int iOpacity = 255) 
+    { 
+        return { (BYTE) iOpacity, (BYTE) rgbColor.iRed,(BYTE) rgbColor.iGreen,(BYTE) rgbColor.iBlue }; }
+};
 struct RgbGradient
 {
     RgbColor   color1;
@@ -1063,62 +1282,17 @@ struct RgbGradient
     bool       bHorizontal;    // Default is vertical
 };
 
-struct RGBColorA_t
-{
-public:
-	int iRed;
-	int iGreen;
-	int iBlue;
-	int iAlpha;
-public:
-	__forceinline RGBColorA_t operator * (const RGBColorA_t & r2) { return { iRed*r2.iRed/255, iGreen*r2.iGreen/255, iBlue*r2.iBlue/255 }; }
-	__forceinline RGBColorA_t & operator *= (const RGBColorA_t & r2) { iRed = iRed*r2.iRed/255; iGreen = iGreen*r2.iGreen/255; iBlue = iBlue*r2.iBlue/255; return *this; }
-	__forceinline RGBColorA_t operator * (int iValue) { return { iRed*iValue, iGreen*iValue, iBlue*iValue }; }
-    __forceinline RGBColorA_t & operator *= (int iValue) { iRed *= iValue, iGreen *= iValue, iBlue *= iValue; return *this; }
-	__forceinline RGBColorA_t operator / (int iValue) { return { iRed/iValue, iGreen/iValue, iBlue/iValue }; }
-    __forceinline RGBColorA_t & operator /= (int iValue) { iRed /= iValue, iGreen /= iValue, iBlue /= iValue; return *this; }
 
-	__forceinline operator int () { return (int) RGB(iRed,iGreen,iBlue); }
-	__forceinline operator DWORD () { return (DWORD) RGB(iRed,iGreen,iBlue); }
-    __forceinline operator RGBColor_t () { return RGBColor_t{iRed,iGreen,iBlue}; }
+// Rgb Conversion Functions
 
-#ifdef SupportGDI
-   	__forceinline operator  Gdiplus::Color () { return Gdiplus::Color(iAlpha,iRed,iGreen,iBlue); }
-#endif
+__forceinline RgbColor Rgb(int iRed,int iGreen,int iBlue) { return RgbColor{iRed,iGreen,iBlue}; }
+__forceinline RgbColor Rgb(RgbColorA rgbColorA) { return (RgbColor) rgbColorA; }
+RgbColor Rgb(const char * sColor);
 
-	__forceinline DWORD toRGB() { return RGB(iRed,iGreen,iBlue); }
-	__forceinline RGBColor24 toRGB24() { return RGBColor24{(unsigned char) iRed,(unsigned char) iGreen,(unsigned char) iBlue}; }
-	__forceinline RGBColorA_t & fromRGB(DWORD dwColor) { iRed = GetRValue(dwColor); iGreen = GetGValue(dwColor); iBlue = GetBValue(dwColor); return *this; }
-	__forceinline DWORD operator * () { return RGB(iRed,iGreen,iBlue);  }
-	__forceinline RGBColorA_t & operator = (DWORD dwColor) { return fromRGB(dwColor);  }
-	
-	/// <summary>
-	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
-    /// <para></para>&#160;&#160;&#160;
-    /// Init() and SetUndefined() are the same function.
-	/// </summary>
-	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
-	RGBColorA_t & Init();
-
-	/// <summary>
-	/// Set color as undefined (all values = -1). This is used to determine lack of color, to use default, or otherwise as a signal that there is no color assigned.
-    /// <para></para>&#160;&#160;&#160;
-    /// Init() and SetUndefined() are the same function.
-	/// </summary>
-	/// <returns>Current color (with Red, Green, Blue set to -1)</returns>
-	RGBColorA_t & SetUndefined();
-	bool Undefined();
-    __forceinline RGBColorA_t fromGray(int iGray) { return { iGray,iGray,iGray,iAlpha }; }
-    __forceinline RGBColorA_t fromGray(double fGray) { return { (int) fGray,(int) fGray,(int) fGray, iAlpha }; }
-    __forceinline RGBColorA_t & toGray() { iRed = iGreen = iBlue = IntGray(); return *this; }
-    __forceinline RGBColorA_t & toLABGray() { iRed = iGreen = iBlue = (int) (255.0*LabGray()); return *this; }
-	__forceinline int IntGray() { return (iRed + iGreen + iBlue)/3; };
-	__forceinline double Gray() { return (double) ((int)(iRed+iGreen+iBlue))/3.0; }
-	double LabGray();
-
-
-	__forceinline void Clip() { iAlpha = max(0,min(255,iAlpha)); iRed = max(0,min(255,iRed)); iGreen = max(0,min(255,iGreen)); iBlue = max(0,min(255,iBlue)); }
-};
+__forceinline RgbColorA RgbA(int iRed,int iGreen,int iBlue,int iAlpha) { return RgbColorA{iRed,iGreen,iBlue,iAlpha}; }
+__forceinline RgbColorA RgbA(const RgbColor & rgbColor,int iAlpha = 255) { return RgbColorA{rgbColor.iRed,rgbColor.iGreen,rgbColor.iBlue,iAlpha}; }
+RgbColorA RgbA(const char * sColor);
+RgbColorA RgbA(const char * sColor,int iAlpha);
 
 #ifdef SupportGDI
 
@@ -1139,12 +1313,13 @@ public:
 #endif
 	// Gradient -- used two store two colors to form a gradient
 	//
-	struct Gradient
+	struct ColorGradient
 	{
 		RGBColor_t rgbColor1;		// Top or Left Color
 		RGBColor_t rgbColor2;		// Bottom or Right Color
 		bool bMono;					// When true, only the top color is used (i.e. it's just storage for the top color)
 		bool bHorizontal;
+        double fAngle; 
 	};
 	struct FloatBitmap_t
 	{
@@ -1328,9 +1503,10 @@ public:
 
 		bool CopyFrom(RawBitmap32_t & stSource, POINT pDestStart = {0,0} , POINT pSourceStart = { 0,0 }, SIZE szSize = {0,0});
 		bool Copyto(RawBitmap32_t & stDest, POINT pSourceStart = { 0,0}, POINT pDestStart = { 0,0 }, SIZE szSize = { 0,0 });
-		bool FillColor(Sage::RGBColor_t rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
-		bool FillColor(DWORD dwColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
-
+		bool FillColor(Sage::CRgbColor rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
+		bool FillColorA(Sage::CRgbColor rgbColor, int iMaskValue,POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
+		bool FillColorA(RgbColorA rgbColor, POINT pStart = { 0,0 }, SIZE szSize = { 0,0 });
+        bool ReverseBitmap();
 
         static RawBitmap32_t CreateFrom(CBitmap & cBitmap);
 	};
@@ -1618,6 +1794,7 @@ enum class ControlSubStyles
 	bool WriteBitmap(const char * sFile,RawBitmap_t & stBitmap); 
 
 	[[nodiscard]] RawBitmap32_t BMPtoBitmap32(const unsigned char * sBMP);
+	[[nodiscard]] RawBitmap32_t BMP32toBitmap32(const unsigned char * sBMP);
 	[[nodiscard]] RawBitmap_t BMPtoBitmap(const unsigned char * sBMP);
 	bool BMPtoBitmap(const unsigned char * sBMP,RawBitmap_t & stBitmap);
 	void DeleteBitmap(Sage::RawBitmap_t & stBitmap);
@@ -1688,9 +1865,9 @@ enum class ControlSubStyles
 	BITMAPINFO CreateBitmapInfo32(int iWidth,int iHeight);
 	int FindIntValues(char * sString,long * iValues,int iMaxValues);
 	int FindIntValues(char * sString,int * iValues,int iMaxValues);
-	[[nodiscard]] Mem<char> ReadTextFile(const char * sFile,bool bNullTerminate = false,bool * bSuccess = nullptr);
-	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,bool * bSuccess = nullptr);
-	[[nodiscard]] Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
+	Mem<char> ReadTextFile(const char * sFile,bool bNullTerminate = false,bool * bSuccess = nullptr);
+	Mem<unsigned char> ReadBinaryFile(const char * sFile,bool * bSuccess = nullptr);
+	Mem<unsigned char> ReadBinaryFile(const char * sFile,int iMaxSize,ImageStatus * eStatus = nullptr);
 	CBitmap ReadJpegFile(const char * sPath,bool * bSuccess = nullptr);
 	CBitmap ReadJpegMem(const unsigned char * sData,int iDataLength,bool * bSuccess = nullptr);
     CBitmap GetSageIcon(int iIcon); 
@@ -1769,12 +1946,13 @@ enum class ControlSubStyles
 
     CString ShowExceptMsg(const char * sTitle, const char * sMsg,const char * sFile,unsigned int sLine);
 
-    namespace Rgb
+    namespace RgbVal
     {
         static constexpr RGBColor_t Transparent = RGBColor_t{-1,-1,-1};     // Use to specify transparency for Circle(), Rectangle(), etc.
         static constexpr RGBColor_t None        = RGBColor_t{-1,-1,-1};     // Used to specify non-existent color, such as Pen color for Circle(), Rectangle(), etc.
         static constexpr RGBColor_t Undefined   = RGBColor_t{-1,-1,-1};     // Used to specify undefined color (i.e. defaults and such).
         static constexpr RGBColor_t Default     = RGBColor_t{-1,-1,-1};     // Used to specify default color (i.e. DrawLine() or LineTo()
+        static constexpr RGBColor_t NotFound    = RGBColor_t{-2,-2,-2};     // Used to internally specify color was not found in a search.
     };
 
     // WinX has been co-opted by the use of "Win" in Quick C++
@@ -1787,7 +1965,7 @@ enum class ControlSubStyles
     struct SageboxInit
     {
         public:
-            AutoUpdateType  eAutoUpdateType = Sage::AutoUpdateType::On;
+            AutoUpdateType  eAutoUpdateType = Sage::AutoUpdateType::Off;
             bool bWordWrap = false;
             bool bControlCExitDisabled = false; 
             RgbColor        bgColor;                // TBD - Background color for created windows

@@ -20,16 +20,9 @@ private:
     bool m_bWindowCloseEvent = false;
 public:
 
-    class opt
-    {
-    public:
-        static cwfOpt AfterTitle(const char * sTitle) { return Sage::opt::Str("AfterTitle",sTitle); }; 
-        static cwfOpt BeforeTitle(const char * sTitle) { return Sage::opt::Str("BeforeTitle",sTitle); }; 
-        static cwfOpt Percent(int iPercent) { return Sage::opt::Int("Percent",iPercent); }; 
-        static cwfOpt Maximize(bool bMaximize = true) { return Sage::opt::Bool("Maximize",bMaximize); }; 
-    };
-    CBeforeAfterImage(const char * sTitle,CBitmap & cBefore,CBitmap & cAfter,const cwfOpt & cwOpt = cwfOpt());
-    CBeforeAfterImage(CBitmap & cBefore,CBitmap & cAfter,const cwfOpt & cwOpt = cwfOpt());
+
+    CBeforeAfterImage(const char * sTitle,CBitmap & cBefore,CBitmap & cAfter,const kwOpt & keywords = kw::none);
+    CBeforeAfterImage(CBitmap & cBefore,CBitmap & cAfter,const kwOpt & keywords = kw::none);
     ~CBeforeAfterImage();
     CBeforeAfterImage(const CBeforeAfterImage &p1);
     bool isValid();

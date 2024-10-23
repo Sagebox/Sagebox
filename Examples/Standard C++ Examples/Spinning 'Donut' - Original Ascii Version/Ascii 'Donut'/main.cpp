@@ -51,12 +51,12 @@
 // 1. Sandbox Project 
 //
 //    The Sandbox-Style project in Sagebox is a great way to quickly start up a session with SageBox. 
-//    the main function is derived from CWindow, and the basic interface works the same as C/C++, with 
+//    the main function is derived from window, and the basic interface works the same as C/C++, with 
 //    printf(), and SageBox functions can now be directly called. 
 //
 //    When the main() funciton is entered, the window is already created, and it is simple to perform
-//    various functions with SageBox, rather than a) the need to create a window and b) de-referencing the window, i.e. cWin.printf or 
-//    cwin.DrawRectangle() vs. simple "printf()" and "DrawRectangle()"
+//    various functions with SageBox, rather than a) the need to create a window and b) de-referencing the window, i.e. win.printf or 
+//    win.DrawRectangle() vs. simple "printf()" and "DrawRectangle()"
 //
 //    When the project is opened, CSageBox is already created along with the window, and programs can be instantly started in the 
 //    Sandbox's main() function.
@@ -104,18 +104,19 @@
 
 #include "SageBox.h"
 
-using namespace Sage::opt;      // Sagebox options
+using namespace Sage::kw;      // Sagebox Keywords
 
 int main()
 {
-    auto& cWin = Sagebox::NewWindow("SageBox - Ascii Donut by Andy Sloan"); 
+    auto& win = Sagebox::NewWindow("SageBox - Ascii Donut by Andy Sloan"); 
 
-    cWin.Cls(SageColor::SkyBlueDark,SageColor::SkyBlue);             // Clear screen with a gradient, using stock colors. 
+
+    win.Cls("skybluedark,skyblue");             // Clear screen with a gradient, using stock colors. 
 
     const char * sFont = "Courier New,14";                      // Set the Ascii Font we want to use (i.e. non-proportional font)
-    CPoint pTermSize = CPoint( 80, 25 ) * cWin.getCharSize(sFont);   // Get an (80x25) window for our terminal, sized to our font
+    CPoint pTermSize = CPoint( 80, 25 ) * (CPoint) win.getCharSize(sFont);   // Get an (80x25) window for our terminal, sized to our font
     CPoint pWinSize = CPoint( 800,550 );                    
-    cWin.SetWindowSize(pWinSize,true);                               // Set our main window size (true == size the interior this size)
+    win.SetWindowSize(pWinSize,true);                               // Set our main window size (true == size the interior this size)
 
     // Get the window where we will print out the ascii characters. 
     //
@@ -123,8 +124,12 @@ int main()
     // AddBorder() adds a small border around the window
     // Font() Sets the font we've chosen
 
-    auto& AsciiWindow = cWin.ChildWindow(0,40,pTermSize.x,pTermSize.y,CenterX() | AddBorder() | Font(sFont));
+    auto& AsciiWindow = win.ChildWindow(0,40,pTermSize.x,pTermSize.y,CenterX() | AddBorder() | Font(sFont));
     AsciiWindow.Cls(SageColor::Black);     
+    AsciiWindow.SetAutoUpdate();    // Sets the window to update every 10-20ms or so.
+                                    // The default is to not update until called upon to do so, so we'd
+                                    // have to do it manually with an update() call below -- but, since
+                                    // the program is so fast, it's better to let it update automatically because
 
     // Set the background to Opaque since we're not clearing the screen and overwriting previous characters.
     // The default is that characters are transparent and won't fill in the background.
@@ -132,20 +137,20 @@ int main()
     AsciiWindow.SetBkMode(BkMode::Opaque);
 
     // Set a fire-and-forget message centered above the Ascii Window, giving credit to the original author
-
-    cWin.TextWidget(0,10,"Ascii Donut by Andy Sloan", Font("arial,18") | CenterX() | Transparent());
+     
+    win.TextWidget(0,10,"Ascii Donut by Andy Sloan", Font("arial,18") | CenterX());
     
     // Create a close button so the user can stop the program -- the close window button also works
     // Center() Centers it in the X-dimension.
 
-    auto& CloseButton = cWin.NewButton(0,pWinSize.y-50,"    Press Button or Close Window to Exit    ",Center());
+    auto& CloseButton = win.NewButton(0,pWinSize.y-50,"    Press Button or Close Window to Exit    ",Center());
 
     // Create another text widget.  This updates the count, and also redraws the parent's background (which is a gradient),
     // so we don't have to worry about any of it. (the 00000000 is to reserve needed space)
 
-    auto& cText = cWin.TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor(SageColor::Yellow) | Font("Arial,14") | Transparent());
+    auto& text = win.TextWidget(80,pTermSize.y + 40+7,"UpdateCount = 000000000000", fgColor(SageColor::Yellow) | Font("Arial,14"));
     
-    int iCount = 0;
+    int count = 0;
 
     // ----- Original Code ------
     //
@@ -199,11 +204,11 @@ int main()
 
         // ------- End of Original Code --------
 
-        cText.Write(CString() << "Update Count " << ++iCount);    // Put out the count to our text widget
+        text.Write(CString() << "Update Count " << ++count);    // Put out the count to our text widget
 
         // See if the close button was pressed or the window is closing.
 
-        if (CloseButton.Pressed() || cWin.WindowClosing()) break;
+        if (CloseButton.Pressed() || win.WindowClosing()) break;
         // CSagebox::VsyncWait(); // Add this line to slow down the display to 60fps (or whatever the monitor refresh rate)
     }
     return 0;

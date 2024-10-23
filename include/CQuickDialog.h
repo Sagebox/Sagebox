@@ -160,6 +160,7 @@ private:
 
         Control eType;
         const cwfOpt * cwOpt;
+        const kwOpt * keywords;
         const char * sName;
         const char * sDesc;
         void * vOutValue;
@@ -178,9 +179,9 @@ private:
     static constexpr int          m_iIndentY            = 10;
     static constexpr int          m_iIndentYBot         = 5; //10;
     static constexpr int          m_iMaxWidth           = 1200;
-    static constexpr RgbColor     m_rgbDefaultBg        = {30,80,160}; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg         = {32, 73, 137}; //{ 0, 55, 155 }; //{ 0, 60, 170 };
     static constexpr RgbColor     m_rgbDefaultBg1        = { 16, 65, 175 }; //{ 35, 107, 197 }; //, { 35, 76, 172 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
-    static constexpr RgbColor     m_rgbDefaultBg2        = { 20, 95, 205 }; //{ 37, 102, 206 }; //{ 11, 43, 120 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
+    static constexpr RgbColor     m_rgbDefaultBg2        = { 26,62,115  }; //{ 37, 102, 206 }; //{ 11, 43, 120 }; //{ 0, 55, 155 }; //{ 0, 60, 170 };
     static constexpr int          m_iHeaderFontSizes[m_iMaxHeaderLines+1] = { 17,14,13,12,12,12 };  // This follows H1 (+blank), not number of lines. 
     static constexpr const char * m_sListboxTitleFont   = "Arial,13";
     static constexpr const char * m_sListboxItemFont    = "Arial,13";
@@ -320,7 +321,7 @@ private:
         const char * sDefault;
         bool bDefault;
     };
-    bool Init(const cwfOpt & cwOpt);
+    bool Init(const kwOpt & keywords);
 
 private:
 
@@ -395,12 +396,13 @@ private:
     bool m_bNoCancel          = false;  // When true, there is no cancel widow and dialog window cannot close (also sets m_bNoClose = true);
     bool m_bNoAutoHide        = false;  // Will not auto-hide the dialog window when user presses Cancel after calling WaitforClose() -- avoids flash
     bool m_bModal             = false;
-    bool HandleCheckbox(stElement_t & stElement);
-    bool HandleHeader(stElement_t & stElement);
+    bool HandleCheckbox(stElement_t & stElement,const kwOpt & keywords);
+    bool HandleHeader(stElement_t & stElement,const kwOpt & keywords);
     bool HandleSlider(stElement_t & stElement);
-    bool HandleEditBox(stElement_t & stElement); 
-    bool HandleListbox(stElement_t & stElement);
-    bool HandleCombobox(stElement_t & stElement);
+   // bool HandleEditBox(stElement_t & stElement); 
+    bool HandleEditBox(stElement_t & stElement,const kwOpt & keywords); 
+    bool HandleListbox(stElement_t & stElement, const kwOpt& keywords);
+    bool HandleCombobox(stElement_t & stElement,const kwOpt & keywords);
     bool AddItem(stItem_t & stItem);
     bool AddSysButtons();
     bool CalcWindow();
@@ -418,7 +420,7 @@ private:
     bool CalcOutboundValues();
 
 kSagePrivPublic:
-    CQuickDialog(CWindow * cWin,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CQuickDialog(CWindow * cWin,const kwOpt & keywords = kw::none);
 
 
     // --------------------------
@@ -462,7 +464,7 @@ public:
     /// <param name="sHeader">- Text of header string.  This can contain multiple lines of text.</param>
     /// <param name="cwOpt"> - (optional) any options, such as opt::JustLeft()</param>
     /// <returns></returns>
-    bool AddHeader(const char * sHeader,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    bool AddHeader(const char * sHeader,const kwOpt & keywords = kw::none); 
 
    /// <summary>
     /// Adds a text-string header to the Quick Dialog Window, with a text smaller than AddHeader(). Also see AddHeader().
@@ -479,7 +481,7 @@ public:
     /// <param name="sHeader">- Text of header string.  This can contain multiple lines of text.</param>
     /// <param name="cwOpt"> - (optional) any options, such as opt::JustLeft()</param>
     /// <returns></returns>
-    bool AddHeaderH3(const char * sHeader,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    bool AddHeaderH3(const char * sHeader,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a checkbox to the Quick Dialog window. You can use the opt::Default(true) to set the check ON as default.
@@ -494,7 +496,7 @@ public:
     /// <param name="sCheckboxText"> - Checkbox label</param>
     /// <param name="cwOpt"> - Any options (optional), such as Default() or other checkbox options</param>
     /// <returns>CButton object to access the Checkbox created by the Quick Dialog. Not needed of bChecked reference was used.</returns>
-    CButton & AddCheckbox(const char * sCheckboxText,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CButton & AddCheckbox(const char * sCheckboxText,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a checkbox to the Quick Dialog window. You can use the opt::Default(true) to set the check ON as default.
@@ -509,7 +511,7 @@ public:
     /// <param name="sCheckboxText"> - Checkbox label</param>
     /// <param name="cwOpt"> - Any options (optional), such as Default() or other checkbox options</param>
     /// <returns>CButton object to access the Checkbox created by the Quick Dialog. Not needed of bChecked reference was used.</returns>
-    CButton & AddCheckbox(const char * sCheckboxText,bool & bError,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CButton & AddCheckbox(const char * sCheckboxText,bool & bError,const kwOpt & keywords = kw::none);
  
     /// <summary>
     /// Adds a checkbox to the Quick Dialog window. You can use the opt::Default(true) to set the check ON as default.
@@ -524,7 +526,7 @@ public:
     /// <param name="sCheckboxText"> - Checkbox label</param>
     /// <param name="cwOpt"> - Any options (optional), such as Default() or other checkbox options</param>
     /// <returns>CButton object to access the Checkbox created by the Quick Dialog. Not needed of bChecked reference was used.</returns>
-    CButton & AddCheckbox(bool & bChecked,const char * sCheckboxText,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CButton & AddCheckbox(bool & bChecked,const char * sCheckboxText,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a checkbox to the Quick Dialog window. You can use the opt::Default(true) to set the check ON as default.
@@ -539,26 +541,7 @@ public:
     /// <param name="sCheckboxText"> - Checkbox label</param>
     /// <param name="cwOpt"> - Any options (optional), such as Default() or other checkbox options</param>
     /// <returns>CButton object to access the Checkbox created by the Quick Dialog. Not needed of bChecked reference was used.</returns>
-    CButton & AddCheckbox(bool & bChecked,const char * sCheckboxText,bool & bError,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
- 
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CButton & AddCheckbox(bool & bChecked,const char * sCheckboxText,bool & bError,const kwOpt & keywords = kw::none);
  
     /// <summary>
     /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -577,7 +560,8 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(const char * sLabel,const kwOpt & keywords = kw::none);
+ 
 
     /// <summary>
     /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -596,7 +580,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(int & iValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -615,216 +599,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(int & iValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(double & fValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(double & fValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(float & fValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(float & fValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(CString & cString,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(CString & cString,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(std::string & cString,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddEditbox(std::string & cString,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-    /// <summary>
-    /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(int & iValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(int & iValue,const char * sLabel,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -843,7 +618,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(int & iValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(int & iValue,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -862,7 +637,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(float & fValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(float & fValue,const char * sLabel,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -881,7 +656,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(float & fValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(float & fValue,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an EditBox (or InputBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -900,7 +675,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(double & fValue,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(double & fValue,const char * sLabel,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -919,27 +694,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(double & fValue,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
-
-
-    /// <summary>
-    /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
-    /// <para></para>
-    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
-    /// <para></para>
-    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
-    /// <para></para>
-    /// --> Examples
-    /// <para></para>
-    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
-    /// <para></para>
-    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
-    /// </summary>
-    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
-    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
-    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
-    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(CString & cString,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(double & fValue,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -958,7 +713,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(CString & cString,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(CString & cString,const char * sLabel,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -977,7 +732,7 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(std::string & cString,const char * sLabel,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(CString & cString,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
@@ -996,7 +751,26 @@ public:
     /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
     /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
     /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
-    CEditBox & AddInputbox(std::string & cString,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt);
+    CEditBox & AddInputBox(std::string & cString,const char * sLabel,const kwOpt & keywords = kw::none);
+
+    /// <summary>
+    /// Adds an InputBox (or EditBox) to the Quick Dialog, which can be used to get a string, integer value, or double value from the user. Note: AddEditBox() and AddInputBox() functions are the same.
+    /// <para></para>
+    /// --> Use the returned CEditbox object to get the string or number from the edit box.  Use opt::Range(), opt::Min, or opt::Max(), to set a range or seperate min/max values.
+    /// <para></para>
+    /// --> You can provide an integer, double, CString, or std::string value to be filled with the currently displayed value when the OK button is pressed in the Quick Dialog Window.
+    /// <para></para>
+    /// --> Examples
+    /// <para></para>
+    /// auto cEditbox = cDialog.AddEditbox(); -- returns cEditBox so that it can be accessed directly as a regular editbox
+    /// <para></para>
+    /// cDialog.AddEditbox(IntValue,Range(0,100));  -- fills IntValue with integer value. Validates Range of 0-100
+    /// </summary>
+    /// <param name="Return Variable Name"> - (optional) Name of int, double, std::string, or CString value to fill when OK button is pressed.</param>
+    /// <param name="sLabel"> - (optional) Label for edit box (shows above the edit box)</param>
+    /// <param name="cwOpt"> - (optional) Options such as opt::Range(), opt::Min(), opt::Max(), etc.</param>
+    /// <returns>CEdibox object to access EditBox/Input box created by the Quick Dialog.  Not needed of a variable reference to fill was given instead.</returns>
+    CEditBox & AddInputBox(std::string & cString,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1017,7 +791,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int iWidth,int iHeight,const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(int iWidth,int iHeight,const char * * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1038,7 +812,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int iWidth,int iHeight,const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox& AddListbox(int iWidth, int iHeight, const char* sItemList, const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1059,7 +833,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int iWidth,int iHeight,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt)                ;
+    CListbox & AddListbox(int iWidth,int iHeight, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1080,7 +854,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(const char * * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1101,7 +875,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(const char * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1122,7 +896,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(const cwfOpt & cwOpt = CQuickDialog::cwNoOpt)                                       ;
+    CListbox & AddListbox(const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1143,7 +917,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,int iWidth,int iHeight,const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(int & iSelection,int iWidth,int iHeight,const char * * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1164,7 +938,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,int iWidth,int iHeight,const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox& AddListbox(int& iSelection, int iWidth, int iHeight, const char* sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1185,7 +959,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,int iWidth,int iHeight,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt)                ;
+    CListbox & AddListbox(int & iSelection,int iWidth,int iHeight, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1206,7 +980,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(int & iSelection,const char * * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1227,7 +1001,7 @@ public:
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns></returns>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CListbox & AddListbox(int & iSelection,const char * sItemList, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Listbox to the Quick Dialog Box. 
@@ -1247,7 +1021,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Listbox, such as opt::Title() or opt::Default()</param>
     /// <returns>CListbox object to access Listbox created by the Quick Dialog.  Not needed of iSelection is used instead.</returns>
-    CListbox & AddListbox(int & iSelection,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt)                                       ;
+    CListbox & AddListbox(int & iSelection, const kwOpt& keywords = kw::none);
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1264,7 +1038,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int iWidth,const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(int iWidth,const char * * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1281,7 +1055,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int iWidth,const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(int iWidth,const char * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1298,7 +1072,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int iWidth,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(int iWidth,const kwOpt & keywords = kw::none);  
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1315,7 +1089,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(const char * sItemList,cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(const char * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1332,7 +1106,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(const char * * sItemList,cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(const char * * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1349,7 +1123,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox(const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1366,7 +1140,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,int iWidth,const char * * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,int iWidth,const char * * sItemList,const kwOpt & keywords = kw::none);  
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1383,7 +1157,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,int iWidth,const char * sItemList,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,int iWidth,const char * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1400,7 +1174,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,int iWidth,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,int iWidth,const kwOpt & keywords = kw::none);  
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1417,7 +1191,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,const char * sItemList,cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,const char * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1434,7 +1208,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,const char * * sItemList,cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,const char * * sItemList,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Adds a Combobox to the Quick Dialog Box. 
@@ -1451,7 +1225,7 @@ public:
     /// <param name="sItemList">- (optional) a list of items (either a const char * null-terminated string or const char ** point with a null at the end of the list.</param>
     /// <param name="cwOpt"> - (optional) Any options for the Combobox, such as opt::Title() or opt::Default()</param>
     /// <returns>Combobox object created for the Quick Dialog (not needed if iSelection is used instead)</returns>
-    CCombobox & AddCombobox(int & iSelection,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    CCombobox & AddCombobox_Set(int & iSelection,const kwOpt & keywords = kw::none); 
 
     /// <summary>
     /// Add multiple checkboxes (horizontally or vertically) to the Quick Dialog Window.
@@ -1466,7 +1240,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access checkboxes (by order of placement, i.e. 0-N)</returns>
-    ControlGroup AddCheckboxes(const char * sCheckboxes,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    ControlGroup AddCheckboxes(const char * sCheckboxes,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Add multiple checkboxes (horizontally or vertically) to the Quick Dialog Window.
@@ -1481,8 +1255,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access checkboxes (by order of placement, i.e. 0-N)</returns>
-    ControlGroup AddCheckboxes(const char * sCheckboxes,bool & bError,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
-   
+    ControlGroup AddCheckboxes(const char * sCheckboxes,bool & bError,const kwOpt & keywords = kw::none);
     
     /// <summary>
     /// Adds a set of radio buttons to the Quick Dialog window, either vertically (default) or horizontally.
@@ -1498,7 +1271,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access the radio buttons.  Not needed of the iSelection value was used to fill the returned value.</returns>
-    ControlGroup AddRadioButtons(const char * sRadioButtons,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    ControlGroup AddRadioButtons(const char * sRadioButtons,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a set of radio buttons to the Quick Dialog window, either vertically (default) or horizontally.
@@ -1514,7 +1287,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access the radio buttons.  Not needed of the iSelection value was used to fill the returned value.</returns>
-    ControlGroup AddRadioButtons(const char * sRadioButtons,bool & bError,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    ControlGroup AddRadioButtons(const char * sRadioButtons,bool & bError,const kwOpt & keywords = kw::none);
     
     /// <summary>
     /// Adds a set of radio buttons to the Quick Dialog window, either vertically (default) or horizontally.
@@ -1530,7 +1303,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access the radio buttons.  Not needed of the iSelection value was used to fill the returned value.</returns>
-    ControlGroup AddRadioButtons(int & iSelection,const char * sRadioButtons,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    ControlGroup AddRadioButtons(int & iSelection,const char * sRadioButtons,const kwOpt & keywords = kw::none);
 
     /// <summary>
     /// Adds a set of radio buttons to the Quick Dialog window, either vertically (default) or horizontally.
@@ -1546,7 +1319,7 @@ public:
     /// <param name="bError"> - (optional) Not used [deprecated]</param>
     /// <param name="cwOpt"> - (optional) Checkbox options, such as opt::Horz().  opt::Default(true) only checks the first checkbox</param>
     /// <returns>Control Group object to access the radio buttons.  Not needed of the iSelection value was used to fill the returned value.</returns>
-    ControlGroup AddRadioButtons(int & iSelection,const char * sRadioButtons,bool & bError,const cwfOpt & cwOpt = CQuickDialog::cwNoOpt); 
+    ControlGroup AddRadioButtons(int & iSelection,const char * sRadioButtons,bool & bError,const kwOpt & keywords = kw::none);
 
     static CQuickDialog m_cEmptyDialog;     // This is used to return a reference for an empty/non-functional Quick Dialog box when the state of the system is unknonw,
 
@@ -1612,7 +1385,7 @@ public:
     /// <summary>
     /// Used Internally.  Do not use.  Use CWindow::QuickDialog() or Sagebox::QuickDialog() to create a Quick Dialog Window
     /// </summary>
-    static CQuickDialog * CreateNew(CWindow * cWin,const char * sHeader,const cwfOpt & cwOPt);
+    static CQuickDialog * CreateNew(CWindow * cWin,const char * sHeader,const kwOpt & keywords);
 
     /// <summary>
     /// Returns true of the OK or CANCEL buttons has been pressed.  This is an event: GetEvent() returns when the status changed, and a 
@@ -1712,10 +1485,12 @@ public:
     /// Returns true if the dialog box was cancelled by the user.  This is the equivalent of checking whether GetStatus() returns a cancelled status.
     /// </summary>
     /// <returns>TRUE if the user cancelled the dialog, false if the OK button was pressed.</returns>
-    bool WasCancelled();
+    bool WasCanceled();
     ~CQuickDialog();
 
 };
+
+using QuickDialog = CQuickDialog;
 
 }; // namespace Sage
 
