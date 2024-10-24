@@ -11,22 +11,22 @@
 </h2>
 
 <h3>
-A Quick Note About C++, Python, C# and Visual Basic
+$${\color{lightgreen}A \space Quick \space Note \space About \space C\text{++}, \space Python, \space C \#, \space and \space Visual \space Basic}$$
 </h3>
 
 Sagebox now supports Python and also has prototype support for C# and Visual Basic.  The documentation below was written before this support and focuses on C++, but can 
 now be applied to Python, C# and Visual Basic.
 
-For Python, see the Pybox repository here
+For Python, see the Pybox repository [here](https://github.com/Sagebox/Pybox)
 For C# and Visual Basic, these libraries are included in the main project unde the VisualBasic and C# directories. See the Read Me file in those directories.
 
 
 Sagebox is a set of GUI-based tools to help you add GUI components to your program, all without adding a lot of event-driven or GUI-specific code just to have
 graphics and controls in your program.  
 <br />
-
-### Write Programs with GUI Controls and Graphics as Easily as a Scripting Language
-
+<h2 align="left">
+Write Programs with GUI Controls and Graphics as Easily as a Scripting Language
+</h2><br />
 With C++, it can be difficult and time-consuming to write a program with controls and graphics.  
 
 **_Sagebox was designed to provide the ability to write both Console Mode and full-on Windows programs as easily as regular C++_** &ndash; as easy as a scripting language, and in many ways easier when combined with the power of C++.
