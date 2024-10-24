@@ -142,7 +142,7 @@ if (MyButton.Pressed()) printf("Button was pressed!\n");
 If you want to add a range to the slider with a default, you can add to the original line:
 
 ```C++
-auto& MySlider = Sagebox::DevSlider("Box Size",opt::Range(10,500) << opt::Default(150))
+auto& MySlider = Sagebox::DevSlider("Box Size",kw::Range(10,500) + kw::Default(150))
 ```
 
 ![output-dev-slider-box-150](https://user-images.githubusercontent.com/70604831/174466616-fed9d593-d165-458f-9c55-84ba93524adf.png)
@@ -214,7 +214,7 @@ For example, this program:
 
 ```C++
 auto& MyWindow = Sagebox.NewWindow();
-MyWindow.write("Hello World!",opt::Font(150) << opt::CenterXY());
+MyWindow.write("Hello World!",kw::Font(150) + kw::CenterXY());
 ```
 ![output-hello-world-plain](https://user-images.githubusercontent.com/70604831/174466797-fdab1bdc-e4e4-4dff-a673-6afc2c0126a0.png)
 
