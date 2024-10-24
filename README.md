@@ -7,8 +7,18 @@
 </p>
 
 <h2 align="center">
-  Procedural, Non-Event Driven GUI-based tools for C++ (and now Python, C#, Visual Basic, Rust)
+  Procedural, Non-Event Driven GUI-based tools for C++ (and now Python, C#, and Visual Basic)
 </h2>
+
+<h3>
+A Quick Note About C++, Python, C# and Visual Basic
+</h3>
+
+Sagebox now supports Python and also has prototype support for C# and Visual Basic.  The documentation below was written before this support and focuses on C++, but can 
+now be applied to Python, C# and Visual Basic.
+
+For Python, see the Pybox repository here
+For C# and Visual Basic, these libraries are included in the main project unde the VisualBasic and C# directories. See the Read Me file in those directories.
 
 
 Sagebox is a set of GUI-based tools to help you add GUI components to your program, all without adding a lot of event-driven or GUI-specific code just to have
