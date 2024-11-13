@@ -7,7 +7,7 @@
 </p>
 
 <h2 align="center">
-  Procedural, Non-Event Driven GUI-based tools for C++ (and now Python, C#, Visual Basic, and Rust)
+  Procedural, Non-Event Driven GUI productivity (and fun) tools for C++ (and now Python, C#, Visual Basic, and Rust)
 </h2>
 
 <h3>
